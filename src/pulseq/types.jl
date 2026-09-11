@@ -1,0 +1,206 @@
+"""
+Define the main types forming a [`PulseqSequence`](@ref).
+
+Extensions and sections types are defined in their own modules.
+"""
+module Types
+
+"""
+    PulseqSection(:<title>)(lines)
+
+Represents a section in the pulseq file format.
+"""
+struct PulseqSection{T}
+    content :: Vector{String}
+end
+
+"""
+    PulseqShape(samples)
+
+Define the shape of a [`PulseqRFPulse`](@ref) or [`PulseqGradient`](@ref).
+"""
+struct PulseqShape
+    samples :: Vector{Float64}
+end
+
+Base.length(shape::PulseqShape) = length(shape.samples)
+
+"""
+Super-type for any RF pulses/gradients/ADC/extensions that can play out during a [`PulseqBlock`](@ref).
+"""
+abstract type AnyPulseqComponent end
+
+
+"""
+    PulseqRFPulse(amplitude::Number, magnitude::PulseqShape, phase::PulseqShape, time::PulseqShape, delay::Int, frequency::Number, phase_offset::Number)
+
+An RF pulse defined in Pulseq (see [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf)).
+"""
+struct PulseqRFPulse <: AnyPulseqComponent
+    amplitude :: Float64
+    magnitude :: PulseqShape
+    phase :: PulseqShape
+    time :: Union{Nothing, PulseqShape}
+    center :: Float64
+    delay :: Int
+    frequency_ppm :: Float64
+    phase_ppm :: Float64
+    frequency :: Float64
+    phase_offset :: Float64
+    use :: Char
+end
+
+function PulseqRFPulse(amplitude::Number, magnitude::PulseqShape, phase::PulseqShape, time::Union{Nothing, PulseqShape}, delay::Int, frequency::Number, phase_offset::Number)
+    # Support for <v1.5.0 pulseq format
+    return PulseqRFPulse(
+        amplitude,
+        magnitude,
+        phase,
+        time,
+        NaN,
+        delay,
+        0.,
+        0.,
+        frequency,
+        phase_offset,
+        'u'
+    )
+end
+
+Base.length(rf::PulseqRFPulse) = length(rf.magnitude)
+
+"""
+Super-type of Pulseq gradients:
+- [`PulseqGradient`](@ref)
+- [`PulseqTrapezoid`](@ref)
+"""
+abstract type AnyPulseqGradient <: AnyPulseqComponent end
+
+"""
+    PulseqGradient(amplitude::Number, shape::PulseqShape, time::PulseqShape, delay::int)
+
+A generic gradient waveform defined in Pulseq (see [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf)).
+"""
+struct PulseqGradient <: AnyPulseqGradient
+    amplitude :: Float64
+    first :: Float64
+    last :: Float64
+    shape :: PulseqShape
+    time :: Union{Nothing, PulseqShape}
+    delay :: Int
+end
+
+function PulseqGradient(amplitude::Number, shape::PulseqShape, time::Union{Nothing, PulseqShape}, delay::Int)
+    # Support for <v1.5.0 pulseq format
+    return PulseqGradient(
+        amplitude,
+        NaN,
+        NaN,
+        shape,
+        time,
+        delay
+    )
+end
+
+"""
+    PulseqTrapezoid(amplitude::Number, rise::Int, flat::Int, fall::Int, delay::Int)
+
+A trapezoidal gradient pulse defined in Pulseq (see [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf)).
+"""
+struct PulseqTrapezoid <:AnyPulseqGradient
+    amplitude :: Float64
+    rise :: Int
+    flat :: Int
+    fall :: Int
+    delay :: Int
+end
+
+"""
+    PulseqADC(num::Int, dwell::Float64, delay::Int, frequency::Number, phase::Number)
+
+An ADC readout event defined in Pulseq (see [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf)).
+"""
+struct PulseqADC <: AnyPulseqComponent
+    num :: Int
+    dwell :: Float64
+    delay :: Int
+    frequency_ppm :: Float64
+    phase_ppm :: Float64
+    frequency :: Float64
+    phase :: Float64
+    phase_shape :: Union{Nothing, PulseqShape}
+end
+
+function PulseqADC(num::Int, dwell::Float64, delay::Int, frequency::Number, phase::Number)
+    # Support for <v1.5.0 pulseq format
+    return PulseqADC(
+        num,
+        dwell,
+        delay,
+        0.,
+        0.,
+        frequency,
+        phase,
+        nothing
+    )
+end
+
+"""
+    PulseqExtensionDefinition(name, content)
+
+Abstract definition of an unknown Pulseq extension.
+"""
+struct PulseqExtensionDefinition{N}
+    content :: Vector{String}
+end
+
+"""
+    PulseqExtension(definition::PulseqExtensionDefinition, id::Int)
+
+Reference to a specific implementation of a [`PulseqExtensionDefinition`](@ref).
+"""
+struct PulseqExtension{N} <: AnyPulseqComponent
+    definition::PulseqExtensionDefinition{N}
+    id :: Int
+end
+
+"""
+    PulseqBlock(duration::Int, rf::PulseqRFPulse, gx::AnyPulseqGradient, gy::AnyPulseqGradient, gz::AnyPulseqGradient, adc::PulseqADC, ext)
+
+Defines a Building Block with the Pulseq sequence (see [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf)).
+
+The RF pulse, gradients, and ADC can be set to `nothing`.
+
+The `ext` is a sequence of extension blocks that will be played out.
+Set this to a sequence of zero length to not have any extensions.
+"""
+struct PulseqBlock
+    duration :: Int
+    rf :: Union{Nothing, PulseqRFPulse}
+    gx :: Union{Nothing, AnyPulseqGradient}
+    gy :: Union{Nothing, AnyPulseqGradient}
+    gz :: Union{Nothing, AnyPulseqGradient}
+    adc :: Union{Nothing, PulseqADC}
+    ext :: Vector
+end
+
+"""
+    PulseqSequence(version::VersionNumber, definitions::NamedTuple, blocks::Vector{PulseqBlock}, TR=nothing)
+
+A full sequence defined according to the Pulseq [specification](https://raw.githubusercontent.com/pulseq/pulseq/master/doc/specification.pdf).
+"""
+struct PulseqSequence
+    version:: VersionNumber
+    definitions:: NamedTuple
+    blocks:: Vector{PulseqBlock}
+    TR:: Union{Nothing, Float64}
+end
+
+PulseqSequence(version::VersionNumber, definitions::NamedTuple, blocks::Vector{PulseqBlock}) = PulseqSequence(version, definitions, blocks, nothing)
+
+Base.length(seq::PulseqSequence) = length(seq.blocks)
+Base.getindex(seq::PulseqSequence, i::Int) = PulseqSequence(seq.version, seq.definitions, [seq.blocks[i]], seq.TR)
+Base.getindex(seq::PulseqSequence, range) = PulseqSequence(seq.version, seq.definitions, seq.blocks[range], seq.TR)
+Base.show(io::IO, seq::PulseqSequence) = print(io, "PulseqSequence v$(seq.version) with $(length(seq.blocks)) blocks")
+
+end

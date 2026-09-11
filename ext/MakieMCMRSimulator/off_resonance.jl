@@ -1,0 +1,38 @@
+module OffResonance
+using Makie
+import StaticArrays: SVector
+import MCMRSimulator.Plot: PlotPlane, plot_off_resonance, plot_off_resonance!, GeometryLike
+import MCMRSimulator.Geometries.Internal: FixedSusceptibility, susceptibility_off_resonance
+import MCMRSimulator.Geometries: fix_susceptibility
+
+@recipe Plot_Off_Resonance (plot_plane::PlotPlane, geometry::GeometryLike) begin
+    "sets the number of points where the off-resonance field is evaluated before producing the image. Setting this to a higher number will produce a more accurate image of the off-resonance field at the cost of more computing power."
+    ngrid=400
+    Makie.mixin_colormap_attributes()...
+    Makie.mixin_generic_plot_attributes()...
+end
+
+Makie.argument_names(::Type{<: Plot_Off_Resonance}, N) = (:plot_plane, :geometry)
+
+function Makie.plot!(scene::Plot_Off_Resonance)
+    Makie.register_computation!(scene.attributes, [:geometry, :plot_plane, :ngrid], [:x_interval, :y_interval, :field]) do inputs, changed, cached
+        susc = inputs.geometry isa FixedSusceptibility ? inputs.geometry : fix_susceptibility(inputs.geometry)
+
+        dims = -0.5:(1/inputs.ngrid):0.5
+        xx_1d = dims * inputs.plot_plane.sizex
+        yy_1d = dims * inputs.plot_plane.sizey
+        pos_plane = broadcast(
+            (x, y) -> SVector{3}([x, y, 0.]),
+            reshape(xx_1d, length(xx_1d), 1),
+            reshape(yy_1d, 1, length(yy_1d)),
+        )
+        pos_orig = inv(inputs.plot_plane.transformation).(pos_plane)
+        field = map(p->susceptibility_off_resonance(susc, p), pos_orig)
+        x_interval = (-0.5 * inputs.plot_plane.sizex) .. (0.5 * inputs.plot_plane.sizex)
+        y_interval = (-0.5 * inputs.plot_plane.sizey) .. (0.5 * inputs.plot_plane.sizey)
+        return x_interval, y_interval, field
+    end
+    Makie.image!(scene, scene.attributes, scene.x_interval, scene.y_interval, scene.field)
+end
+
+end
