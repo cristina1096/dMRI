@@ -69,7 +69,7 @@ end
 
 # with active RF pulse
 function relax!(orient::SpinOrientation, old_pos::SVector{3, Float64}, new_pos::NewPosType, pulse::PulsePart, props::MRIProperties, duration_ext::Float64, t1_ext::Float64, t2_ext::Float64, off_resonance::Float64, ::NamedTuple)
-    relax_time = 1 / max(props.R1, props.R2)
+    relax_time = 1 / max(props.R1, props.R2) # estimate shorest relaxation timescale, compare with RF chunks
     internal_timestep = 1/length(pulse.pulse)
     if isinf(relax_time)
         nsplit_rotation = Val(1)

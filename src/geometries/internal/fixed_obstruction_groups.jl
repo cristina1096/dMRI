@@ -103,8 +103,8 @@ repeating(::Type{<:FixedObstructionGroup{N, R}}) where {N, R} = R <: SVector{N, 
 
 obstruction_type(::Type{<:FixedObstructionGroup{N, R, O}}) where {N, R, O} = obstruction_type(O)
 
-rotate_from_global(g::FixedObstructionGroup, pos::SVector{3}) = g.inv_rotation * pos
-rotate_to_global(g::FixedObstructionGroup{N}, pos::SVector{N}) where {N} = g.rotation * pos
+rotate_from_global(g::FixedObstructionGroup, pos::SVector{3}) = g.inv_rotation * pos # spin -> wall 
+rotate_to_global(g::FixedObstructionGroup{N}, pos::SVector{N}) where {N} = g.rotation * pos # wall -> 3D
 
 
 size_scale(g::FixedObstructionGroup) = g.size_scale
