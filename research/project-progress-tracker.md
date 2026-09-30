@@ -12,7 +12,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
-| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 21 | 0 | ☐ |
+| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 21 | 12 | ◐ |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 0 | ☐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
@@ -43,13 +43,13 @@ Trace one simulation end to end. Target output is a written map, not general fam
 
 | ID | ☐ | Task | What to locate | Output |
 |---|---|---|---|---|
-| P1.2.1 | ☐ | **Code structure** | Module layout; how geometry, sequence and simulation modules depend on each other; how MRIBuilder sequences are passed in | code map §1 |
-| P1.2.2 | ☐ | **Simulation workflow** | Main loop: setup → step → readout; where τ_max is computed from the constraint list (Supp. S1) | code map §2 |
-| P1.2.3 | ☐ | **Geometry representation** | Storage of walls, cylinders, spheres, annuli, meshes; collision grid; repeating geometry; how surface vs volume parameters attach (Table 1) | code map §3 |
-| P1.2.4 | ☐ | **Spin trajectories** | Gaussian step draw; collision detection; reflection and re-test; handling of perfectly permeable surfaces (§2.10) | code map §4 |
-| P1.2.5 | ☐ | **Magnetisation update** | Bloch update between events; update-to-collision-time (§2.4); RF chunking (§2.5); **exact lines where `θ_relax` is applied** | code map §5 |
-| P1.2.6 | ☐ | **Single-spin trace** — one cylinder, spin echo, ~100 spins; log one spin's position and magnetisation every step through at least one collision | Trace matches the reading of the code | trace log |
-| P1.2.7 | ☐ | Mark insertion points for R₂(d): parameter definition, distance evaluation, relaxation application | Each insertion point named with file and function | code map §6 |
+| P1.2.1 | ☑ | **Code structure** | Module layout; how geometry, sequence and simulation modules depend on each other; how MRIBuilder sequences are passed in | code map §1 — see `research/phase1_code_log.md` |
+| P1.2.2 | ☑ | **Simulation workflow** | Main loop: setup → step → readout; where τ_max is computed from the constraint list (Supp. S1) | code map §2 |
+| P1.2.3 | ☑ | **Geometry representation** | Storage of walls, cylinders, spheres, annuli, meshes; collision grid; repeating geometry; how surface vs volume parameters attach (Table 1) | code map §3 |
+| P1.2.4 | ☑ | **Spin trajectories** | Gaussian step draw; collision detection; reflection and re-test; handling of perfectly permeable surfaces (§2.10) | code map §4 |
+| P1.2.5 | ☑ | **Magnetisation update** | Bloch update between events; update-to-collision-time (§2.4); RF chunking (§2.5); **exact lines where `θ_relax` is applied** | code map §5 |
+| P1.2.6 | ☑ | **Single-spin trace** — one cylinder, spin echo, ~100 spins; log one spin's position and magnetisation every step through at least one collision | Trace matches the reading of the code | trace log |
+| P1.2.7 | ☑ | Mark insertion points for R₂(d): parameter definition, distance evaluation, relaxation application | Each insertion point named with file and function | code map §6 |
 
 ## 1.3 Reproduce baseline results
 
@@ -57,10 +57,10 @@ Use notebook values where available; values read off figures carry a few percent
 
 | ID | ☐ | Result | Reference | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P1.3.1 | ☐ | **R1** — surface relaxation, slab and single cylinder: R₂ = θ_relax·√(D/π)·(S/V) | Eq. 17, analytic | Within 2σ | fig + numbers |
-| P1.3.2 | ☐ | **R2** — compartment T₂: ~80 ms intra-, ~60 ms extra-axonal, ~45 ms myelin | §3.3, Fig. 8 | Within 2σ, or 5% if read off figure | fig + numbers |
-| P1.3.3 | ☐ | **R3** — timestep plateau, ADC vs τ, cylinder packings | Supp. Fig. S1 | Plateau onset near τ ≈ 0.01 ms | fig |
-| P1.3.4 | ☐ | **R4** — surface-relaxation correction schemes, 1D slab | Supp. Fig. S2C | Logarithmic scheme flat to τ ≈ 10⁻³ ms; confirm θ_relax used | fig + θ_relax value |
+| P1.3.1 | ◐ | **R1** — surface relaxation, slab and single cylinder: R₂ = θ_relax·√(D/π)·(S/V) | Eq. 17, analytic | Within 2σ | fig + numbers — slab PASS; cylinder −3.15σ vs Eq. 17 but −0.17σ vs exact Brownstein–Tarr (Eq. 17 bias 0.08%) — decision needed, see `baseline_record.md` |
+| P1.3.2 | ☑ | **R2** — compartment T₂: ~80 ms intra-, ~60 ms extra-axonal, ~45 ms myelin | §3.3, Fig. 8 | Within 2σ, or 5% if read off figure | fig + numbers — within 5% of digitised notebook Fig. 8 at all TEs |
+| P1.3.3 | ☑ | **R3** — timestep plateau, ADC vs τ, cylinder packings | Supp. Fig. S1 | Plateau onset near τ ≈ 0.01 ms | fig — onset 6e-3–2.5e-2 ms; notebook S1 x-axis mislabelled |
+| P1.3.4 | ☑ | **R4** — surface-relaxation correction schemes, 1D slab | Supp. Fig. S2C | Logarithmic scheme flat to τ ≈ 10⁻³ ms; confirm θ_relax used | fig + θ_relax value — θ_relax = 1/T (θ = 10 for the τ≈1e-3 row) |
 | P1.3.5 | ☐ | *(optional)* **R5** — diffusion vs Mitra / van Gelderen | Fig. 5 | Qualitative agreement | fig |
 
 **If a result fails:** find the cause before continuing. It is usually a parameter mismatch, and the cause is worth recording.
@@ -69,17 +69,17 @@ Use notebook values where available; values read off figures carry a few percent
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P1.4.1 | ☐ | Baseline record for every run (software versions + commit hashes, hardware, geometry with exact S/V, physics, sequence, τ_max and binding constraint, N_spins, seeds, signal, apparent T₂, σ, runtime, reference, pass/fail) | Every run has a complete entry | `baseline_record.md` |
-| P1.4.2 | ☐ | Noise floor σ for each baseline configuration, ≥ 10 seeds | σ reported per configuration | table |
-| P1.4.3 | ☐ | Save raw outputs with generating script and seed | Any result regenerable from the repo | `results/baseline/` |
+| P1.4.1 | ☑ | Baseline record for every run (software versions + commit hashes, hardware, geometry with exact S/V, physics, sequence, τ_max and binding constraint, N_spins, seeds, signal, apparent T₂, σ, runtime, reference, pass/fail) | Every run has a complete entry | `baseline_record.md` — `research/baseline_record.md` |
+| P1.4.2 | ☑ | Noise floor σ for each baseline configuration, ≥ 10 seeds | σ reported per configuration | table |
+| P1.4.3 | ◐ | Save raw outputs with generating script and seed | Any result regenerable from the repo | `results/baseline/` — outputs + scripts in `research/`; not yet committed |
 | P1.4.4 | ☐ | Tag commit `baseline-v1` | Tag exists | git tag |
 
 ## Phase 1 deliverables
 
-- ☐ Code map with insertion points
-- ☐ R1–R4 reproduced with pass/fail
+- ☑ Code map with insertion points
+- ◐ R1–R4 reproduced with pass/fail (R1 cylinder criterion open)
 - ☐ Baseline record, pinned environment, `baseline-v1` tag
-- ☐ Noise floor σ per baseline configuration
+- ☑ Noise floor σ per baseline configuration
 
 ---
 
