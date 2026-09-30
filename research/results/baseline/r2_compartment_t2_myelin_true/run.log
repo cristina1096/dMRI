@@ -1,0 +1,20 @@
+geometry: 651 annuli (notebook: 651), outer-radius density 0.7004, myelin=true
+
+
+τ_max = 0.01 ms
+S/V (µm⁻¹): Dict("intra" => 2.3578403662980825, "extra" => 3.8586947330614576, "myelin" => 5.501627521362192)
+volume fractions: Dict("intra" => 0.3432016004576336, "extra" => 0.2995885704946252, "myelin" => 0.3572098290477412)
+seed  1  (57.2 s)  nspins extra/myelin/intra = [267, 372, 361]  T2(TE=50) = 52.9 / 39.7 / 86.7
+seed  2  (48.9 s)  nspins extra/myelin/intra = [308, 342, 350]  T2(TE=50) = 53.5 / 40.1 / 86.7
+seed  3  (38.2 s)  nspins extra/myelin/intra = [302, 362, 336]  T2(TE=50) = 54.0 / 39.1 / 84.4
+seed  4  (37.6 s)  nspins extra/myelin/intra = [314, 324, 362]  T2(TE=50) = 54.0 / 40.5 / 85.1
+seed  5  (37.6 s)  nspins extra/myelin/intra = [312, 341, 347]  T2(TE=50) = 53.8 / 39.1 / 87.6
+seed  6  (37.7 s)  nspins extra/myelin/intra = [295, 359, 346]  T2(TE=50) = 54.6 / 40.8 / 89.3
+seed  7  (38.1 s)  nspins extra/myelin/intra = [309, 358, 333]  T2(TE=50) = 54.3 / 40.3 / 84.1
+seed  8  (37.3 s)  nspins extra/myelin/intra = [308, 338, 354]  T2(TE=50) = 55.3 / 39.3 / 90.2
+seed  9  (37.4 s)  nspins extra/myelin/intra = [300, 343, 357]  T2(TE=50) = 54.7 / 40.5 / 86.9
+seed 10  (37.4 s)  nspins extra/myelin/intra = [334, 334, 332]  T2(TE=50) = 55.0 / 40.1 / 85.8
+extra   T2_fit =   56.4 ±  0.9 ms (σ)  T2(TE=50) =   54.2 ±  0.7  T2(TE=100) =   54.9 ±  0.9  ref ≈ 60  → outside 5%
+myelin  T2_fit =   48.5 ±  0.9 ms (σ)  T2(TE=50) =   39.9 ±  0.6  T2(TE=100) =   42.9 ±  0.7  ref ≈ 45  → outside 5%
+intra   T2_fit =   97.2 ±  2.2 ms (σ)  T2(TE=50) =   86.7 ±  2.0  T2(TE=100) =   90.3 ±  2.0  ref ≈ 80  → outside 5%
+saved to /Users/ishimiyabisaki/Documents/mcmrsimulator.jl-main/research/results/baseline/r2_compartment_t2_myelin_true

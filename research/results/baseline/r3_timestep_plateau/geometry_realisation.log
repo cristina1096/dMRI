@@ -1,0 +1,11 @@
+geometry seed  1: ADC = 2.0593
+geometry seed  2: ADC = 2.0903
+geometry seed  3: ADC = 2.0095
+geometry seed  4: ADC = 2.0422
+geometry seed  5: ADC = 2.0382
+geometry seed  6: ADC = 2.0317
+geometry seed  7: ADC = 2.0104
+geometry seed  8: ADC = 1.9942
+geometry seed  9: ADC = 2.0417
+geometry seed 10: ADC = 2.0762
+random_low plateau over 10 geometries: 2.0394 ± 0.0302 (σ, includes spin noise ≈0.027)

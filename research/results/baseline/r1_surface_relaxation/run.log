@@ -1,0 +1,31 @@
+
+
+
+== slab: S/V=1.0 µm⁻¹, τ_max=0.04 ms, R2_eq17=0.009772050238058399, R2_BT=0.009761449119217086
+  seed  1: nspins=10000  R2_fit=0.009770  intercept=-1.68e-04  S(100)=0.37655  (6.8 s)
+  seed  2: nspins=10000  R2_fit=0.009764  intercept=-2.76e-04  S(100)=0.37679  (0.8 s)
+  seed  3: nspins=10000  R2_fit=0.009760  intercept=-1.53e-04  S(100)=0.37684  (0.8 s)
+  seed  4: nspins=10000  R2_fit=0.009765  intercept=-1.99e-04  S(100)=0.37672  (0.8 s)
+  seed  5: nspins=10000  R2_fit=0.009758  intercept=-1.47e-04  S(100)=0.37687  (0.8 s)
+  seed  6: nspins=10000  R2_fit=0.009760  intercept=6.10e-04  S(100)=0.37664  (0.8 s)
+  seed  7: nspins=10000  R2_fit=0.009767  intercept=-7.63e-05  S(100)=0.37659  (0.8 s)
+  seed  8: nspins=10000  R2_fit=0.009759  intercept=3.00e-04  S(100)=0.37674  (0.8 s)
+  seed  9: nspins=10000  R2_fit=0.009771  intercept=-2.31e-04  S(100)=0.37650  (0.8 s)
+  seed 10: nspins=10000  R2_fit=0.009764  intercept=3.52e-05  S(100)=0.37663  (0.8 s)
+  R2_fit = 0.009764 ± 0.000004 (σ over 10 seeds, SEM 1.40e-06); theory Eq17 0.009772; deviation -8.28e-06 = -1.87σ → PASS
+  vs exact Brownstein–Tarr 0.009761: deviation 2.32e-06 = 0.53σ → PASS  (Eq17/BT − 1 = 1.09e-03)
+
+== cylinder: S/V=2.0 µm⁻¹, τ_max=0.01 ms, R2_eq17=0.019544100476116797, R2_BT=0.01952819362043806
+  seed  1: nspins=7877  R2_fit=0.019537  intercept=-6.63e-05  S(100)=0.14176  (7.4 s)
+  seed  2: nspins=7849  R2_fit=0.019528  intercept=-9.69e-05  S(100)=0.14186  (6.1 s)
+  seed  3: nspins=7843  R2_fit=0.019533  intercept=-5.59e-04  S(100)=0.14189  (6.1 s)
+  seed  4: nspins=7819  R2_fit=0.019527  intercept=2.08e-04  S(100)=0.14188  (6.0 s)
+  seed  5: nspins=7884  R2_fit=0.019524  intercept=1.96e-04  S(100)=0.14190  (6.0 s)
+  seed  6: nspins=7868  R2_fit=0.019524  intercept=2.30e-04  S(100)=0.14190  (6.1 s)
+  seed  7: nspins=7867  R2_fit=0.019533  intercept=-2.44e-04  S(100)=0.14188  (5.7 s)
+  seed  8: nspins=7901  R2_fit=0.019524  intercept=-2.71e-04  S(100)=0.14194  (6.0 s)
+  seed  9: nspins=7851  R2_fit=0.019524  intercept=1.56e-04  S(100)=0.14194  (6.1 s)
+  seed 10: nspins=7876  R2_fit=0.019519  intercept=3.69e-04  S(100)=0.14197  (6.1 s)
+  R2_fit = 0.019527 ± 0.000005 (σ over 10 seeds, SEM 1.69e-06); theory Eq17 0.019544; deviation -1.68e-05 = -3.15σ → FAIL
+  vs exact Brownstein–Tarr 0.019528: deviation -9.01e-07 = -0.17σ → PASS  (Eq17/BT − 1 = 8.15e-04)
+saved to /Users/ishimiyabisaki/Documents/mcmrsimulator.jl-main/research/results/baseline/r1_surface_relaxation

@@ -1,0 +1,18 @@
+[deps]
+Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MCMRSimulator = "eac06e4d-a854-4bf6-b44f-54c98b0401d1"
+MRIBuilder = "691e6122-0b62-4932-92e7-e4ff0ddaf3a0"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[sources]
+MCMRSimulator = {path = "../.."}

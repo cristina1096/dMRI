@@ -1,0 +1,49 @@
+provenance: Dict{String, Any}("git_branch" => "cc/near-surface-r2", "src_modified" => false, "cpu" => "Apple M1 Pro", "MRIBuilder" => "0.4.1 @ v0.4.1", "MCMRSimulator" => "1.1.0", "script" => "p1_2_6_single_spin_trace.jl", "date" => "2026-09-29T23:06:08.393", "git_commit" => "c73c7237759db9ed84c0beb854aa44c579c89def", "julia" => "1.12.7", "julia_threads" => 1, "memory_GB" => 16.0, "os" => "Darwin arm64-apple-darwin25.5.0", "ncpu" => 8)
+
+==== Sequence: instant pulses ====
+sim.timestep = MCMRSimulator.TimeSteps.TimeStep(0.01, Inf)
+number of sequence parts = 501
+  t=0.0000 ms: instant pulse flip=90° phase=90° → L 0.000000→0.000000 (exp 0.000000), T 0.000000→1.000000 (exp 1.000000)
+  step 9 (t=0.080 ms, EmptyPart): 1 collision(s). path:
+      (0.79353, 0.12414, -1.73307)  r=0.803177
+      (0.99433, 0.10635, -1.98970)  r=1.000000
+      (0.85086, 0.06174, -2.18096)  r=0.853097
+      M⊥ 0.99912538 → 0.98906028 ; predicted 0.98906028  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+  step 12 (t=0.110 ms, EmptyPart): 1 collision(s). path:
+      (0.95211, -0.10805, -1.91454)  r=0.958226
+      (0.99773, -0.06730, -1.81763)  r=1.000000
+      (0.91386, 0.03087, -1.61308)  r=0.914385
+      M⊥ 0.98881304 → 0.97885183 ; predicted 0.97885183  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+  step 14 (t=0.130 ms, EmptyPart): 1 collision(s). path:
+      (0.74653, 0.18754, -1.28331)  r=0.769727
+      (0.99839, 0.05668, -1.36256)  r=1.000000
+      (0.92841, 0.00955, -1.38612)  r=0.928455
+      M⊥ 0.97872948 → 0.96886984 ; predicted 0.96886984  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+  t=2.5000 ms: instant pulse flip=180° phase=0° → L -0.002497→-0.002497 (exp -0.002497), T 0.576301→0.576229 (exp 0.576229)
+steps with collision: 111, total collisions: 112
+no-RF steps checked: 500, max relative error vs prediction: 6.195e-16
+spin stayed inside cylinder for all steps: true
+final: L=0.000006  T=0.306512  phase=-0.000°
+
+==== Sequence: finite hard pulses ====
+sim.timestep = MCMRSimulator.TimeSteps.TimeStep(0.01, Inf)
+number of sequence parts = 526
+  step 9 (t=0.080 ms, PulsePart): 1 collision(s). path:
+      (0.79353, 0.12414, -1.73307)  r=0.803177
+      (0.99433, 0.10635, -1.98970)  r=1.000000
+      (0.85086, 0.06174, -2.18096)  r=0.853097
+      M⊥ 0.21804786 → 0.24622208 ; predicted NaN  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+  step 12 (t=0.110 ms, PulsePart): 1 collision(s). path:
+      (0.95211, -0.10805, -1.91454)  r=0.958226
+      (0.99773, -0.06730, -1.81763)  r=1.000000
+      (0.91386, 0.03087, -1.61308)  r=0.914385
+      M⊥ 0.30648770 → 0.33303208 ; predicted NaN  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+  step 14 (t=0.130 ms, PulsePart): 1 collision(s). path:
+      (0.74653, 0.18754, -1.28331)  r=0.769727
+      (0.99839, 0.05668, -1.36256)  r=1.000000
+      (0.92841, 0.00955, -1.38612)  r=0.928455
+      M⊥ 0.36238901 → 0.38755633 ; predicted NaN  (factor exp(-R2 dt)=0.99987501, per-hit exp(-θ√τ)=0.99004983)
+steps with collision: 120, total collisions: 121
+no-RF steps checked: 375, max relative error vs prediction: 5.081e-16
+spin stayed inside cylinder for all steps: true
+final: L=-0.032716  T=0.295556  phase=-0.145°

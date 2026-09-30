@@ -1,0 +1,47 @@
+{
+  "params": {
+    "D": 3.0,
+    "R": 1.0,
+    "R1": 0.001,
+    "R2": 0.0125,
+    "TE": 5.0,
+    "seed": 20260929,
+    "tau": 0.01,
+    "theta": 0.1
+  },
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-09-29T23:06:08.393",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "c73c7237759db9ed84c0beb854aa44c579c89def",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p1_2_6_single_spin_trace.jl",
+    "src_modified": false
+  },
+  "results": [
+    {
+      "label": "instant pulses",
+      "nparts": 501,
+      "n_hit_steps": 111,
+      "total_hits": 112,
+      "n_checked": 500,
+      "max_rel_err": 6.194786794730389e-16,
+      "stayed_inside": true
+    },
+    {
+      "label": "finite hard pulses",
+      "nparts": 526,
+      "n_hit_steps": 120,
+      "total_hits": 121,
+      "n_checked": 375,
+      "max_rel_err": 5.081197586979316e-16,
+      "stayed_inside": true
+    }
+  ]
+}
