@@ -1,0 +1,86 @@
+
+== θ = 0
+  default   τ=0.04    S(25)=1.00000±0.00000  S(50)=1.00000±0.00000 (σ)  descriptive rate 0.000000 ms⁻¹  runtime 27 s
+  tau_1e-2  τ=0.01    S(25)=1.00000±0.00000  S(50)=1.00000±0.00000 (σ)  descriptive rate 0.000000 ms⁻¹  runtime 63 s
+  τ check default  vs 1e-2: max |z| = 0.00, S(50) rel diff = +0.00e+00
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 2.52e-12 (tol 2.2e-11) → PASS
+
+== θ = 0.001
+  default   τ=0.04    S(25)=0.97587±0.00001  S(50)=0.95232±0.00001 (σ)  descriptive rate 0.000977 ms⁻¹  runtime 17 s
+  tau_1e-3  τ=0.001   S(25)=0.97587±0.00001  S(50)=0.95232±0.00001 (σ)  descriptive rate 0.000977 ms⁻¹  runtime 247 s
+  tau_1e-2  τ=0.01    S(25)=0.97587±0.00001  S(50)=0.95232±0.00001 (σ)  descriptive rate 0.000977 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 1.62, S(50) rel diff = +3.66e-06
+  τ check tau_1e-3 vs 1e-2: max |z| = 1.80, S(50) rel diff = -2.77e-06
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 7.17e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.0015
+  default   τ=0.04    S(25)=0.96403±0.00001  S(50)=0.92935±0.00001 (σ)  descriptive rate 0.001466 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.96402±0.00001  S(50)=0.92934±0.00001 (σ)  descriptive rate 0.001466 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 1.63, S(50) rel diff = +5.60e-06
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 7.45e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.002
+  default   τ=0.04    S(25)=0.95233±0.00002  S(50)=0.90693±0.00002 (σ)  descriptive rate 0.001954 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.95232±0.00001  S(50)=0.90692±0.00002 (σ)  descriptive rate 0.001954 ms⁻¹  runtime 58 s
+  τ check default  vs 1e-2: max |z| = 1.64, S(50) rel diff = +7.61e-06
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 7.18e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.003
+  default   τ=0.04    S(25)=0.92936±0.00003  S(50)=0.86370±0.00003 (σ)  descriptive rate 0.002931 ms⁻¹  runtime 20 s
+  tau_1e-2  τ=0.01    S(25)=0.92935±0.00002  S(50)=0.86369±0.00002 (σ)  descriptive rate 0.002931 ms⁻¹  runtime 85 s
+  τ check default  vs 1e-2: max |z| = 1.67, S(50) rel diff = +1.18e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 8.32e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.005
+  default   τ=0.04    S(25)=0.88509±0.00004  S(50)=0.78337±0.00004 (σ)  descriptive rate 0.004883 ms⁻¹  runtime 25 s
+  tau_1e-3  τ=0.001   S(25)=0.88506±0.00006  S(50)=0.78334±0.00004 (σ)  descriptive rate 0.004884 ms⁻¹  runtime 266 s
+  tau_1e-2  τ=0.01    S(25)=0.88507±0.00003  S(50)=0.78335±0.00004 (σ)  descriptive rate 0.004883 ms⁻¹  runtime 85 s
+  τ check default  vs 1e-2: max |z| = 1.71, S(50) rel diff = +2.12e-05
+  τ check tau_1e-3 vs 1e-2: max |z| = 1.79, S(50) rel diff = -1.25e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 8.14e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.007
+  default   τ=0.04    S(25)=0.84294±0.00006  S(50)=0.71053±0.00005 (σ)  descriptive rate 0.006835 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.84291±0.00004  S(50)=0.71051±0.00005 (σ)  descriptive rate 0.006835 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 1.76, S(50) rel diff = +3.17e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 4.71e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.01
+  default   τ=0.04    S(25)=0.78348±0.00007  S(50)=0.61383±0.00006 (σ)  descriptive rate 0.009761 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.78344±0.00005  S(50)=0.61379±0.00006 (σ)  descriptive rate 0.009762 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 1.82, S(50) rel diff = +4.96e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 4.81e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.015
+  default   τ=0.04    S(25)=0.69363±0.00010  S(50)=0.48110±0.00007 (σ)  descriptive rate 0.014634 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.69358±0.00006  S(50)=0.48106±0.00007 (σ)  descriptive rate 0.014635 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 1.94, S(50) rel diff = +8.54e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 6.18e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.02
+  default   τ=0.04    S(25)=0.61417±0.00012  S(50)=0.37718±0.00008 (σ)  descriptive rate 0.019501 ms⁻¹  runtime 17 s
+  tau_1e-3  τ=0.001   S(25)=0.61410±0.00016  S(50)=0.37712±0.00009 (σ)  descriptive rate 0.019504 ms⁻¹  runtime 248 s
+  tau_1e-2  τ=0.01    S(25)=0.61410±0.00007  S(50)=0.37713±0.00007 (σ)  descriptive rate 0.019503 ms⁻¹  runtime 57 s
+  τ check default  vs 1e-2: max |z| = 2.05, S(50) rel diff = +1.29e-04
+  τ check tau_1e-3 vs 1e-2: max |z| = 1.75, S(50) rel diff = -3.01e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 5.52e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.03
+  default   τ=0.04    S(25)=0.48170±0.00014  S(50)=0.23201±0.00007 (σ)  descriptive rate 0.029220 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.48160±0.00009  S(50)=0.23196±0.00006 (σ)  descriptive rate 0.029224 ms⁻¹  runtime 58 s
+  τ check default  vs 1e-2: max |z| = 2.28, S(50) rel diff = +2.37e-04
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 5.00e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.04
+  default   τ=0.04    S(25)=0.37800±0.00014  S(50)=0.14287±0.00006 (σ)  descriptive rate 0.038918 ms⁻¹  runtime 17 s
+  tau_1e-2  τ=0.01    S(25)=0.37789±0.00009  S(50)=0.14281±0.00005 (σ)  descriptive rate 0.038924 ms⁻¹  runtime 58 s
+  τ check default  vs 1e-2: max |z| = 2.51, S(50) rel diff = +3.77e-04
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 5.38e-13 (tol 2.2e-11) → PASS
+
+== θ = 0.05
+  default   τ=0.04    S(25)=0.29678±0.00014  S(50)=0.08806±0.00005 (σ)  descriptive rate 0.048595 ms⁻¹  runtime 18 s
+  tau_1e-3  τ=0.001   S(25)=0.29667±0.00019  S(50)=0.08802±0.00005 (σ)  descriptive rate 0.048603 ms⁻¹  runtime 250 s
+  tau_1e-2  τ=0.01    S(25)=0.29666±0.00009  S(50)=0.08802±0.00004 (σ)  descriptive rate 0.048604 ms⁻¹  runtime 58 s
+  τ check default  vs 1e-2: max |z| = 2.74, S(50) rel diff = +5.47e-04
+  τ check tau_1e-3 vs 1e-2: max |z| = 1.66, S(50) rel diff = +2.14e-05
+  bulk: max |S(θ,1/80)/(S(θ,0)·e^(−t/80)) − 1| = 5.88e-13 (tol 2.2e-11) → PASS

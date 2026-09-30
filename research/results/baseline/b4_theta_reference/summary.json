@@ -1,0 +1,275 @@
+{
+  "bulk_all_pass": true,
+  "bulk_check": [
+    {
+      "theta": 0.0,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 2.524203068787756e-12,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.001,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 7.169820293029261e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.0015,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 7.451816941284051e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.002,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 7.176481631177012e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.003,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 8.317790900491673e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.005,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 8.141265439576273e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.007,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 4.711786516509164e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.01,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 4.810596365700803e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.015,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 6.176170685989746e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.02,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 5.524469770534779e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.03,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 5.003775171985581e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.04,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 5.380140777333509e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    },
+    {
+      "theta": 0.05,
+      "R2_bulk": 0.0125,
+      "max_abs_rel_dev": 5.883071807488705e-13,
+      "tol": 2.248201624865942e-11,
+      "pass": true
+    }
+  ],
+  "bulk_tol": 2.248201624865942e-11,
+  "geometry": "Walls(repeats=2.0, surface_relaxation=θ): planes x = k·2.0, θ on both faces",
+  "nseeds": 10,
+  "nseeds_fine": 5,
+  "nspins_per_seed": 100000,
+  "physics": "D=3.0, R1=0, R2_bulk ∈ {0, 0.0125}, permeability/off-resonance/MT off",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-09-30T14:19:42.964",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "677a7080f9ae34ef3fb34ff9139228e99215a9f8",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "b4_theta_reference.jl",
+    "src_modified": false
+  },
+  "readout_times_ms": [
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0,
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0
+  ],
+  "reference_config": "tau_1e-2",
+  "sequence": "empty_sequence() — no RF; spins start transverse=1, longitudinal=0, phase=0",
+  "tau_1e-3_agrees_within_2sem": true,
+  "thetas": [
+    0.0,
+    0.001,
+    0.0015,
+    0.002,
+    0.003,
+    0.005,
+    0.007,
+    0.01,
+    0.015,
+    0.02,
+    0.03,
+    0.04,
+    0.05
+  ],
+  "thetas_fine": [
+    0.001,
+    0.005,
+    0.02,
+    0.05
+  ],
+  "timestep_check": [
+    {
+      "theta": 0.0,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 0.0,
+      "z_at_50": 0.0,
+      "rel_diff_at_50": 0.0
+    },
+    {
+      "theta": 0.001,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.6206639578475481,
+      "z_at_50": 0.8275990845625351,
+      "rel_diff_at_50": 3.6600854260715465e-6
+    },
+    {
+      "theta": 0.001,
+      "compare": "tau_1e-3 vs tau_1e-2",
+      "max_abs_z": 1.8015116446985693,
+      "z_at_50": -0.4760899496139983,
+      "rel_diff_at_50": -2.7743434752869334e-6
+    },
+    {
+      "theta": 0.0015,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.6318693530838038,
+      "z_at_50": 0.8439250269843165,
+      "rel_diff_at_50": 5.5980728890236975e-6
+    },
+    {
+      "theta": 0.002,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.6430800465349031,
+      "z_at_50": 0.860262507461496,
+      "rel_diff_at_50": 7.608117450708107e-6
+    },
+    {
+      "theta": 0.003,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.6655172110019578,
+      "z_at_50": 0.8929718845090693,
+      "rel_diff_at_50": 1.1844660367854587e-5
+    },
+    {
+      "theta": 0.005,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.7104542723418381,
+      "z_at_50": 0.9585263789479351,
+      "rel_diff_at_50": 2.118553336383222e-5
+    },
+    {
+      "theta": 0.005,
+      "compare": "tau_1e-3 vs tau_1e-2",
+      "max_abs_z": 1.7898836820792288,
+      "z_at_50": -0.42929657143239314,
+      "rel_diff_at_50": -1.2522826026928335e-5
+    },
+    {
+      "theta": 0.007,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.7554743746225598,
+      "z_at_50": 1.024258351536738,
+      "rel_diff_at_50": 3.168720864521468e-5
+    },
+    {
+      "theta": 0.01,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.8231580876700029,
+      "z_at_50": 1.1231800091175155,
+      "rel_diff_at_50": 4.962606476976994e-5
+    },
+    {
+      "theta": 0.015,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 1.9363665803284291,
+      "z_at_50": 1.2888780485785278,
+      "rel_diff_at_50": 8.5391800921375e-5
+    },
+    {
+      "theta": 0.02,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 2.0500657907550175,
+      "z_at_50": 1.4555562085070062,
+      "rel_diff_at_50": 0.00012855269789446844
+    },
+    {
+      "theta": 0.02,
+      "compare": "tau_1e-3 vs tau_1e-2",
+      "max_abs_z": 1.7461657821101046,
+      "z_at_50": -0.25693913938303964,
+      "rel_diff_at_50": -3.0125927267143915e-5
+    },
+    {
+      "theta": 0.03,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 2.2788815808313365,
+      "z_at_50": 1.7915991353472043,
+      "rel_diff_at_50": 0.00023733854498653173
+    },
+    {
+      "theta": 0.04,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 2.509497332285671,
+      "z_at_50": 2.1308091107047233,
+      "rel_diff_at_50": 0.0003765382624782987
+    },
+    {
+      "theta": 0.05,
+      "compare": "default vs tau_1e-2",
+      "max_abs_z": 2.741807451170138,
+      "z_at_50": 2.4726999081163257,
+      "rel_diff_at_50": 0.0005467025464442887
+    },
+    {
+      "theta": 0.05,
+      "compare": "tau_1e-3 vs tau_1e-2",
+      "max_abs_z": 1.6582493391181643,
+      "z_at_50": 0.07208803953275987,
+      "rel_diff_at_50": 2.1385968559606283e-5
+    }
+  ]
+}

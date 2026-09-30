@@ -12,7 +12,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
-| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 21 | 12 | ◐ |
+| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 15 | ◐ |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 0 | ☐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
@@ -71,14 +71,15 @@ Use notebook values where available; values read off figures carry a few percent
 |---|---|---|---|---|
 | P1.4.1 | ☑ | Baseline record for every run (software versions + commit hashes, hardware, geometry with exact S/V, physics, sequence, τ_max and binding constraint, N_spins, seeds, signal, apparent T₂, σ, runtime, reference, pass/fail) | Every run has a complete entry | `baseline_record.md` — `research/baseline_record.md` |
 | P1.4.2 | ☑ | Noise floor σ for each baseline configuration, ≥ 10 seeds | σ reported per configuration | table |
-| P1.4.3 | ◐ | Save raw outputs with generating script and seed | Any result regenerable from the repo | `results/baseline/` — outputs + scripts in `research/`; not yet committed |
-| P1.4.4 | ☐ | Tag commit `baseline-v1` | Tag exists | git tag |
+| P1.4.3 | ☑ | Save raw outputs with generating script and seed | Any result regenerable from the repo | `research/results/baseline/` + scripts in `research/baseline/`, committed |
+| P1.4.4 | ☑ | Tag commit `baseline-v1` | Tag exists | git tag `baseline-v1` (2026-09-30). R1 cylinder criterion (Eq. 17 vs exact) left open: not used by Phase 2 |
+| P1.4.5 | ☑ | Wall-geometry baselines for Phase 2 (B0–B5): test suite, null run, bulk R₂, density/occupancy, θ_relax reference curves, runtime vs τ | Each recorded with settings, σ and pass/fail or reference role | `baseline_record.md` B-series; B6 deferred |
 
 ## Phase 1 deliverables
 
 - ☑ Code map with insertion points
 - ◐ R1–R4 reproduced with pass/fail (R1 cylinder criterion open)
-- ☐ Baseline record, pinned environment, `baseline-v1` tag
+- ◐ Baseline record ☑, `baseline-v1` tag ☑; pinned environment ◐ (MCMRSimulator 1.1.0 of this repo, not the paper's v1.0.0 — see P1.1.1)
 - ☑ Noise floor σ per baseline configuration
 
 ---
@@ -89,7 +90,7 @@ Use notebook values where available; values read off figures carry a few percent
 
 **Why walls and no RF.** A planar wall makes every quantity exact: the distance is a single coordinate, the offset surface is another plane, the layer volume fraction is *f* = λ/*w* with no curvature, and along a straight step the distance changes **linearly in time**, so the relaxation integral has a closed form for every profile. Removing RF removes the second chunking driver, so any error is attributable to the R₂(d) code alone. Cylinder, sphere and finite-RF checks (V5 curved, V13) move to Phase 3.
 
-**Exit criterion.** Section 2.3 passes; all four profiles pass Section 2.4; *c*_λ is calibrated and ε_R₂ fixed (Section 2.6). Tag `rd-walls-v1`.
+**Exit criterion.** Section 2.3 passes; all four profiles pass Section 2.4; *c*_h is calibrated and ε_R₂ fixed (Section 2.6). Tag `rd-walls-v1`.
 
 ## Reference configuration
 
@@ -97,37 +98,37 @@ Use this for every Phase 2 test unless a task says otherwise, so results are com
 
 | Parameter | Value | Note |
 |---|---|---|
-| Geometry | Repeating planar walls, spacing *w* = 2 µm | Layer on **one side** of each wall |
+| Geometry | Repeating planar walls, spacing *w* = 2 µm | Layer on **both faces** of every gap, matching the baseline θ_relax reference (B4). For *h* > *w*/2 the two layers overlap and their contributions add (proposal Eq. 10) |
 | D | 3 µm²·ms⁻¹ | |
-| R₂^bulk | 0 | Isolates the layer term |
+| R₂^bulk | 0 | Isolates the layer term. Bulk is switched on only in the additivity test (P2.3.11) and in one V4 case |
 | R₁ | off | |
 | θ_relax, θ_perm, susceptibility, MT | 0 / off | Recorded explicitly |
 | Sequence | No RF; spins start fully transverse; free decay | No refocusing needed since off-resonance is zero |
-| Readout times | 0, 10, 20, 30, 40, 50 ms | |
-| Debug amplitude *A* | Chosen so attenuation at 50 ms is 0.2–0.8 | Physiological values are too weak to test |
+| Readout times | 0, 5, 10, …, 50 ms | Same as the B4 reference curves |
+| Surface excess rate ΔR₂(0) | 0.1 ms⁻¹ | = (ρ/*h*)·*g*(0) (proposal Eq. 9). Must be ≥ 0.046 ms⁻¹ so every B4 θ is reachable (at *h* = *w*/2 the step profile gives *S*(50) = e^(−ΔR₂(0)·50)). Physiological values are too weak to test |
+| Timestep | τ = 1e-2 ms for comparisons with B4; the converged τ from P2.6 once known | B4 reference is converged at 1e-2 ms; the default 0.04 ms biases the baseline by up to 0.055% |
 | N_spins | 10⁵ | Adjust after P2.1.4 |
-| Seeds | 10 | |
+| Seeds | 1–10 | Same seeds as B1–B4, so runs are paired with the baseline |
 
-**Expected values, step profile, *A* = 0.5 ms⁻¹, *w* = 2 µm, t = 50 ms** — compute these before running:
+**Exact expectations** (hold for any diffusion regime; compute before running):
 
-| λ (µm) | *f* = λ/*w* | R₂ (ms⁻¹) | *M*ₓᵧ(50)/*M*ₓᵧ(0) |
-|---|---|---|---|
-| 0 | 0 | 0 | 1.000 |
-| 0.1 | 0.05 | 0.025 | 0.287 |
-| 0.2 | 0.10 | 0.050 | 0.082 |
-| 0.4 | 0.20 | 0.100 | 0.007 |
+| Case | Expected signal | Why it is exact |
+|---|---|---|
+| *h* = 0 (layer off) | identical to B1 (bulk off) or B2 (bulk on), bit for bit | no layer code runs |
+| Step profile, *h* = *w*/2, both faces | *S*(*t*) = exp(−ΔR₂(0)·*t*) per spin, to roundoff | every point of the gap lies in exactly one layer, so every path sees ΔR₂(0) all the time |
+| Any profile, R₂_bulk on | *S*_bulk+layer(*t*) = exp(−R₂_bulk·*t*)·*S*_layer(*t*), same seed, to roundoff | bulk is uniform and does not change trajectories (B2) |
 
-(Reduce *A* or *t* if the λ = 0.4 point is below the noise floor.)
+Everything else is **measured**, not predicted, and compared with the B4 reference curves (baseline θ_relax model), which are a reference rather than the true answer.
 
 ## 2.1 Design and test harness (week 3)
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P2.1.1 | ☐ | Define the parameter interface: `rho`, `lambda`, `shape` as **surface** parameters; `A = rho/lambda` derived internally, never user-settable | Interface agreed and documented | design note |
-| P2.1.2 | ☐ | Construction-time validation: reject λ < 0, ρ < 0; warn if *A*·*g*(0) exceeds the rigid-lattice ceiling; warn if λ > object size | Invalid inputs rejected with clear messages | code + tests |
-| P2.1.3 | ☐ | Test harness: runs a configuration over seeds, returns mean, σ, runtime, layer-visit count; computes ρ from a target amplitude for verification mode | Harness reproduces a Phase 1 result | `harness.jl` |
-| P2.1.4 | ☐ | Noise floor for the reference configuration at λ = 0 | σ recorded; N_spins adjusted so the λ = 0.1 → 0.2 difference exceeds 10σ | σ table |
-| P2.1.5 | ☐ | Analytic expectations script: *f*(λ), R₂, attenuation for every test below | Tables generated before any run | `expected.jl` |
+| P2.1.1 | ☐ | Define the parameter interface (proposal §3.2 III): `rho` (integrated relaxivity ρ), `h` (length scale), `shape` (*g*) as **surface** parameters; ΔR₂(0) = (ρ/*h*)·*g*(0) derived internally, never user-settable | Interface agreed and documented | design note |
+| P2.1.2 | ☐ | Construction-time validation: reject *h* < 0, ρ < 0; warn if ΔR₂(0) exceeds the rigid-lattice ceiling; warn if *h* > object size; state how overlapping layers (*h* > *w*/2) are summed (Eq. 10) | Invalid inputs rejected with clear messages | code + tests |
+| P2.1.3 | ☐ | Test harness: runs a configuration over seeds, returns mean, σ, runtime, layer-visit count; computes ρ from a target ΔR₂(0) and *h* (fixed-ΔR₂(0) mode used by V4/V5); loads the B4 reference curves | Harness reproduces B1, B2 and one B4 curve exactly (same seeds) | `harness.jl` |
+| P2.1.4 | ☐ | Noise floor of the model at ΔR₂(0) = 0.1 ms⁻¹, *h* = 0.1 and 0.5 µm (at *h* = 0 σ is exactly 0, B1) | σ of *S*(*t*) recorded per readout; N_spins adjusted so neighbouring *h* in the P2.3.4 sweep differ by > 10σ | σ table |
+| P2.1.5 | ☐ | Expectations script: the exact cases above, plus loading and interpolating the B4 reference curves (θ ↔ *S*(*t*)) | Exact tables and reference interpolation available before any run | `expected.jl` |
 
 ## 2.2 Step profile — component implementation (weeks 3–5)
 
@@ -139,28 +140,29 @@ Implement and test each component separately, in this order. Each has its own un
 | P2.2.2 | ☐ | **Crossing detection — entry** | Detect when a step segment crosses the offset plane *d* = λ inward | Constructed segments with known crossings, including ones with **neither endpoint inside the layer** | All crossings found, times exact |
 | P2.2.3 | ☐ | **Crossing detection — exit** | Same, outward | As above | All crossings found |
 | P2.2.4 | ☐ | **Crossing detection — with reflection** | Segment enters layer, reflects off wall, exits, within one step | Constructed cases | Correct sequence of sub-segments |
-| P2.2.5 | ☐ | **Trajectory segmentation** | Split each step into sub-segments at every crossing and reflection, each labelled inside/outside | Sub-segment durations sum to τ; labels correct | Exact |
-| P2.2.6 | ☐ | **Local relaxation evaluation** | ∫ΔR₂(*d*(*t*)) d*t* over each sub-segment; for the step profile this is *A*·(time inside) | Constructed segments vs hand calculation | Exact |
-| P2.2.7 | ☐ | **Transverse magnetisation update** | *M*ₓᵧ ← *M*ₓᵧ·exp(−∫ΔR₂ d*t*), applied per sub-segment in time order; phase untouched | Single spin held inside the layer decays at exactly *A* | Exact |
-| P2.2.8 | ☐ | **λ = 0 short-circuit** | No layer code executes when λ = 0 | Code-path check; runtime equal to baseline | No measurable slowdown |
+| P2.2.5 | ☐ | **Trajectory segmentation** | Split each step into sub-segments at every crossing and reflection, each labelled inside/outside | Sub-segment durations sum to τ; labels correct; bulk term summed over sub-segments = R₂_bulk·τ (no piece missed or counted twice) | Exact |
+| P2.2.6 | ☐ | **Local relaxation evaluation** | ∫ΔR₂(*d*(*t*)) d*t* over each sub-segment; for the step profile this is ΔR₂(0)·(time inside) | Constructed segments vs hand calculation | Exact |
+| P2.2.7 | ☐ | **Transverse magnetisation update** | *M*ₓᵧ ← *M*ₓᵧ·exp(−∫ΔR₂ d*t*), applied per sub-segment in time order; phase untouched | Single spin held inside the layer decays at exactly R₂_bulk + ΔR₂(0); outside at exactly R₂_bulk | Exact |
+| P2.2.8 | ☐ | **λ = 0 short-circuit** | No layer code executes when λ = 0 | Code-path check; with R₂_bulk ≠ 0, result bit-identical to B2; runtime vs B1/B5 | Bit-identical; no measurable slowdown |
 | P2.2.9 | ☐ | End-to-end single-spin trace, as in P1.2.6, with the layer on | Logged decay matches manual integration of the logged path | Exact |
 
 ## 2.3 Step profile — verification (weeks 5–6)
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P2.3.1 | ☐ | **V0b** baseline reproduction | λ = 0 vs `baseline-v1` | Within 1σ | table |
+| P2.3.1 | ☐ | **V0b** baseline reproduction | *h* = 0 vs B1 (bulk off) and B2 (bulk on), same seeds | Bit-identical | table |
 | P2.3.2 | ☐ | **V9** equilibrium density | Relaxation off; histogram spin density vs *d* | Uniform within Poisson error (cf. RMS App. A for the failure mode) | histogram |
-| P2.3.3 | ☐ | **Layer occupancy check** | Relaxation off; count spins inside the layer | Fraction = λ/*w* within Poisson error. **Validates geometry independent of relaxation code** | table |
-| P2.3.4 | ☐ | **V5 linearity** (fixed amplitude, sweep λ = 0.05–0.4 µm) | R₂ vs λ | Straight line through origin; slope = *A*/*w* within 2σ; **no curvature** | fig |
-| P2.3.5 | ☐ | **Monotonicity** | Attenuation vs λ | Strictly increasing | fig |
-| P2.3.6 | ☐ | **Mono-exponential decay** | *M*ₓᵧ(t) at six readout times, thin layer | Log-linear in *t* (fast-exchange limit) | fig |
+| P2.3.3 | ☐ | **Layer occupancy check** | Relaxation off; count spins inside the layer | Fraction within *h* of either face = 2*h*/*w* (*h* ≤ *w*/2) within Poisson error, as in B3. **Validates geometry independent of relaxation code** | table |
+| P2.3.4 | ☐ | **V5 attenuation vs *h*** (step profile, fixed surface excess rate ΔR₂(0), both faces) | (a) **Exact end point:** *h* = *w*/2, where every point of the gap lies in exactly one layer, so every spin decays at exactly ΔR₂(0) whatever its path. (b) **Characterisation:** sweep *h* = 0.05 – 1.0 µm; record *S*(*t*) vs *h* at all readouts, mean ± σ, seeds 1–10 | (a) *S*(*t*) = exp(−ΔR₂(0)·*t*) to the roundoff bound, per spin and ensemble. (b) Curve recorded with σ; **no functional form assumed** (not a linearity test) | table + fig |
+| P2.3.5 | ☐ | **Monotonicity** (proposal §3.2 VI) | Attenuation vs *h* from P2.3.4(b), fixed profile and fixed ΔR₂(0) | Attenuation strictly increasing with *h*: each step up in *h* increases 1 − *S*(50) by more than 2σ of the difference | fig |
+| P2.3.6 | ☐ | **Decay shape** | ln *S*(*t*) over all readouts, for each *h* in P2.3.4(b) | Characterisation, no assumed form: record the curvature of ln *S*(*t*) vs *h* with σ, and compare with the curvature of the matched B4 curve | fig |
 | P2.3.7 | ☐ | **V11** intersection vs endpoint detection | Run both methods at τ = 1 µs | Endpoint method under-counts; bias quantified | table |
-| P2.3.8 | ☐ | **V10** Route A cross-check | Same step profile built from perfectly permeable walls with per-compartment R₂ | Within 2σ of Route B | table |
-| P2.3.9 | ☐ | **V4** λ → 0 limit | λ decreasing, ρ fixed, vs baseline θ_relax result (ρ = θ_relax√(D/π)) | Converges within 2σ | fig |
+| P2.3.8 | ✖ | **V10** Route A cross-check — *deferred to future work (decision 2026-09-30)* | Same step profile built from perfectly permeable walls with per-compartment R₂ | Within 2σ of Route B | table |
+| P2.3.9 | ☐ | **V4 fit *h*\*(θ) to the baseline** | For each θ in the B4 reference set (τ = 1e-2 ms curves): step profile, fixed ΔR₂(0) (≥ 0.046 ms⁻¹ so every θ is reachable, e.g. 0.1 ms⁻¹), same seeds 1–10 and 10⁵ spins as B4; find *h*\* minimising Σₜ[(*S*_model − *S*_θ)/σ]² over the readouts; bulk off, then one θ repeated with R₂_bulk = 1/80 | *h*\*(θ) found for every θ in the grid, with its uncertainty and the residual at every readout. **The baseline is a reference, not the truth:** residuals are reported as the difference between the two models, not as pass/fail | fig + table |
+| P2.3.11 | ☐ | **Additivity** R₂_total = R₂_bulk + ΔR₂(*d*) | Same seeds, *h* = 0.2 µm, R₂_bulk = 0 and 1/80 ms⁻¹ | *S*_bulk+layer(*t*) = exp(−R₂_bulk·*t*)·*S*_layer(*t*) to the roundoff bound (as in B2/B4) | table |
 | P2.3.10 | ☐ | **Tag** `rd-step-v1` | — | Tag exists | git tag |
 
-**Gate:** do not start 2.4 until P2.3.3 and P2.3.4 pass. Failure there means distance or segmentation is wrong, and every later profile would inherit it.
+**Gate:** do not start 2.4 until P2.3.3, P2.3.4(a) (exact *h* = *w*/2 end point) and P2.2.9 (single-spin trace) pass. Failure there means distance or segmentation is wrong, and every later profile would inherit it.
 
 ## 2.4 Additional profiles (weeks 6–8)
 
@@ -183,12 +185,12 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 |---|---|---|---|---|
 | P2.4.1 | ☐ | Shape-function module: *g*, its closed-form integral along a linear *d*(*t*), and *g*(0) for each profile | Unit tests vs symbolic or high-order numerical integration | `profiles.jl` |
 | P2.4.2 | ☐ | Normalisation check: numerically integrate each *g* | ∫*g* = 1 to 10⁻⁸ | table |
-| P2.4.3 | ☐ | Linear profile end-to-end | Passes P2.3.3–P2.3.6 equivalents | fig |
+| P2.4.3 | ☐ | Linear profile end-to-end | Single-spin trace exact (P2.2.9); P2.3.4(b)–P2.3.6 and P2.3.11 equivalents (the exact *h* = *w*/2 end point applies to the step profile only) | fig |
 | P2.4.4 | ☐ | Polynomial *n* = 2, 3 end-to-end | As above | fig |
 | P2.4.5 | ☐ | Exponential end-to-end, with truncation recorded | As above | fig |
 | P2.4.6 | ☐ | Numerical-quadrature path (midpoint vs trapezoid, adaptive, tolerance ε_R₂) for profiles without a closed form | Agrees with closed form at small ε_R₂ | code |
-| P2.4.7 | ☐ | **Slope-ratio test** — fixed wall value *A*, sweep λ; each profile's R₂ vs λ slope relative to step | Ratios = *k*ₕ = ∫*h*: step 1, linear 1/2, poly *n* 1/(*n*+1), exponential 1 — within 2σ | fig + table |
-| P2.4.8 | ☐ | Step vs exponential cross-check (same *k*ₕ = 1) | Identical within 2σ in the thin-layer limit | table |
+| P2.4.7 | ☐ | **V4 per profile** — fit *h*\*(θ) to the B4 reference for each profile, fixed ΔR₂(0) | *h*\*(θ) with uncertainty and per-readout residuals for every profile; residuals reported, not pass/fail | fig + table |
+| P2.4.8 | ☐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | fig |
 | P2.4.9 | ☐ | *(optional)* Power law and half-Gaussian | As P2.4.3 | fig |
 | P2.4.10 | ☐ | Tag `rd-profiles-v1` | Tag exists | git tag |
 
@@ -198,8 +200,8 @@ Characterisation mode: **ρ fixed**, same reference configuration for every prof
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P2.5.1 | ☐ | Fixed ρ, λ/*w* ≪ 1 (e.g. 0.01–0.05), all profiles | Record the level of agreement; expected to be within noise (only the zeroth moment survives) | table |
-| P2.5.2 | ☐ | Fixed ρ, sweep λ/*w* from 0.01 to 0.5, all profiles | Curves of apparent R₂ vs λ/*w* per profile | fig |
+| P2.5.1 | ☐ | Fixed ρ, λ/*w* ≪ 1 (e.g. 0.01–0.05), all profiles | Fixed ρ **and** fixed *h* (proposal §3.2 aim). Record the level of agreement between profiles with σ; no expected outcome assumed | table |
+| P2.5.2 | ☐ | Fixed ρ, sweep λ/*w* from 0.01 to 0.5, all profiles | Curves of *S*(*t*) (and a descriptive rate) vs *h*/*w* per profile | fig |
 | P2.5.3 | ☐ | Report centroid λ*ū* alongside λ for each profile (step 0.5λ, linear 0.33λ, poly *n* λ/(*n*+2), exponential 1.0λ) | Centroid column in every shape table | table |
 | P2.5.4 | ☐ | Replot P2.5.2 against centroid instead of λ | Note whether shape differences shrink | fig |
 | P2.5.5 | ☐ | Summary: where (if anywhere) profiles separate beyond 3σ on walls | Written paragraph with numbers | results note |
@@ -214,11 +216,11 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P2.6.1 | ☐ | **V1** timestep plateau | Step profile, λ = 0.1 µm; τ from 10⁻⁷ to 10⁻¹ ms, 3 per decade | Plateau found; halving τ changes signal < 1σ; **large-τ bias has predicted sign (too little attenuation)** | fig |
-| P2.6.2 | ☐ | **V2** λ² scaling | Repeat at λ = 0.05, 0.1, 0.2 µm; plot τ_conv vs λ²/D | Line through origin; slope = *c*_λ | fig + *c*_λ |
+| P2.6.1 | ☐ | **V1** timestep plateau | Step profile, *h* = 0.1 µm; τ from 10⁻⁵ to 10⁻¹ ms, 3 per decade (B5: 10⁻⁵ ms costs ≈ 2 h per seed at 10⁵ spins × 50 ms, so use 10⁴ spins or a shorter sequence below 10⁻⁴ ms). If no plateau by 10⁻⁵ ms, record that and restrict *h* (see risks) | Plateau found; halving τ changes signal < 1σ; large-τ bias has the sign expected in proposal §3.2 V (too little attenuation) | fig |
+| P2.6.2 | ☐ | **V2** *h*² scaling | Repeat at *h* = 0.05, 0.1, 0.2 µm; plot τ_conv vs *h*²/D (proposal Eq. 11) | Line through origin; slope = *c*_h | fig + *c*_h |
 | P2.6.3 | ☐ | **V3** 1/D scaling | λ = 0.1 µm, D = 1, 3, 6 | τ_conv ∝ 1/D | fig |
-| P2.6.4 | ☐ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_λ depends on shape; if so, report per shape or use the most demanding | table |
-| P2.6.5 | ☐ | Adopt constraint τ ≤ *c*_λλ²/D with one-decade margin; add to τ_max selection | Constraint active; report which term binds | code |
+| P2.6.4 | ☐ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_h depends on shape; if so, report per shape or use the most demanding | table |
+| P2.6.5 | ☐ | Adopt constraint τ ≤ *c*_h·*h*²/D with one-decade margin; add to τ_max selection | Constraint active; report which term binds | code |
 
 **Decision point:** if V2 does not give λ² scaling, test τ_conv against λ/ρ (the timescale 1/ΔR₂). Re-derive the constraint before adopting it.
 
@@ -233,20 +235,20 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P2.6.8 | ☐ | Runtime vs τ | Wall-clock per spin per ms of sequence, for the V1 sweep | Cost curve alongside accuracy curve | fig |
+| P2.6.8 | ☐ | Runtime vs τ | Wall-clock per spin per ms of sequence, for the V1 sweep; ratio to the old code at the same τ (B5) | Cost curve alongside accuracy curve | fig |
 | P2.6.9 | ☐ | Runtime: closed form vs quadrature | Same configuration, both paths | Speed-up quantified | table |
-| P2.6.10 | ☐ | Runtime vs λ at converged τ | λ = 0.01–0.5 µm | Confirms feasible working range (proposal §5.4) | table |
-| P2.6.11 | ☐ | Noise cost at fixed budget | Fewer spins required by smaller τ → σ increase (√ ratio) | σ penalty tabulated per λ | table |
+| P2.6.10 | ☐ | Runtime vs *h* at converged τ | *h* = 0.01–0.5 µm | Confirms feasible working range (proposal Table 1, risk "excessive timestep cost") | table |
+| P2.6.11 | ☐ | Noise cost at fixed budget | Fewer spins required by smaller τ → σ increase (√ ratio) | σ penalty tabulated per *h* | table |
 | P2.6.12 | ☐ | Accuracy–cost summary | One figure: error vs runtime, points labelled by τ and ε_R₂ | Recommended settings stated | fig + note |
 | P2.6.13 | ☐ | Tag `rd-walls-v1` | Tag exists | git tag |
 
 ## Phase 2 deliverables
 
 - ☐ R₂(d) implementation on walls, all components unit-tested
-- ☐ Step profile verified (V0b, V4, V5, V9, V10, V11, occupancy)
-- ☐ Linear, polynomial (*n* = 2, 3) and exponential profiles implemented and verified; slope-ratio test passed
+- ☐ Step profile verified (V0b, V5 exact end point, V9, V11, occupancy) and characterised (V5 attenuation vs *h*, monotonicity, V4 *h*\*(θ) fit to the baseline). V10 deferred to future work
+- ☐ Linear, polynomial (*n* = 2, 3) and exponential profiles implemented and verified; *h*\*(θ) fitted for every profile
 - ☐ Preliminary shape comparison at fixed ρ on walls
-- ☐ Calibrated *c*_λ, chosen ε_R₂, accuracy–cost figure
+- ☐ Calibrated *c*_h, chosen ε_R₂, accuracy–cost figure
 - ☐ Tags `rd-step-v1`, `rd-profiles-v1`, `rd-walls-v1`
 
 ## Phase 2 risks
@@ -255,10 +257,10 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 |---|---|---|
 | Endpoint-based detection slips in | P2.2.2 test with neither endpoint inside fails | Use segment–plane intersection only |
 | Density artefact near wall mimics relaxation | P2.3.2 non-uniform | Fix reflection handling before any relaxation test |
-| Signal differences below noise | P2.1.4 shows 10σ not reachable | Raise *A* (verification mode) or N_spins |
-| τ_conv too small to be practical | P2.6.1 plateau below 10⁻⁶ ms at λ = 0.1 µm | Restrict λ range; consider escape-from-a-layer approach |
+| Signal differences below noise | P2.1.4 shows 10σ not reachable | Raise ΔR₂(0) (verification mode) or N_spins |
+| τ_conv too small to be practical | P2.6.1 no plateau by 10⁻⁵ ms at *h* = 0.1 µm (B5: ≈ 2 h per seed there) | Restrict *h* range; consider escape-from-a-layer approach (proposal Table 1) |
 | Exponential tail truncation contaminates comparison | P2.4.5 loss > 1% | Keep λ ≤ *w*/5 or increase *w* |
-| Shape-dependent *c*_λ | P2.6.4 | Use the most demanding shape's constraint |
+| Shape-dependent *c*_h | P2.6.4 | Use the most demanding shape's constraint |
 
 ---
 
@@ -267,7 +269,7 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | Week | Dates | Planned | Completed | Blockers / notes |
 |---|---|---|---|---|
 | 1 | 21–25 Sep | P1.1, P1.2.1–P1.2.3 | | |
-| 2 | 28 Sep – 2 Oct | P1.2.4–P1.2.7, P1.3, P1.4 | | |
+| 2 | 28 Sep – 2 Oct | P1.2.4–P1.2.7, P1.3, P1.4 | P1.2.4–P1.2.7, R1–R4, P1.4.1–P1.4.4, wall baselines B0–B5 | R1 cylinder criterion open; V4/V5 and fast-diffusion-based Phase 2 tests rewritten as fitting/characterisation (2026-09-30) |
 | 3 | 5–9 Oct | P2.1, P2.2.1 | | |
 | 4 | 12–16 Oct | P2.2.2–P2.2.6 | | |
 | 5 | 19–23 Oct | P2.2.7–P2.2.9, P2.3.1–P2.3.4 | | |

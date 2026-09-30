@@ -16,6 +16,33 @@ Baseline results of the **unmodified** MCMRSimulator. Each run lists every setti
 | P1.3.3 | **R3** timestep plateau, ADC vs τ | Supp. Fig. S1 | plateau onset near τ ≈ 0.01 ms | **PASS**: onset (2σ) 6.3 × 10⁻³ – 2.5 × 10⁻² ms in all 4 packings |
 | P1.3.4 | **R4** correction schemes, 1D slab | Supp. Fig. S2C | log scheme flat to τ ≈ 10⁻³ ms; record θ_relax | **PASS**: flat within 2σ to 3.3 × 10⁻³ ms (toy) and 1.25 × 10⁻² ms (MCMR) at θ = 10; MCMR matches the toy log scheme at every τ |
 | P1.3.5 | R5 (optional) | Fig. 5 | — | not run |
+| B0 | Existing test suite (collisions, evolve, permeability, transfer, known_sequences) | package tests | all pass | **PASS**: 442 / 442 |
+| B1 | Wall reference config, null run (no relaxation) | exact: M⊥ = 1 | \|M⊥/M⊥0 − 1\| ≤ 1e-12 | **PASS**: deviation exactly 0 at every readout, both τ |
+| B2 | Wall reference config, bulk R2 only | exact: exp(−R2·t) | roundoff bound (n_steps + N)·ε; positions == R2 = 0 | **PASS** for R2 = 1/80 – 0.1 ms⁻¹: 2.6e-12 ensemble, 3e-14 per spin; trajectories unchanged by R2 |
+| B3 | Wall reference config, density profile and layer occupancy | uniform, fraction = λ/w | \|z\| ≤ 2 (occupancy), \|z_χ²\| ≤ 3 (profile) | **PASS** at τ = 0.04, 1e-2, 1e-3, 1e-4 ms: no density artefact near the walls, largest occupancy deviation 1.4% (z = 2.2), no systematic sign |
+| B4 | Baseline θ_relax reference curves S_θ(t) on walls (both faces), θ = 0, 0.001–0.05 | reference (not a formula) | τ-converged: τ = 1e-3 vs 1e-2 within 2 SEM; bulk factorisation ≤ roundoff bound | **Reference set** at τ = 1e-2 ms; bulk **PASS** (2.5e-12); default τ = 0.04 ms shows a small systematic bias (≤ +0.055% in S, up to 2.7 SEM at θ = 0.05), so it is not used as reference |
+| B5 (slim) | Runtime vs τ, walls, θ = 0 and 0.01 | — (cost reference) | — | **Done**: per-step cost flat at ≈ 0.016 µs (8 threads); 1e5 spins × 50 ms costs 81 s / 13 min / 2.1 h per seed at τ = 1e-3 / 1e-4 / 1e-5 ms |
+
+## Baseline test index (what, why, result)
+
+All tests run on unmodified `src/`. P1.x tests reproduce the paper (Phase 1). B-tests are the wall-geometry baselines for Phase 2 (reference configuration: `Walls(repeats=2)`, D = 3, no RF, free decay, readouts 0–50 ms).
+
+| ID | What is tested | Why (what it protects later) | Result | Section |
+|---|---|---|---|---|
+| P1.2.6 | One cylinder, 100 spins, spin echo; one spin's position and M logged every step | Confirms the reading of the code (step draw, reflection, `θ_relax` application) before editing it | PASS (max rel. error 6e-16) | [trace](#run-p126-single-spin-trace) |
+| R1 slab | Surface relaxation `θ_relax` on walls, w = 2 µm, vs Eq. 17 | Paper reproduction. Phase 2 uses B4 (reference curves in the wall reference config) instead | PASS (−1.87σ; +0.53σ vs Brownstein–Tarr) | [R1](#run-r1-surface-relaxation-p131) |
+| R1 cylinder | Same, one cylinder a = 1 µm | Curved-geometry reference for Phase 3 | −3.15σ vs Eq. 17, −0.17σ vs exact BT (Eq. 17 bias 0.08%). **Decision open** | [R1](#run-r1-surface-relaxation-p131) |
+| R2 | Compartment T₂ in myelinated white matter | Confirms the full simulator reproduces a published result with realistic settings | PASS (≤ 4.9% vs digitised Fig. 8) | [R2](#run-r2-compartment-t-in-myelinated-white-matter-p132) |
+| R3 | Extra-axonal ADC vs τ, 4 cylinder packings | Where diffusion/collision results stop depending on τ; the default τ sits at the knee for tight packings | PASS (onset 6e-3–2.5e-2 ms) | [R3](#run-r3-timestep-plateau-of-extra-axonal-adc-p133) |
+| R4 | Linear / logarithmic / log+return correction schemes, 1D slab | Identifies the `θ_relax` scheme used (logarithmic), i.e. what the B4 reference curves are made of | PASS (log scheme flat to 1.25e-2 ms at θ = 10) | [R4](#run-r4-surface-relaxation-correction-schemes-1d-slab-p134) |
+| R5 | Diffusion vs Mitra / van Gelderen (optional) | — | not run | — |
+| **B0** | Existing package tests for collisions, evolve, permeability, transfer, known_sequences | A test that fails after the R₂(d) change must be one you broke, not one already failing | **PASS** 442 / 442 | [B0](#run-b0-existing-test-suite) |
+| **B1** | Wall reference config with nothing relaxing: M⊥(t)/M⊥(0) and phase; τ_max chosen; runtime | Target for V0b (λ = 0 must reproduce this) and for P2.2.8 (λ = 0 must not slow down) | **PASS**: exactly 1 and 0°; τ_max = 0.04 ms (tortuosity); 0.013 µs per spin-step | [B1](#run-b1-wall-reference-configuration-null-run) |
+| **B2** | Bulk R2 alone (1/80, 0.025, 0.05, 0.1 ms⁻¹) in the reference config: signal, phase, trajectories, runtime | Fixes how the old code applies R2_bulk, the first term of R2_total = R2_bulk + ΔR2(d). Phase 2 must keep it intact (P2.2.5, P2.2.7, P2.2.8, V0b, additivity test) | **PASS**: S = exp(−R2·t) to 2.6e-12 (per spin 3e-14); positions bit-identical to R2 = 0; runtime +0–6% | [B2](#run-b2-bulk-r2-in-the-wall-reference-configuration) |
+| **B3** | Density across the gap and fraction of spins within λ of each face, relaxation off, 4 timesteps | The layer relaxes a spin only while it is within h of a face, so the time spins spend there depends on the density near the wall. If the old code distorts that density, every Phase 2 result inherits it. Baseline for V9 / P2.3.3 (the Phase 2 gate) | **PASS** at all τ; no near-wall artefact even at τ = 0.04 ms (step 0.49 µm > λ) | [B3](#run-b3-density-and-layer-occupancy-between-walls) |
+| **B4** | Baseline reference curves S_θ(t), θ = 0 and 0.001–0.05, walls, both faces; timestep convergence; bulk factorisation | The curves the R₂(d) model is fitted to (h\*(θ) at fixed ΔR₂(0)); θ = 0 is the no-surface-relaxation reference. Also a non-zero noise floor for P2.1.4 | **Reference set** (τ = 1e-2 ms, converged: τ = 1e-3 within 2 SEM). S(50) spans 0.95 → 0.088. Bulk factorises to 2.5e-12. Default τ = 0.04 ms slightly under-attenuates (≤ 0.055%) | [B4](#run-b4-baseline-reference-curves-s_θt) |
+| **B5** (slim) | Runtime of the old code vs τ = 1e-1 … 1e-5 ms, θ = 0 and 0.01 | Cost reference for the timestep study (P2.6) and feasibility of small τ required by τ ≤ c_h·h²/D (proposal Eq. 11). Signal vs τ is covered by B4 | **Done**: 0.0155–0.017 µs per spin-step for τ ≤ 1e-2 (flat); surface relaxation adds ≤ 2%. One Phase 2 seed (1e5 spins, 50 ms): 81 s at 1e-3, 13 min at 1e-4, 2.1 h at 1e-5 | [B5](#run-b5-slim-runtime-vs-timestep) |
+| B6 | Route A: layer built from permeable boundaries + inside R2 | Independent check on the step profile (V10). Walls have no inside volume, so this probably needs meshes | **deferred to future work** (decision 2026-09-30) | — |
 
 **Two findings about the paper's figure notebooks** (they affect how references are read):
 1. **Supp. Fig. S1 x-axis mislabelled.** `turtuosity.ipynb` computes ADC at τ = 10^(−3:0.2:1) (cell 17) but plots it against τ = 10^(−4:0.25:1) (cell 18). The saved figure is therefore shifted: its first point is τ = 10⁻³ ms, not 10⁻⁴. R3 is compared at the true τ.
@@ -46,6 +73,13 @@ MYELIN=true  julia --project=research/baseline -t 8 research/baseline/r2_compart
 julia --project=research/baseline -t 8 research/baseline/r3_timestep_plateau.jl
 julia --project=research/baseline -t 8 research/baseline/r3b_geometry_realisation.jl
 julia --project=research/baseline -t 8 research/baseline/r4_correction_schemes.jl
+# Wall baselines for Phase 2 (≈ 30 min):
+julia --project -e 'using Pkg; Pkg.test("MCMRSimulator", test_args=["collisions","evolve","permeability","transfer","known_sequences"])'   # B0
+julia --project=research/baseline -t 8 research/baseline/b1_walls_null.jl
+julia --project=research/baseline -t 8 research/baseline/b2_walls_bulk_r2.jl
+julia --project=research/baseline -t 8 research/baseline/b3_walls_density.jl
+julia --project=research/baseline -t 8 research/baseline/b4_theta_reference.jl   # ≈ 45 min
+julia --project=research/baseline -t 8 research/baseline/b5_runtime_vs_tau.jl    # ≈ 3 min
 # R2 figure comparison (needs a clone of mcmr_paper_figures):
 python3 research/baseline/r2_digitise_notebook_fig8.py <mcmr_paper_figures>/Figure_8_9/gradient_spin_echo.ipynb
 ```
@@ -79,7 +113,7 @@ Script [r1_surface_relaxation.jl](baseline/r1_surface_relaxation.jl) → [result
 | Eq. 17 / BT − 1 | 1.09 × 10⁻³ | 8.1 × 10⁻⁴ |
 | Runtime (10 seeds) | 14 s | 61 s |
 
-**Interpretation.** The simulator reproduces surface relaxation to 0.03% of the exact solution. The cylinder "failure" against Eq. 17 is a real, resolvable difference between Eq. 17 (the first-order fast-diffusion approximation, κ = ρa/D = 3.3 × 10⁻³) and the exact eigenvalue. It is not a simulator error. For Phase 2's V4 (λ → 0 limit), compare against the exact Brownstein–Tarr rate, or choose κ small enough that the Eq. 17 bias is below σ.
+**Interpretation.** The simulator reproduces surface relaxation to 0.03% of the exact solution. The cylinder "failure" against Eq. 17 is a real, resolvable difference between Eq. 17 (the first-order fast-diffusion approximation, κ = ρa/D = 3.3 × 10⁻³) and the exact eigenvalue. It is not a simulator error. (Phase 2 does not compare against Eq. 17 or Brownstein–Tarr: the R₂(d) model is fitted to the baseline reference curves of B4 instead.)
 
 ---
 
@@ -207,6 +241,189 @@ Script [p1_2_6_single_spin_trace.jl](baseline/p1_2_6_single_spin_trace.jl) → [
 | τ | fixed 0.01 ms (`TimeStep(0.01, Inf)`) |
 | N_spins / seed | 100 / `Random.seed!(20260929)` |
 | Outcome | no-RF step prediction max relative error 6.2e-16 (a) / 5.1e-16 (b); 112 / 121 collisions; **PASS** |
+
+---
+
+# Wall-geometry baselines for Phase 2 (B-series)
+
+Run 2026-09-30 on HEAD `677a708`, `src/` unmodified (`provenance.src_modified = false`), same environment as above.
+
+**Reference configuration** (Phase 2 tracker) used by B1 and B3:
+
+| Field | Value |
+|---|---|
+| Geometry | `Walls(repeats=2)`: planes x = 2k µm, **normal along x**, both faces present, no surface parameters |
+| Physics | D = 3 µm²/ms; R1 = R2 = 0; θ_relax = 0; permeability 0; off-resonance 0; no MT / sticking |
+| Sequence | none: `mr.SequenceParts.empty_sequence()` (no RF, no gradients). Spins start with `transverse=1, longitudinal=0, phase=0` via `Snapshot` keywords, i.e. free decay from t = 0 |
+| Spins | uniform in a ±500 µm box (`Snapshot(N, sim, 500)`); `Random.seed!(seed)` before each snapshot, so the same seed gives the same initial positions in every configuration |
+| Default τ_max | **0.04 ms**, set by tortuosity 0.03·w²/D with size_scale = w = 2 µm; step length √(2Dτ) = 0.49 µm |
+
+## Run B0: existing test suite
+
+Output → [results/baseline/b0_test_suite/](results/baseline/b0_test_suite/) (`run.log`, `summary.md`)
+
+| Field | Value |
+|---|---|
+| Command | `julia --project -e 'using Pkg; Pkg.test("MCMRSimulator", test_args=["collisions","evolve","permeability","transfer","known_sequences"])'` |
+| Why these suites | They cover the code the R₂(d) change will touch or depend on: wall collisions and reflection, the evolve loop, permeable surfaces (Route A), surface relaxation / MT (`transfer`, including `θ_relax` on walls) and known-signal sequences |
+| Result | **442 / 442 pass**, 0 fail / error / broken. Test time 4 min 36 s (collisions 55 s, evolve 6 s, permeability 25 s, transfer 55 s, known_sequences 136 s); 9 min 23 s wall clock including precompilation |
+
+Not run: `meshes`, `offresonance`, `radio_frequency`, `hierarchical_mri`, `various`, `subsets`, `swc`, `plots`, `cli`. They do not touch wall relaxation, and `plots` needs a display.
+
+## Run B1: wall reference configuration, null run
+
+Script [b1_walls_null.jl](baseline/b1_walls_null.jl) → [results/baseline/b1_walls_null/](results/baseline/b1_walls_null/)
+
+**What / why.** The reference configuration with nothing that relaxes. The unmodified simulator must return M⊥(t)/M⊥(0) = 1 and phase 0 exactly. This is the reference V0b (P2.3.1) compares against at λ = 0. The runtime is the reference for P2.2.8 (the λ = 0 short-circuit must add no measurable cost) and the starting point of the cost study (P2.6.8).
+
+| Field | default τ | τ = 1e-3 ms |
+|---|---|---|
+| τ_max / binding | 0.04 ms / tortuosity | 0.001 ms / user-set |
+| Readouts | 0, 10, 20, 30, 40, 50 ms | same |
+| N_spins / seeds | 100 000 / 1–10 | 10 000 / 1–3 (runtime scaling only) |
+| max \|M⊥/M⊥0 − 1\| | **0** | **0** |
+| max \|phase\| | **0°** | **0°** |
+| Runtime per seed (excl. first, which includes compilation) | 1.62 s | 8.10 s |
+| µs per spin per ms of sequence | 0.324 | 16.2 |
+| µs per spin-step | 0.0130 | 0.0162 |
+| Outcome | **PASS** | **PASS** |
+
+**Interpretation.** With every relaxation parameter zero, the old code leaves M⊥ and its phase untouched, bit for bit. Any non-zero deviation at λ = 0 after the modification is therefore introduced by the new code. Cost is about 0.013–0.016 µs per spin-step on 8 threads. The small-τ run has 10× fewer spins, so it uses the threads less efficiently and its per-step cost is slightly higher. Estimate for later sweeps: a run costs about N_spins × (T/τ) × 0.015 µs, e.g. 10⁵ spins × 50 ms at τ = 1e-5 ms ≈ 12 min per seed.
+
+## Run B2: bulk R2 in the wall reference configuration
+
+Script [b2_walls_bulk_r2.jl](baseline/b2_walls_bulk_r2.jl) → [results/baseline/b2_walls_bulk_r2/](results/baseline/b2_walls_bulk_r2/)
+
+**What / why.** The proposed model is R2_total = R2_bulk + ΔR2(d) (proposal Eq. 5). This run fixes how the unmodified simulator applies R2_bulk on its own, so Phase 2 can show the new code leaves that term intact. The old code multiplies M⊥ by exp(−R2·Δt) once per free sub-segment ([relax.jl:60-63](../src/relax.jl#L60-L63)), and bulk R2 does not enter τ_max.
+
+| Field | Value |
+|---|---|
+| Configuration | reference config (B1) with global `R2` = R2_bulk |
+| R2_bulk | 1/80 (T₂ = 80 ms), 0.025, 0.05, 0.1 ms⁻¹ |
+| τ_max | 0.04 ms for every R2_bulk (unchanged from B1) |
+| N_spins / seeds | 100 000 / 1–10; readouts 0, 10, …, 50 ms |
+| Criteria | ensemble \|S/exp(−R2·t) − 1\| ≤ (n_steps + N)·ε = 2.2 × 10⁻¹¹; per spin ≤ 10⁻¹³; phase ≤ 10⁻⁹°; spin positions at 50 ms `==` the R2 = 0 run (seed 1) |
+
+| R2_bulk (ms⁻¹) | Ensemble max rel. deviation | Per-spin max rel. deviation | Phase | Positions identical to R2 = 0 | Runtime vs R2 = 0 | Outcome |
+|---|---|---|---|---|---|---|
+| 0.0125 | 2.5 × 10⁻¹² | 2.1 × 10⁻¹⁴ | 0 | yes | 1.00 | **PASS** |
+| 0.025 | 1.9 × 10⁻¹² | 2.0 × 10⁻¹⁴ | 0 | yes | 1.03 | **PASS** |
+| 0.05 | 2.6 × 10⁻¹² | 2.6 × 10⁻¹⁴ | 0 | yes | 1.06 | **PASS** |
+| 0.1 | 2.6 × 10⁻¹² | 3.0 × 10⁻¹⁴ | 0 | yes | 1.04 | **PASS** |
+
+**Criterion change (recorded).** The first run used an ensemble tolerance of 10⁻¹² and reported FAIL at 2.5 × 10⁻¹². Diagnosis (seed 1, R2 = 1/80, t = 50 ms): every spin matches exp(−R2·t) to ≤ 2 × 10⁻¹⁴ (the 54 distinct per-spin values come from different numbers of sub-segments per step, i.e. repeated multiplication); the exact mean of the per-spin values deviates by 1.5 × 10⁻¹⁴; MCMR's own ensemble summation (`SpinOrientationSum`) returns 1.8 × 10⁻¹². The 10⁻¹² tolerance was below the floating-point roundoff of that summation. The criterion was replaced by the roundoff bound (n_steps + N)·ε plus the per-spin check, and the run repeated.
+
+**Interpretation.**
+- Bulk R2 is applied exactly (to roundoff) and does not change the phase.
+- It does not change the random trajectories: with the same seed, positions are bit-identical to R2 = 0. In Phase 2, bulk-on and bulk-off runs with the same seed can therefore be compared spin by spin, and the additivity check S(bulk + layer) = exp(−R2_bulk·t)·S(layer) can be tested to roundoff, not to 2σ.
+- Runtime differences (0–6%) are run-to-run timing noise; no criterion is attached to them.
+
+## Run B3: density and layer occupancy between walls
+
+Script [b3_walls_density.jl](baseline/b3_walls_density.jl) → [results/baseline/b3_walls_density/](results/baseline/b3_walls_density/) (`occupancy.csv`, `histogram.csv`, `histogram_chi2.csv`, figure `b3_walls_density.png`)
+
+**What / why.** The layer relaxes a spin only while it is within λ (= h) of a face, so the relaxation it produces depends on how much time spins spend near the wall, and therefore on the density there. If the old code's reflection piles spins up at the wall or depletes them, every layer result inherits that distortion, whatever the new code does. Reflection errors show up within about one step length of a wall. At the default τ that step length (0.49 µm) is longer than every λ tested. This run checks, on the old code and with relaxation off, that (a) the density profile across the gap is flat and (b) the fraction within λ of each face is λ/w. It is the baseline for V9 (P2.3.2) and the occupancy check (P2.3.3, the Phase 2 gate).
+
+| Field | Value |
+|---|---|
+| Observable | u = x mod w ∈ [0, 2) µm; distance to lower face u, to upper face w − u |
+| λ | 0.05, 0.1, 0.2, 0.4 µm (f = 2.5, 5, 10, 20%) |
+| Histogram | 100 bins of 0.02 µm, pooled over seeds (10⁴ spins expected per bin, Poisson σ = 1%) |
+| N_spins / seeds | 100 000 per seed / 1–10 (10⁶ pooled) |
+| Pooled occupancy resolution (1σ, relative) | 0.62% (λ = 0.05), 0.44% (0.1), 0.30% (0.2), 0.20% (0.4) |
+| Criteria | occupancy \|z\| ≤ 2 with z = (n − Np)/√(Np(1−p)); profile χ² vs uniform \|z_χ²\| ≤ 3 and the bin touching each wall within 3σ |
+
+| τ (ms) | Step √(2Dτ) (µm) | Readouts (ms) | Profile χ²/dof range | Wall-bin z range | Occupancy outside 2σ | Worst occupancy z | Largest rel. deviation (t > 0) | Runtime (10 seeds) | Outcome |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.04 (default) | 0.49 | 0–50 | 0.82–1.27 | −1.92 … +2.61 | 2 / 48 | +2.20 | +1.37% (λ = 0.05, lower, t = 30) | 19 s | **PASS** |
+| 1e-2 | 0.245 | 0–50 | 0.78–1.10 | −1.33 … +0.61 | 1 / 48 | −2.23 | −1.39% (λ = 0.05, lower, t = 10) | 58 s | **PASS** |
+| 1e-3 | 0.078 | 0–50 | 0.89–1.21 | −1.34 … +1.16 | 0 / 48 | −1.85 | −1.09% (λ = 0.05, upper, t = 50) | 484 s | **PASS** |
+| 1e-4 | 0.025 | 0, 1, 2, 5 | 0.75–1.16 | −1.40 … +1.16 | 0 / 32 | +1.84 | +1.15% (λ = 0.05, lower, t = 5) | 469 s | **PASS** |
+
+The τ = 1e-4 ms run stops at 5 ms to keep the runtime reasonable. Spins cross the gap in w²/2D ≈ 0.7 ms, so 5 ms is about 7 mixing times. That is enough to show whether a near-wall artefact builds up.
+
+**Interpretation.**
+- The density profile is flat at every τ and readout, including the bins touching the walls. The largest bin deviations are within the 2σ band (±2%).
+- Occupancy equals λ/w at every λ, face, readout and τ. The 3 of 176 comparisons outside 2σ are fewer than the ≈ 8 expected by chance, and they have no consistent sign. The seed-to-seed scatter of the occupancy fraction matches the binomial prediction (ratio 0.8–1.1), so the spins behave as independent uniform samples.
+- **Therefore:** the unmodified reflection code produces no density artefact near walls, even when a single step (0.49 µm) is longer than the layer. The detection limit is about 1.2% (2σ) in occupancy at λ = 0.05 µm, and about 2% per 0.02 µm bin in the profile. If P2.3.2 or P2.3.3 fails after the modification, the cause is in the new code.
+
+## Run B4: baseline reference curves S_θ(t)
+
+Script [b4_theta_reference.jl](baseline/b4_theta_reference.jl) → [results/baseline/b4_theta_reference/](results/baseline/b4_theta_reference/) (`reference_curves.csv`, `timestep_check.csv`, `bulk_check.csv`, figure `b4_theta_reference.png`)
+
+**What / why.** The R₂(d) model (R2_total = R2_bulk + ΔR2(d), ΔR2(d) = (ρ/h)·g(d/h)) is fitted to the baseline θ_relax model: for each θ, Phase 2 finds the layer thickness h\*(θ) (fixed profile g, fixed surface excess rate ΔR2(0)) whose signal best matches S_θ(t), and checks that attenuation increases with h. The baseline is a **reference, not the true answer**, so this run records reference curves with Monte Carlo σ and compares them with no analytic formula. θ = 0 is the no-surface-relaxation reference (identical to B1). The run also checks that the reference does not depend on the timestep and that bulk R2 multiplies it exactly.
+
+| Field | Value |
+|---|---|
+| Geometry | `Walls(repeats=2, surface_relaxation=θ)`: θ acts on **both faces** of every gap (the R₂(d) layer will also be on both faces) |
+| Physics | D = 3; R1 = 0; R2_bulk = 0 (reference) and 1/80 ms⁻¹ (factorisation check); no permeability / off-resonance / MT |
+| Sequence | none (no RF); spins start transverse = 1; readouts 0, 5, …, 50 ms |
+| θ | 0, 0.001, 0.0015, 0.002, 0.003, 0.005, 0.007, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05 (range set by a 1-seed pilot so S(50) covers ≈ 0.95 → 0.09) |
+| τ | default 0.04 ms and 1e-2 ms for every θ (10 seeds); 1e-3 ms for θ = 0.001, 0.005, 0.02, 0.05 (5 seeds). Surface-relaxation τ bound 0.01/θ² ≥ 4 ms, never binding |
+| N_spins / seeds | 100 000 per seed; seed k gives the same initial positions in every run |
+| Reference curve | **τ = 1e-2 ms**, 10 seeds, all θ |
+| Runtime | ≈ 45 min total (default 17 s, 1e-2 57 s, 1e-3 ≈ 250 s per θ) |
+
+**Reference curves** (τ = 1e-2 ms, mean ± σ over 10 seeds; all 11 readouts in `reference_curves.csv`):
+
+| θ_relax | S(10 ms) | S(25 ms) | S(50 ms) |
+|---|---|---|---|
+| 0 | 1.00000 ± 0.00000 | 1.00000 ± 0.00000 | 1.00000 ± 0.00000 |
+| 0.001 | 0.99028 ± 0.00000 | 0.97587 ± 0.00001 | 0.95232 ± 0.00001 |
+| 0.0015 | 0.98545 ± 0.00001 | 0.96402 ± 0.00001 | 0.92934 ± 0.00001 |
+| 0.002 | 0.98065 ± 0.00001 | 0.95232 ± 0.00001 | 0.90692 ± 0.00002 |
+| 0.003 | 0.97112 ± 0.00001 | 0.92935 ± 0.00002 | 0.86369 ± 0.00002 |
+| 0.005 | 0.95234 ± 0.00002 | 0.88507 ± 0.00003 | 0.78335 ± 0.00004 |
+| 0.007 | 0.93393 ± 0.00003 | 0.84291 ± 0.00004 | 0.71051 ± 0.00005 |
+| 0.01 | 0.90700 ± 0.00004 | 0.78344 ± 0.00005 | 0.61379 ± 0.00006 |
+| 0.015 | 0.86386 ± 0.00006 | 0.69358 ± 0.00006 | 0.48106 ± 0.00007 |
+| 0.02 | 0.82282 ± 0.00008 | 0.61410 ± 0.00007 | 0.37713 ± 0.00007 |
+| 0.03 | 0.74660 ± 0.00011 | 0.48160 ± 0.00009 | 0.23196 ± 0.00006 |
+| 0.04 | 0.67758 ± 0.00013 | 0.37789 ± 0.00009 | 0.14281 ± 0.00005 |
+| 0.05 | 0.61507 ± 0.00015 | 0.29666 ± 0.00009 | 0.08802 ± 0.00004 |
+
+**Timestep check** (difference vs τ = 1e-2, in units of the combined SEM; max over readouts):
+
+| Comparison | θ | max \|z\| | S(50) relative difference | Pattern |
+|---|---|---|---|---|
+| τ = 1e-3 vs 1e-2 | 0.001, 0.005, 0.02, 0.05 | 1.80, 1.79, 1.75, 1.66 | −2.8e-6, −1.3e-5, −3.0e-5, +2.1e-5 | no consistent sign → **converged** |
+| default 0.04 vs 1e-2 | 0.001 → 0.05 | 1.62 → 2.74 (exceeds 2 from θ = 0.02) | +3.7e-6 → **+5.5e-4** | always positive, grows with θ → **small systematic bias** |
+
+Caveat: runs at different τ share initial positions (same seed), so they are positively correlated and the combined SEM somewhat overestimates the noise of the difference. The z values are therefore conservative, which makes the default-τ trend more certain, not less.
+
+**Bulk factorisation:** S(θ, R2_bulk = 1/80) / [S(θ, 0)·e^(−t/80)] − 1 ≤ 2.5 × 10⁻¹² for every θ and readout (bound 2.2 × 10⁻¹¹) → **PASS**. Adding R2_bulk in the old code multiplies the surface-relaxation signal exactly.
+
+**Interpretation.**
+- The reference set is ready: S_θ(t) at τ = 1e-2 ms, with σ ≤ 1.5 × 10⁻⁴ at every point. It covers S(50) from 1 (θ = 0) down to 0.088 (θ = 0.05), so any model attenuation in that range can be mapped to an equivalent θ by interpolation, and any θ in the grid can be used as a target for fitting h.
+- At the default τ = 0.04 ms the baseline slightly under-attenuates (S too high by up to 0.055% at θ = 0.05). This is the baseline's own timestep dependence (the per-collision loss e^(−θ√τ) is not exactly τ-independent). It is below 3 SEM, but it has a consistent sign, so the default-τ curves are **not** used as the reference.
+- For Phase 2 fitting, compare model runs against the τ = 1e-2 reference and use the same seeds (1–10) and spin count for pairing.
+- Signal noise is small here (σ/S ≈ 10⁻⁵–5 × 10⁻⁴), so h\* will be determined precisely. Differences in curve *shape* between the two models (whether one h matches all readouts) will be resolvable.
+
+## Run B5 (slim): runtime vs timestep
+
+Script [b5_runtime_vs_tau.jl](baseline/b5_runtime_vs_tau.jl) → [results/baseline/b5_runtime_vs_tau/](results/baseline/b5_runtime_vs_tau/) (`runtime.csv`)
+
+**What / why.** The R₂(d) timestep constraint τ ≤ c_h·h²/D (proposal Eq. 11) can require very small τ for thin layers. This measures the per-step cost of the unmodified code so that (a) the feasible τ range of the Phase 2 timestep study can be planned and (b) the new code's cost can later be quoted relative to the old one at the same τ. Runtime only; signal vs τ is covered by B4. (The full B5 originally planned, with signal over τ = 1e-5 – 1e-1 ms, was reduced to this after B4 showed the reference converged at τ = 1e-2 ms.)
+
+| Field | Value |
+|---|---|
+| Configuration | `Walls(repeats=2, surface_relaxation=θ)`, θ ∈ {0, 0.01}; D = 3; no RF; fixed user τ |
+| Workload | 10 000 spins × 20 000 steps per spin (simulated time T = 20 000·τ); one readout at T |
+| Timing | median of 3 timed runs after one untimed warm-up; `julia -t 8` |
+
+| τ (ms) | µs per spin-step, θ = 0 | µs per spin-step, θ = 0.01 | µs per spin per ms | One seed, 1e5 spins × 50 ms | 10 seeds |
+|---|---|---|---|---|---|
+| 1e-1 | 0.0265 | 0.0206 | 0.2–0.27 | ≈ 1 s | ≈ 15 s |
+| 1e-2 | 0.0169 | 0.0172 | 1.7 | ≈ 9 s | ≈ 1.5 min |
+| 1e-3 | 0.0163 | 0.0163 | 16 | ≈ 81 s | ≈ 14 min |
+| 1e-4 | 0.0155 | 0.0157 | 155 | ≈ 13 min | ≈ 2.2 h |
+| 1e-5 | 0.0153 | 0.0155 | 1 530 | ≈ 2.1 h | ≈ 21 h |
+
+**Interpretation.**
+- For τ ≤ 1e-2 ms the cost per spin-step is flat at ≈ 0.016 µs, so runtime is simply N_spins × (T/τ) × 0.016 µs. Surface relaxation (θ = 0.01) adds ≤ 2%.
+- At τ = 0.1 ms the per-step cost is higher (0.02–0.027 µs): each step (√(6Dτ) ≈ 1.3 µm) often hits a wall, and collision handling dominates. The θ = 0 vs 0.01 difference at that τ is within run-to-run timing variation (min–max 4.8–5.4 s).
+- **Feasibility for Phase 2 (old-code cost; the new code will add to it):** at the reference size (1e5 spins, 50 ms, 10 seeds), τ = 1e-3 ms takes ≈ 14 min and τ = 1e-4 ms ≈ 2 h, both routine. τ = 1e-5 ms takes ≈ 21 h, feasible only with fewer spins, fewer seeds or a shorter sequence. The tracker's V1 sweep down to τ = 1e-7 ms (≈ 9 days per seed at full size) is not feasible at full size.
+- With Eq. 11, the τ needed depends on c_h (still to be determined in P2.6). For example, h = 0.1 µm gives h²/D = 3.3 × 10⁻³ ms; c_h = 0.03 → τ = 1e-4 ms (13 min per seed), c_h = 0.003 → τ = 1e-5 ms (2 h per seed).
 
 ---
 

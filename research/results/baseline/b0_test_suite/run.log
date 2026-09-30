@@ -1,0 +1,953 @@
+    Updating registry at `~/.julia/registries/General`
+┌ Info: The General registry is installed via git. Consider reinstalling it via
+│ the newer faster direct from tarball format by running:
+│   pkg> registry rm General; registry add General
+└ 
+    Updating git-repo `https://github.com/JuliaRegistries/General.git`
+    Updating `~/Documents/mcmrsimulator.jl-main-cc-near-surface-r2/Project.toml`
+  [c7e460c6] + ArgParse v1.2.0
+  [093aae92] + BSplineKit v0.19.3
+  [0e736298] + Bessels v0.2.8
+  [336ed68f] + CSV v1.1.0
+  [5ae59095] + Colors v0.13.2
+  [34da2185] + Compat v4.18.1
+  [150eb455] + CoordinateTransformations v0.6.4
+  [a93c6f00] + DataFrames v1.8.2
+  [31c24e10] + Distributions v0.25.131
+  [5c1252a2] + GeometryBasics v0.5.13
+  [a98d9a8b] + Interpolations v0.16.3
+  [682c06a0] + JSON v1.10.0
+  [d0bc0b20] + KomaMRIBase v0.14.2
+  [fcf631a6] + KomaMRIFiles v0.11.6
+  [b8a86587] + NearestNeighbors v0.4.29
+  [42171d58] + PlyIO v1.2.0
+  [f2b01f46] + Roots v3.0.8
+  [6038ab10] + Rotations v1.7.1
+  [276daf66] + SpecialFunctions v2.9.0
+  [90137ffa] + StaticArrays v1.9.22
+  [10745b16] + Statistics v1.11.5
+  [bd369af6] + Tables v1.14.0
+  [37e2e46d] ~ LinearAlgebra ⇒ v1.12.0
+  [56ddb016] ~ Logging ⇒ v1.11.0
+  [d6f4376e] ~ Markdown ⇒ v1.11.0
+  [9a3f8284] ~ Random ⇒ v1.11.0
+  [2f01184e] ~ SparseArrays ⇒ v1.12.0
+    Updating `~/Documents/mcmrsimulator.jl-main-cc-near-surface-r2/Manifest.toml`
+  [621f4979] + AbstractFFTs v1.5.0
+  [7f219486] + AbstractNFFTs v0.9.1
+  [1520ce14] + AbstractTrees v0.4.5
+  [7d9f7c33] + Accessors v0.1.45
+  [79e6a3ab] + Adapt v4.7.1
+  [66dad0bd] + AliasTables v1.1.3
+  [c7e460c6] + ArgParse v1.2.0
+  [4c555306] + ArrayLayouts v1.13.0
+  [13072b0f] + AxisAlgorithms v1.1.0
+  [093aae92] + BSplineKit v0.19.3
+  [aae01518] + BandedMatrices v1.13.1
+  [0e736298] + Bessels v0.2.8
+  [336ed68f] + CSV v1.1.0
+  [d360d2e6] + ChainRulesCore v1.26.1
+  [944b1d66] + CodecZlib v0.7.9
+  [3da002f7] + ColorTypes v0.12.3
+  [5ae59095] + Colors v0.13.2
+  [38540f10] + CommonSolve v0.2.14
+  [bbf7d656] + CommonSubexpressions v0.3.1
+  [f70d9fcc] + CommonWorldInvalidations v1.2.2
+  [34da2185] + Compat v4.18.1
+  [a33af91c] + CompositionsBase v0.1.2
+  [187b0558] + ConstructionBase v1.6.0
+  [150eb455] + CoordinateTransformations v0.6.4
+  [a8cc5b0e] + Crayons v4.2.0
+  [717857b8] + DSP v0.8.6
+  [9a962f9c] + DataAPI v1.16.0
+  [a93c6f00] + DataFrames v1.8.2
+  [48204bd6] + DataStrings v1.1.0
+  [864edb3b] + DataStructures v0.19.6
+  [e2d170a0] + DataValueInterfaces v1.0.0
+  [163ba53b] + DiffResults v1.1.0
+  [b552c78f] + DiffRules v1.16.0
+  [b4f34e82] + Distances v0.10.12
+  [31c24e10] + Distributions v0.25.131
+  [ffbed154] + DocStringExtensions v0.9.5
+  [41ac09f5] + Durations v1.4.0
+  [7a1cc6ca] + FFTW v1.10.0
+  [442a2c76] + FastGaussQuadrature v1.3.0
+  [5789e2e9] + FileIO v1.20.0
+  [1a297f60] + FillArrays v1.17.1
+⌅ [53c48c17] + FixedPointNumbers v0.8.6
+  [f6369f11] + ForwardDiff v1.4.6
+  [a0844989] + Gamma v1.2.0
+  [5c1252a2] + GeometryBasics v0.5.13
+  [f67ccb44] + HDF5 v0.17.4
+  [076d061b] + HashArrayMappedTries v0.2.0
+  [34004b35] + HypergeometricFunctions v0.3.30
+  [615f187c] + IfElse v0.1.1
+⌅ [842dd82b] + InlineStrings v1.4.6
+  [a98d9a8b] + Interpolations v0.16.3
+  [3587e190] + InverseFunctions v0.1.17
+  [41ab1584] + InvertedIndices v1.3.1
+  [92d709cd] + IrrationalConstants v0.2.6
+  [c8e1da08] + IterTools v1.10.0
+  [82899510] + IteratorInterfaceExtensions v1.0.0
+  [692b3bcd] + JLLWrappers v1.8.0
+  [682c06a0] + JSON v1.10.0
+  [d0bc0b20] + KomaMRIBase v0.14.2
+  [fcf631a6] + KomaMRIFiles v0.11.6
+  [b964fa9f] + LaTeXStrings v1.4.1
+  [9c8b4983] + LightXML v0.9.3
+  [2ab3a3ac] + LogExpFunctions v1.0.2
+  [23992714] + MAT v0.12.1
+  [6ac74813] + MD5 v0.2.3
+  [3da0fdf6] + MPIPreferences v0.1.12
+  [f7771a9a] + MRIBase v0.4.6
+  [5a6f062f] + MRIFiles v0.3.2
+  [1914dd2f] + MacroTools v0.5.16
+  [e1d29d7a] + Missings v1.2.0
+⌅ [7424e34d] + NFFTTools v0.2.7
+  [77ba4419] + NaNMath v1.1.4
+  [b8a86587] + NearestNeighbors v0.4.29
+  [6fe1bfb0] + OffsetArrays v1.17.0
+  [bac558e1] + OrderedCollections v2.0.1
+  [90014a1f] + PDMats v0.11.41
+  [d96e819e] + Parameters v0.13.1
+  [69de0a69] + Parsers v3.0.0
+  [42171d58] + PlyIO v1.2.0
+  [f27b6e38] + Polynomials v4.1.3
+  [2dfb63ee] + PooledArrays v1.4.3
+  [aea7be01] + PrecompileTools v1.3.4
+  [21216c6a] + Preferences v1.6.0
+  [08abe8d2] + PrettyTables v3.5.0
+  [43287f4e] + PtrArrays v1.4.0
+  [1fd47b50] + QuadGK v2.11.3
+  [94ee1d12] + Quaternions v0.7.7
+  [c84ed2f1] + Ratios v0.4.5
+  [c1ae055f] + RealDot v0.1.0
+  [189a3867] + Reexport v1.2.2
+  [ae029012] + Requires v1.3.1
+  [79098fc4] + Rmath v0.9.0
+  [f2b01f46] + Roots v3.0.8
+  [6038ab10] + Rotations v1.7.1
+  [431bcebd] + SciMLPublic v1.3.0
+  [7e506255] + ScopedValues v1.6.2
+  [91c51154] + SentinelArrays v1.4.10
+  [efcf1570] + Setfield v1.1.2
+  [a2af1166] + SortingAlgorithms v1.2.3
+  [276daf66] + SpecialFunctions v2.9.0
+  [aedffcd0] + Static v1.4.6
+  [90137ffa] + StaticArrays v1.9.22
+  [1e83bf80] + StaticArraysCore v1.4.4
+  [10745b16] + Statistics v1.11.5
+  [82ae8749] + StatsAPI v1.8.0
+  [2913bbd2] + StatsBase v0.34.13
+  [4c63d2b9] + StatsFuns v2.2.1
+  [69024149] + StringEncodings v0.3.7
+  [892a3eda] + StringManipulation v0.6.1
+  [ec057cc2] + StructUtils v2.9.2
+  [3783bdb8] + TableTraits v1.0.1
+  [bd369af6] + Tables v1.14.0
+  [b718987f] + TextWrap v1.0.2
+  [3bb67fe8] + TranscodingStreams v0.11.3
+  [3a884ed6] + UnPack v1.0.2
+  [efce3f68] + WoodburyMatrices v1.1.0
+⌅ [5ae413db] + EarCut_jll v2.2.4+0
+  [f5851436] + FFTW_jll v3.3.12+0
+  [0234f1f7] + HDF5_jll v2.2.2+0
+⌃ [e33a78d0] + Hwloc_jll v2.14.0+0
+  [1d5cc7b8] + IntelOpenMP_jll v2025.2.0+0
+  [94ce4f54] + Libiconv_jll v1.18.0+0
+  [856f044c] + MKL_jll v2025.2.0+0
+  [b5ada748] + MPIABI_jll v1.0.1+0
+  [7cb0a576] + MPICH_jll v5.0.2+0
+  [f1f71cc9] + MPItrampoline_jll v5.5.6+0
+  [9237b28f] + MicrosoftMPI_jll v10.1.4+3
+  [fe0851c0] + OpenMPI_jll v5.0.12+0
+  [efe28fd5] + OpenSpecFun_jll v0.5.6+0
+  [f50d1b31] + Rmath_jll v0.5.2+0
+⌅ [02c8fc9c] + XML2_jll v2.13.9+0
+  [a65dc6b1] + Xorg_libpciaccess_jll v0.19.0+0
+⌅ [2b3700d1] + aws_c_auth_jll v0.9.6+0
+⌅ [70f11efc] + aws_c_cal_jll v0.9.13+0
+⌅ [73048d1d] + aws_c_common_jll v0.12.6+0
+⌅ [73a04cd5] + aws_c_compression_jll v0.3.2+0
+⌅ [3254fc65] + aws_c_http_jll v0.10.15+0
+⌅ [13c41daa] + aws_c_io_jll v0.26.3+0
+⌅ [bd1f34fb] + aws_c_s3_jll v0.11.5+0
+⌅ [1282aa60] + aws_c_sdkutils_jll v0.2.4+1
+⌅ [b2a88e68] + aws_checksums_jll v0.2.10+0
+  [c4b69c83] + dlfcn_win32_jll v1.4.2+0
+  [477f73a3] + libaec_jll v1.1.7+0
+  [9aeb927a] + mpif_jll v1.0.0+0
+  [1317d2d5] + oneTBB_jll v2022.3.0+0
+  [cddc5d3d] + s2n_tls_jll v1.7.10+0
+  [0dad84c5] + ArgTools v1.1.2
+  [56f22d72] + Artifacts v1.11.0
+  [2a0f44e3] + Base64 v1.11.0
+  [ade2ca70] + Dates v1.11.0
+  [8ba89e20] + Distributed v1.11.0
+  [f43a241f] + Downloads v1.7.0
+  [7b1f6079] + FileWatching v1.11.0
+  [9fa8497b] + Future v1.11.0
+  [b77e0a4c] + InteractiveUtils v1.11.0
+  [ac6e5ff7] + JuliaSyntaxHighlighting v1.12.0
+  [4af54fe1] + LazyArtifacts v1.11.0
+  [b27032c2] + LibCURL v0.6.4
+  [76f85450] + LibGit2 v1.11.0
+  [8f399da3] + Libdl v1.11.0
+  [37e2e46d] ~ LinearAlgebra ⇒ v1.12.0
+  [56ddb016] ~ Logging ⇒ v1.11.0
+  [d6f4376e] ~ Markdown ⇒ v1.11.0
+  [a63ad114] + Mmap v1.11.0
+  [ca575930] + NetworkOptions v1.3.0
+  [44cfe95a] + Pkg v1.12.1
+  [de0858da] + Printf v1.11.0
+  [3fa0cd96] + REPL v1.11.0
+  [9a3f8284] ~ Random ⇒ v1.11.0
+  [ea8e919c] + SHA v0.7.0
+  [9e88b42a] + Serialization v1.11.0
+  [1a1011a3] + SharedArrays v1.11.0
+  [6462fe0b] + Sockets v1.11.0
+  [2f01184e] ~ SparseArrays ⇒ v1.12.0
+  [f489334b] + StyledStrings v1.11.0
+  [4607b0f0] + SuiteSparse
+  [fa267f1f] + TOML v1.0.3
+  [a4e569a6] + Tar v1.10.0
+  [cf7118a7] + UUIDs v1.11.0
+  [4ec0a83e] + Unicode v1.11.0
+  [e66e0078] + CompilerSupportLibraries_jll v1.3.1+2
+  [deac9b47] + LibCURL_jll v8.15.0+0
+  [e37daf67] + LibGit2_jll v1.9.0+0
+  [29816b5a] + LibSSH2_jll v1.11.3+1
+  [14a3606d] + MozillaCACerts_jll v2025.11.4
+  [4536629a] + OpenBLAS_jll v0.3.29+0
+  [05823500] + OpenLibm_jll v0.8.7+0
+  [458c3c95] + OpenSSL_jll v3.5.6+0
+  [bea87d4a] + SuiteSparse_jll v7.8.3+2
+  [83775a58] + Zlib_jll v1.3.1+2
+  [8e850b90] + libblastrampoline_jll v5.15.0+0
+  [8e850ede] + nghttp2_jll v1.64.0+1
+  [3f19e933] + p7zip_jll v17.7.0+0
+        Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`
+      Status `~/Documents/mcmrsimulator.jl-main-cc-near-surface-r2/test/Project.toml`
+  [336ed68f] CSV v1.1.0
+  [13f3f980] CairoMakie v0.15.15
+  [3da002f7] ColorTypes v0.12.3
+  [a93c6f00] DataFrames v1.8.2
+  [5789e2e9] FileIO v1.20.0
+  [4c0ca9eb] Gtk v1.3.1
+  [682c06a0] JSON v1.10.0
+  [eac06e4d] MCMRSimulator v1.1.0 `.`
+  [276daf66] SpecialFunctions v2.9.0
+  [90137ffa] StaticArrays v1.9.22
+  [10745b16] Statistics v1.11.5
+  [34922c18] VisualRegressionTests v1.4.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [56ddb016] Logging v1.11.0
+  [9a3f8284] Random v1.11.0
+  [8dfed614] Test v1.11.0
+      Status `~/Documents/mcmrsimulator.jl-main-cc-near-surface-r2/Manifest.toml`
+  [621f4979] AbstractFFTs v1.5.0
+  [7f219486] AbstractNFFTs v0.9.1
+  [1520ce14] AbstractTrees v0.4.5
+  [7d9f7c33] Accessors v0.1.45
+  [79e6a3ab] Adapt v4.7.1
+  [35492f91] AdaptivePredicates v1.2.0
+  [66dad0bd] AliasTables v1.1.3
+  [27a7e980] Animations v0.4.2
+  [c7e460c6] ArgParse v1.2.0
+  [4fba245c] ArrayInterface v7.30.2
+  [4c555306] ArrayLayouts v1.13.0
+  [67c07d97] Automa v1.2.0
+  [13072b0f] AxisAlgorithms v1.1.0
+  [39de3d68] AxisArrays v0.4.8
+  [093aae92] BSplineKit v0.19.3
+  [aae01518] BandedMatrices v1.13.1
+  [18cc8868] BaseDirs v1.4.0
+  [0e736298] Bessels v0.2.8
+  [62783981] BitTwiddlingConvenienceFunctions v0.1.6
+  [fa961155] CEnum v0.5.0
+  [2a0fbf3d] CPUSummary v0.2.7
+  [96374032] CRlibm v1.0.2
+  [336ed68f] CSV v1.1.0
+  [159f3aea] Cairo v1.1.1
+  [13f3f980] CairoMakie v0.15.15
+  [aafaddc9] CatIndices v0.2.2
+  [d360d2e6] ChainRulesCore v1.26.1
+  [fb6a15b2] CloseOpenIntervals v0.1.13
+  [944b1d66] CodecZlib v0.7.9
+  [6b39b394] CodecZstd v0.8.7
+  [a2cac450] ColorBrewer v0.4.2
+  [35d6a980] ColorSchemes v3.31.0
+  [3da002f7] ColorTypes v0.12.3
+  [c3611d14] ColorVectorSpace v0.11.0
+  [5ae59095] Colors v0.13.2
+  [38540f10] CommonSolve v0.2.14
+  [bbf7d656] CommonSubexpressions v0.3.1
+  [f70d9fcc] CommonWorldInvalidations v1.2.2
+  [34da2185] Compat v4.18.1
+  [a33af91c] CompositionsBase v0.1.2
+  [ed09eef8] ComputationalResources v0.3.2
+  [95dc2771] ComputePipeline v0.1.8
+  [187b0558] ConstructionBase v1.6.0
+  [d38c429a] Contour v0.6.3
+  [150eb455] CoordinateTransformations v0.6.4
+  [b7a15901] CoreMath v0.1.0
+  [adafc99b] CpuId v0.3.1
+  [a8cc5b0e] Crayons v4.2.0
+  [dc8bdbbb] CustomUnitRanges v1.0.2
+  [717857b8] DSP v0.8.6
+  [9a962f9c] DataAPI v1.16.0
+  [a93c6f00] DataFrames v1.8.2
+  [48204bd6] DataStrings v1.1.0
+  [864edb3b] DataStructures v0.19.6
+  [e2d170a0] DataValueInterfaces v1.0.0
+  [927a84f5] DelaunayTriangulation v1.6.7
+  [163ba53b] DiffResults v1.1.0
+  [b552c78f] DiffRules v1.16.0
+  [b4f34e82] Distances v0.10.12
+  [31c24e10] Distributions v0.25.131
+  [ffbed154] DocStringExtensions v0.9.5
+  [41ac09f5] Durations v1.4.0
+  [4e289a0a] EnumX v1.0.7
+  [429591f6] ExactPredicates v2.2.9
+  [b86e33f2] FFTA v0.3.1
+  [4f61f5a4] FFTViews v0.3.2
+  [7a1cc6ca] FFTW v1.10.0
+  [442a2c76] FastGaussQuadrature v1.3.0
+  [5789e2e9] FileIO v1.20.0
+  [8fc22ac5] FilePaths v0.9.0
+  [48062228] FilePathsBase v0.9.24
+  [1a297f60] FillArrays v1.17.1
+⌅ [53c48c17] FixedPointNumbers v0.8.6
+  [1fa38f19] Format v1.3.7
+  [f6369f11] ForwardDiff v1.4.6
+  [b38be410] FreeType v4.1.1
+  [663a7486] FreeTypeAbstraction v0.10.8
+  [a0844989] Gamma v1.2.0
+  [5c1252a2] GeometryBasics v0.5.13
+  [a2bd30eb] Graphics v1.1.3
+  [3955a311] GridLayoutBase v0.11.3
+  [4c0ca9eb] Gtk v1.3.1
+  [f67ccb44] HDF5 v0.17.4
+  [076d061b] HashArrayMappedTries v0.2.0
+  [3e5b6fbb] HostCPUFeatures v0.1.18
+  [34004b35] HypergeometricFunctions v0.3.30
+  [615f187c] IfElse v0.1.1
+  [2803e5a7] ImageAxes v0.6.12
+  [c817782e] ImageBase v0.1.7
+  [a09fc81d] ImageCore v0.10.5
+  [51556ac3] ImageDistances v0.2.17
+  [6a3955dd] ImageFiltering v0.7.12
+  [82e4d734] ImageIO v0.6.10
+  [6218d12a] ImageMagick v1.4.2
+  [bc367c6b] ImageMetadata v0.9.10
+  [787d08f9] ImageMorphology v0.4.7
+  [9b13fd28] IndirectArrays v1.0.0
+  [d25df0c9] Inflate v0.1.5
+⌅ [842dd82b] InlineStrings v1.4.6
+  [18e54dd8] IntegerMathUtils v0.1.4
+  [a98d9a8b] Interpolations v0.16.3
+  [d1acc4aa] IntervalArithmetic v1.0.12
+  [8197267c] IntervalSets v0.7.14
+  [3587e190] InverseFunctions v0.1.17
+  [41ab1584] InvertedIndices v1.3.1
+  [92d709cd] IrrationalConstants v0.2.6
+  [f1662d9f] Isoband v0.1.1
+  [c8e1da08] IterTools v1.10.0
+  [82899510] IteratorInterfaceExtensions v1.0.0
+  [692b3bcd] JLLWrappers v1.8.0
+  [682c06a0] JSON v1.10.0
+  [b835a17e] JpegTurbo v0.1.6
+  [5ab0869b] KernelDensity v0.6.12
+  [d0bc0b20] KomaMRIBase v0.14.2
+  [fcf631a6] KomaMRIFiles v0.11.6
+  [b964fa9f] LaTeXStrings v1.4.1
+  [10f19ff3] LayoutPointers v0.1.17
+  [8cdb02fc] LazyModules v0.3.1
+  [9c8b4983] LightXML v0.9.3
+  [2ab3a3ac] LogExpFunctions v1.0.2
+  [bdcacae8] LoopVectorization v0.12.174
+  [23992714] MAT v0.12.1
+  [eac06e4d] MCMRSimulator v1.1.0 `.`
+  [6ac74813] MD5 v0.2.3
+  [3da0fdf6] MPIPreferences v0.1.12
+  [f7771a9a] MRIBase v0.4.6
+  [5a6f062f] MRIFiles v0.3.2
+  [1914dd2f] MacroTools v0.5.16
+  [ee78f7c6] Makie v0.24.15
+  [d125e4d3] ManualMemory v0.1.8
+  [dbb5928d] MappedArrays v0.4.3
+  [0a4f8689] MathTeXEngine v0.6.9
+  [e1d29d7a] Missings v1.2.0
+  [e94cdb99] MosaicViews v0.3.4
+  [46d2c3a1] MuladdMacro v0.2.7
+⌅ [7424e34d] NFFTTools v0.2.7
+  [77ba4419] NaNMath v1.1.4
+  [b8a86587] NearestNeighbors v0.4.29
+  [f09324ee] Netpbm v1.1.1
+  [510215fc] Observables v0.5.5
+  [6fe1bfb0] OffsetArrays v1.17.0
+  [52e1d378] OpenEXR v0.3.3
+  [bac558e1] OrderedCollections v2.0.1
+  [90014a1f] PDMats v0.11.41
+  [f57f5aa1] PNGFiles v0.4.5
+  [19eb6ba3] Packing v0.5.1
+  [5432bcbf] PaddedViews v0.5.12
+  [d96e819e] Parameters v0.13.1
+  [69de0a69] Parsers v3.0.0
+  [eebad327] PkgVersion v0.3.3
+  [995b91a9] PlotUtils v1.5.0
+  [42171d58] PlyIO v1.2.0
+  [1d0040c9] PolyesterWeave v0.2.2
+  [647866c9] PolygonOps v0.1.2
+  [f27b6e38] Polynomials v4.1.3
+  [2dfb63ee] PooledArrays v1.4.3
+  [aea7be01] PrecompileTools v1.3.4
+  [21216c6a] Preferences v1.6.0
+  [08abe8d2] PrettyTables v3.5.0
+  [27ebfcd6] Primes v0.5.7
+  [92933f4c] ProgressMeter v1.11.0
+  [43287f4e] PtrArrays v1.4.0
+  [4b34888f] QOI v1.0.2
+  [1fd47b50] QuadGK v2.11.3
+  [94ee1d12] Quaternions v0.7.7
+  [b3c3ace0] RangeArrays v0.3.2
+  [c84ed2f1] Ratios v0.4.5
+  [c1ae055f] RealDot v0.1.0
+  [189a3867] Reexport v1.2.2
+  [05181044] RelocatableFolders v1.0.1
+  [ae029012] Requires v1.3.1
+  [79098fc4] Rmath v0.9.0
+  [f2b01f46] Roots v3.0.8
+  [6038ab10] Rotations v1.7.1
+  [5eaf0fd0] RoundingEmulator v0.2.1
+  [fdea26ae] SIMD v3.7.2
+  [94e857df] SIMDTypes v0.1.0
+  [476501e8] SLEEFPirates v0.6.46
+  [431bcebd] SciMLPublic v1.3.0
+  [7e506255] ScopedValues v1.6.2
+  [6c6a2e73] Scratch v1.3.0
+  [91c51154] SentinelArrays v1.4.10
+  [efcf1570] Setfield v1.1.2
+  [65257c39] ShaderAbstractions v0.5.1
+  [73760f76] SignedDistanceFields v0.4.1
+  [699a6c99] SimpleTraits v0.9.6
+  [45858cf5] Sixel v0.1.5
+  [a2af1166] SortingAlgorithms v1.2.3
+  [276daf66] SpecialFunctions v2.9.0
+  [cae243ae] StackViews v0.1.2
+  [aedffcd0] Static v1.4.6
+  [0d7ed370] StaticArrayInterface v1.10.0
+  [90137ffa] StaticArrays v1.9.22
+  [1e83bf80] StaticArraysCore v1.4.4
+  [10745b16] Statistics v1.11.5
+  [82ae8749] StatsAPI v1.8.0
+  [2913bbd2] StatsBase v0.34.13
+  [4c63d2b9] StatsFuns v2.2.1
+  [69024149] StringEncodings v0.3.7
+  [892a3eda] StringManipulation v0.6.1
+  [09ab397b] StructArrays v0.7.3
+  [ec057cc2] StructUtils v2.9.2
+  [3783bdb8] TableTraits v1.0.1
+  [bd369af6] Tables v1.14.0
+  [62fd8b95] TensorCore v0.1.1
+  [b718987f] TextWrap v1.0.2
+  [8290d209] ThreadingUtilities v0.5.6
+  [731e570b] TiffImages v0.11.9
+  [06e1c1a7] TiledIteration v0.5.0
+  [3bb67fe8] TranscodingStreams v0.11.3
+  [981d1d27] TriplotBase v0.1.0
+  [3a884ed6] UnPack v1.0.2
+  [1cfade01] UnicodeFun v0.4.1
+  [1986cc42] Unitful v1.29.0
+  [3d5dd08c] VectorizationBase v0.21.74
+  [34922c18] VisualRegressionTests v1.4.0
+  [e3aaa7dc] WebP v0.1.3
+  [efce3f68] WoodburyMatrices v1.1.0
+  [7b86fcea] ATK_jll v2.38.1+0
+  [6e34b625] Bzip2_jll v1.0.9+0
+  [4e9b3aee] CRlibm_jll v1.0.1+0
+  [83423d85] Cairo_jll v1.18.7+0
+  [a38c48d9] CoreMath_jll v0.1.0+0
+  [ee1fde0b] Dbus_jll v1.16.2+0
+⌅ [5ae413db] EarCut_jll v2.2.4+0
+  [2702e6a9] EpollShim_jll v0.0.20230411+1
+  [2e619515] Expat_jll v2.8.4+0
+  [b22a6f82] FFMPEG_jll v9.0.1+0
+  [f5851436] FFTW_jll v3.3.12+0
+  [a3f928ae] Fontconfig_jll v2.17.1+0
+  [d7e528f0] FreeType2_jll v2.14.3+1
+  [559328eb] FriBidi_jll v1.0.17+0
+  [77ec8976] GTK3_jll v3.24.31+0
+⌅ [b0724c58] GettextRuntime_jll v0.22.4+0
+  [61579ee1] Ghostscript_jll v9.55.1+0
+  [59f7168a] Giflib_jll v6.1.3+0
+  [7746bdde] Glib_jll v2.88.3+0
+  [3b182d85] Graphite2_jll v1.3.16+0
+  [0234f1f7] HDF5_jll v2.2.2+0
+  [2e76f6c2] HarfBuzz_jll v100.14004.0+0
+⌃ [e33a78d0] Hwloc_jll v2.14.0+0
+  [c73af94c] ImageMagick_jll v7.1.2029+0
+  [905a6f67] Imath_jll v3.2.2+0
+  [1d5cc7b8] IntelOpenMP_jll v2025.2.0+0
+  [aacddb02] JpegTurbo_jll v3.2.0+1
+  [c1c5ebd0] LAME_jll v3.100.3+0
+  [88015f11] LERC_jll v4.2.0+0
+  [1d63c593] LLVMOpenMP_jll v23.1.1+0
+  [42c93a91] Libepoxy_jll v1.5.11+0
+⌅ [e9f186c6] Libffi_jll v3.4.7+0
+  [7e76a0d4] Libglvnd_jll v1.7.1+1
+  [94ce4f54] Libiconv_jll v1.18.0+0
+  [4b2f31a3] Libmount_jll v2.42.0+0
+  [925c91fb] Librsvg_jll v2.54.7+0
+  [89763e89] Libtiff_jll v4.7.3+0
+  [38a345b3] Libuuid_jll v2.42.0+0
+  [d3a379c0] LittleCMS_jll v2.19.1+0
+  [856f044c] MKL_jll v2025.2.0+0
+  [b5ada748] MPIABI_jll v1.0.1+0
+  [7cb0a576] MPICH_jll v5.0.2+0
+  [f1f71cc9] MPItrampoline_jll v5.5.6+0
+  [9237b28f] MicrosoftMPI_jll v10.1.4+3
+  [e7412a2a] Ogg_jll v1.3.6+0
+  [6cdc7f73] OpenBLASConsistentFPCSR_jll v0.3.34+0
+  [18a262bb] OpenEXR_jll v3.4.15+0
+  [643b3616] OpenJpeg_jll v2.5.5+0
+  [fe0851c0] OpenMPI_jll v5.0.12+0
+  [efe28fd5] OpenSpecFun_jll v0.5.6+0
+  [91d4177d] Opus_jll v1.6.1+0
+  [36c8627f] Pango_jll v1.58.2+0
+  [30392449] Pixman_jll v0.46.4+0
+  [f50d1b31] Rmath_jll v0.5.2+0
+  [a2964d1f] Wayland_jll v1.24.0+0
+⌅ [02c8fc9c] XML2_jll v2.13.9+0
+  [ffd25f8a] XZ_jll v5.8.4+0
+  [4f6342f7] Xorg_libX11_jll v1.8.13+0
+  [0c0b7dd1] Xorg_libXau_jll v1.0.13+0
+  [3c9796d7] Xorg_libXcomposite_jll v0.4.7+0
+  [935fb764] Xorg_libXcursor_jll v1.2.4+0
+  [0aeada51] Xorg_libXdamage_jll v1.1.7+0
+  [a3789734] Xorg_libXdmcp_jll v1.1.6+0
+  [1082639a] Xorg_libXext_jll v1.3.8+0
+  [d091e8ba] Xorg_libXfixes_jll v6.0.2+0
+  [a51aa0fd] Xorg_libXi_jll v1.8.4+0
+  [d1454406] Xorg_libXinerama_jll v1.1.7+0
+  [ec84b674] Xorg_libXrandr_jll v1.5.6+0
+  [ea2f1a96] Xorg_libXrender_jll v0.9.12+0
+  [b6f176f1] Xorg_libXtst_jll v1.2.5+0
+  [a65dc6b1] Xorg_libpciaccess_jll v0.19.0+0
+  [c7cfdc94] Xorg_libxcb_jll v1.17.1+0
+  [cc61e674] Xorg_libxkbfile_jll v1.2.0+0
+  [35661453] Xorg_xkbcomp_jll v1.4.7+0
+  [33bec58e] Xorg_xkeyboard_config_jll v2.47.0+2
+  [c5fb5394] Xorg_xtrans_jll v1.6.0+0
+  [3161d3a3] Zstd_jll v1.5.7+1
+⌅ [b437f822] adwaita_icon_theme_jll v3.33.93+0
+  [de012916] at_spi2_atk_jll v2.38.0+0
+  [0fc3237b] at_spi2_core_jll v2.60.6+0
+⌅ [2b3700d1] aws_c_auth_jll v0.9.6+0
+⌅ [70f11efc] aws_c_cal_jll v0.9.13+0
+⌅ [73048d1d] aws_c_common_jll v0.12.6+0
+⌅ [73a04cd5] aws_c_compression_jll v0.3.2+0
+⌅ [3254fc65] aws_c_http_jll v0.10.15+0
+⌅ [13c41daa] aws_c_io_jll v0.26.3+0
+⌅ [bd1f34fb] aws_c_s3_jll v0.11.5+0
+⌅ [1282aa60] aws_c_sdkutils_jll v0.2.4+1
+⌅ [b2a88e68] aws_checksums_jll v0.2.10+0
+  [c4b69c83] dlfcn_win32_jll v1.4.2+0
+  [da03df04] gdk_pixbuf_jll v2.42.13+0
+⌅ [059c91fe] hicolor_icon_theme_jll v0.17.0+3
+  [bf975903] iso_codes_jll v4.20.1+1
+  [9a68df92] isoband_jll v0.2.3+0
+  [477f73a3] libaec_jll v1.1.7+0
+  [a4ae2306] libaom_jll v3.15.1+0
+  [0ac62f75] libass_jll v0.17.5+0
+  [8e53e030] libdrm_jll v2.4.134+0
+  [f638f0a6] libfdk_aac_jll v2.0.4+0
+  [b53b4c65] libpng_jll v1.6.58+0
+  [075b6546] libsixel_jll v1.10.5+0
+  [9a156e7d] libva_jll v2.23.0+0
+  [f27f6e37] libvorbis_jll v1.3.8+0
+  [c5f90fcd] libwebp_jll v1.6.1+0
+  [337d8026] libzip_jll v1.11.4+0
+  [9aeb927a] mpif_jll v1.0.0+0
+  [1317d2d5] oneTBB_jll v2022.3.0+0
+  [cddc5d3d] s2n_tls_jll v1.7.10+0
+⌅ [1270edf5] x264_jll v10164.0.1+0
+  [dfaa095f] x265_jll v4.1.0+0
+  [d8fb68d0] xkbcommon_jll v1.13.0+0
+  [0dad84c5] ArgTools v1.1.2
+  [56f22d72] Artifacts v1.11.0
+  [2a0f44e3] Base64 v1.11.0
+  [8bf52ea8] CRC32c v1.11.0
+  [ade2ca70] Dates v1.11.0
+  [8ba89e20] Distributed v1.11.0
+  [f43a241f] Downloads v1.7.0
+  [7b1f6079] FileWatching v1.11.0
+  [9fa8497b] Future v1.11.0
+  [b77e0a4c] InteractiveUtils v1.11.0
+  [ac6e5ff7] JuliaSyntaxHighlighting v1.12.0
+  [4af54fe1] LazyArtifacts v1.11.0
+  [b27032c2] LibCURL v0.6.4
+  [76f85450] LibGit2 v1.11.0
+  [8f399da3] Libdl v1.11.0
+  [37e2e46d] LinearAlgebra v1.12.0
+  [56ddb016] Logging v1.11.0
+  [d6f4376e] Markdown v1.11.0
+  [a63ad114] Mmap v1.11.0
+  [ca575930] NetworkOptions v1.3.0
+  [44cfe95a] Pkg v1.12.1
+  [de0858da] Printf v1.11.0
+  [3fa0cd96] REPL v1.11.0
+  [9a3f8284] Random v1.11.0
+  [ea8e919c] SHA v0.7.0
+  [9e88b42a] Serialization v1.11.0
+  [1a1011a3] SharedArrays v1.11.0
+  [6462fe0b] Sockets v1.11.0
+  [2f01184e] SparseArrays v1.12.0
+  [f489334b] StyledStrings v1.11.0
+  [4607b0f0] SuiteSparse
+  [fa267f1f] TOML v1.0.3
+  [a4e569a6] Tar v1.10.0
+  [8dfed614] Test v1.11.0
+  [cf7118a7] UUIDs v1.11.0
+  [4ec0a83e] Unicode v1.11.0
+  [e66e0078] CompilerSupportLibraries_jll v1.3.1+2
+  [deac9b47] LibCURL_jll v8.15.0+0
+  [e37daf67] LibGit2_jll v1.9.0+0
+  [29816b5a] LibSSH2_jll v1.11.3+1
+  [14a3606d] MozillaCACerts_jll v2025.11.4
+  [4536629a] OpenBLAS_jll v0.3.29+0
+  [05823500] OpenLibm_jll v0.8.7+0
+  [458c3c95] OpenSSL_jll v3.5.6+0
+  [efcefdf7] PCRE2_jll v10.44.0+1
+  [bea87d4a] SuiteSparse_jll v7.8.3+2
+  [83775a58] Zlib_jll v1.3.1+2
+  [8e850b90] libblastrampoline_jll v5.15.0+0
+  [8e850ede] nghttp2_jll v1.64.0+1
+  [3f19e933] p7zip_jll v17.7.0+0
+        Info Packages marked with ⌃ and ⌅ have new versions available. Those with ⌃ may be upgradable, but those with ⌅ are restricted by compatibility constraints from upgrading.
+Precompiling for configuration --code-coverage=none --color=auto --check-bounds=yes --warn-overwrite=yes --depwarn=yes --inline=yes --startup-file=no --track-allocation=none
+    844.5 ms  ✓ DataStrings
+    867.8 ms  ✓ Adapt
+    814.8 ms  ✓ Statistics
+    787.2 ms  ✓ LogExpFunctions
+   1025.0 ms  ✓ InlineStrings
+   1101.6 ms  ✓ FillArrays
+   1011.5 ms  ✓ Durations
+    640.1 ms  ✓ Preferences
+    998.2 ms  ✓ OffsetArrays → OffsetArraysAdaptExt
+   1300.4 ms  ✓ StructUtils
+   1869.4 ms  ✓ Tables
+   1153.9 ms  ✓ Adapt → AdaptSparseArraysExt
+   1099.5 ms  ✓ ArrayInterface
+    390.5 ms  ✓ IntervalSets → IntervalSetsStatisticsExt
+    548.9 ms  ✓ Statistics → SparseArraysExt
+    588.7 ms  ✓ LogExpFunctions → LogExpFunctionsInverseFunctionsExt
+   1916.2 ms  ✓ SignedDistanceFields
+   1307.9 ms  ✓ Gamma
+   2214.6 ms  ✓ Distances
+    964.2 ms  ✓ FillArrays → FillArraysStatisticsExt
+   1355.2 ms  ✓ LogExpFunctions → LogExpFunctionsChainRulesCoreExt
+    813.0 ms  ✓ FillArrays → FillArraysSparseArraysExt
+    683.5 ms  ✓ FillArrays → FillArraysPDMatsExt
+   2211.7 ms  ✓ FixedPointNumbers
+    801.5 ms  ✓ PrecompileTools
+    867.1 ms  ✓ JLLWrappers
+   1107.6 ms  ✓ MPIPreferences
+   1414.5 ms  ✓ ComputePipeline
+   1362.5 ms  ✓ StructUtils → StructUtilsStaticArraysCoreExt
+   1165.3 ms  ✓ ArrayInterface → ArrayInterfaceChainRulesCoreExt
+   1010.0 ms  ✓ ArrayInterface → ArrayInterfaceStaticArraysCoreExt
+    564.1 ms  ✓ ArrayInterface → ArrayInterfaceFillArraysExt
+   1378.1 ms  ✓ ArrayInterface → ArrayInterfaceSparseArraysExt
+   1867.8 ms  ✓ StructArrays
+   1621.8 ms  ✓ StructUtils → StructUtilsTablesExt
+   1488.2 ms  ✓ Distances → DistancesChainRulesCoreExt
+   1682.4 ms  ✓ HypergeometricFunctions
+   1716.9 ms  ✓ Distances → DistancesSparseArraysExt
+   1689.7 ms  ✓ Ratios → RatiosFixedPointNumbersExt
+    853.5 ms  ✓ SciMLPublic
+    508.3 ms  ✓ CommonSolve
+   3149.0 ms  ✓ StatsBase
+    492.6 ms  ✓ CommonWorldInvalidations
+    846.1 ms  ✓ MuladdMacro
+   3552.4 ms  ✓ ColorTypes
+    812.6 ms  ✓ isoband_jll
+   1288.4 ms  ✓ Libffi_jll
+    755.6 ms  ✓ OpenSpecFun_jll
+    563.1 ms  ✓ Libuuid_jll
+   5305.5 ms  ✓ StringManipulation
+    806.4 ms  ✓ CoreMath_jll
+    780.3 ms  ✓ aws_c_common_jll
+    728.2 ms  ✓ LLVMOpenMP_jll
+    955.3 ms  ✓ Imath_jll
+   1029.8 ms  ✓ libaec_jll
+    773.0 ms  ✓ CRlibm_jll
+    833.8 ms  ✓ JpegTurbo_jll
+   1694.4 ms  ✓ IntelOpenMP_jll
+    642.8 ms  ✓ Ogg_jll
+    774.4 ms  ✓ x265_jll
+    791.0 ms  ✓ x264_jll
+    678.5 ms  ✓ hicolor_icon_theme_jll
+    810.6 ms  ✓ iso_codes_jll
+    884.8 ms  ✓ Libiconv_jll
+   1152.2 ms  ✓ FriBidi_jll
+   1083.5 ms  ✓ Graphite2_jll
+  15982.5 ms  ✓ Unitful
+   1032.0 ms  ✓ EpollShim_jll
+   9346.9 ms  ✓ StaticArrays
+    866.7 ms  ✓ Xorg_libpciaccess_jll
+    727.1 ms  ✓ Xorg_libXau_jll
+    759.6 ms  ✓ s2n_tls_jll
+   1085.4 ms  ✓ libpng_jll
+   1022.6 ms  ✓ Giflib_jll
+    853.4 ms  ✓ Xorg_libXdmcp_jll
+   1082.6 ms  ✓ LAME_jll
+    980.0 ms  ✓ EarCut_jll
+  10019.1 ms  ✓ SIMD
+    927.2 ms  ✓ libaom_jll
+    838.5 ms  ✓ Zstd_jll
+    696.6 ms  ✓ Opus_jll
+    626.1 ms  ✓ MicrosoftMPI_jll
+    591.7 ms  ✓ Xorg_xtrans_jll
+    819.5 ms  ✓ Expat_jll
+    613.4 ms  ✓ dlfcn_win32_jll
+    619.5 ms  ✓ Libmount_jll
+    677.7 ms  ✓ Rmath_jll
+    742.7 ms  ✓ Bzip2_jll
+    740.7 ms  ✓ LERC_jll
+    795.6 ms  ✓ libfdk_aac_jll
+    873.9 ms  ✓ XZ_jll
+  12859.5 ms  ✓ Automa
+    690.7 ms  ✓ FFTW_jll
+    761.5 ms  ✓ OpenBLASConsistentFPCSR_jll
+    881.6 ms  ✓ StructArrays → StructArraysAdaptExt
+   1307.3 ms  ✓ oneTBB_jll
+    593.8 ms  ✓ StructArrays → StructArraysLinearAlgebraExt
+    447.8 ms  ✓ Accessors → StructArraysExt
+    587.6 ms  ✓ StructArrays → StructArraysSparseArraysExt
+   1623.0 ms  ✓ MPItrampoline_jll
+  20353.4 ms  ✓ Polynomials
+   1256.2 ms  ✓ ColorTypes → StyledStringsExt
+   1944.1 ms  ✓ ColorVectorSpace
+   2310.3 ms  ✓ FFTA
+   2441.0 ms  ✓ PDMats → StatsBaseExt
+   3275.6 ms  ✓ Roots
+   2496.3 ms  ✓ Isoband
+   3058.5 ms  ✓ Colors
+   2194.1 ms  ✓ CoreMath
+   1844.0 ms  ✓ aws_checksums_jll
+   1393.2 ms  ✓ aws_c_sdkutils_jll
+   2147.6 ms  ✓ aws_c_cal_jll
+   2728.5 ms  ✓ aws_c_compression_jll
+   3972.4 ms  ✓ SpecialFunctions
+   1236.5 ms  ✓ Pixman_jll
+   1065.1 ms  ✓ CRlibm
+   1584.3 ms  ✓ OpenEXR_jll
+   2236.8 ms  ✓ aws_c_io_jll
+   2277.9 ms  ✓ Ghostscript_jll
+   2392.6 ms  ✓ adwaita_icon_theme_jll
+   2251.8 ms  ✓ StringEncodings
+   1439.8 ms  ✓ XML2_jll
+   1951.8 ms  ✓ GettextRuntime_jll
+  20054.8 ms  ✓ Parsers
+   1269.7 ms  ✓ Unitful → NaNMathExt
+    635.2 ms  ✓ Unitful → ConstructionBaseUnitfulExt
+    587.0 ms  ✓ Accessors → UnitfulExt
+   1257.5 ms  ✓ Unitful → InverseFunctionsUnitfulExt
+   1018.1 ms  ✓ Unitful → PrintfExt
+   1069.3 ms  ✓ StaticArrays → StaticArraysStatisticsExt
+    611.4 ms  ✓ ConstructionBase → ConstructionBaseStaticArraysExt
+    604.2 ms  ✓ Adapt → AdaptStaticArraysExt
+    659.7 ms  ✓ Accessors → StaticArraysExt
+   1429.6 ms  ✓ StaticArrays → StaticArraysChainRulesCoreExt
+    553.1 ms  ✓ libdrm_jll
+    694.8 ms  ✓ FillArrays → FillArraysStaticArraysExt
+    620.6 ms  ✓ Xorg_libxcb_jll
+   1070.9 ms  ✓ libsixel_jll
+   1992.4 ms  ✓ CoordinateTransformations
+    640.2 ms  ✓ Dbus_jll
+   1706.8 ms  ✓ StructArrays → StructArraysStaticArraysExt
+    613.0 ms  ✓ Wayland_jll
+   1286.7 ms  ✓ CodecZstd
+   2828.8 ms  ✓ Rotations
+   1114.9 ms  ✓ Rmath
+   1214.4 ms  ✓ FreeType2_jll
+   1152.0 ms  ✓ MKL_jll
+   1882.4 ms  ✓ Libtiff_jll
+   1982.9 ms  ✓ libzip_jll
+   2183.6 ms  ✓ Polynomials → PolynomialsChainRulesCoreExt
+   2383.3 ms  ✓ QOI
+   2171.0 ms  ✓ Roots → RootsUnitfulExt
+   1978.7 ms  ✓ Roots → RootsChainRulesCoreExt
+   1831.4 ms  ✓ Graphics
+   1801.2 ms  ✓ Animations
+  14861.3 ms  ✓ Static
+   1320.7 ms  ✓ libvorbis_jll
+   1208.5 ms  ✓ ColorVectorSpace → SpecialFunctionsExt
+   1951.9 ms  ✓ FastGaussQuadrature
+   2832.7 ms  ✓ SpecialFunctions → SpecialFunctionsChainRulesCoreExt
+   1973.0 ms  ✓ OpenEXR
+   2217.5 ms  ✓ LightXML
+   1458.5 ms  ✓ Hwloc_jll
+   5306.6 ms  ✓ ColorSchemes
+   3246.8 ms  ✓ aws_c_http_jll
+   6017.0 ms  ✓ ForwardDiff
+  11461.6 ms  ✓ GeometryBasics
+   2392.7 ms  ✓ InlineStrings → ParsersExt
+   6513.7 ms  ✓ IntervalArithmetic
+   3088.1 ms  ✓ Glib_jll
+    412.5 ms  ✓ Xorg_libX11_jll
+  20799.4 ms  ✓ PrettyTables
+   2164.5 ms  ✓ FreeType
+   4455.8 ms  ✓ NearestNeighbors
+   4624.0 ms  ✓ StatsFuns
+   9179.0 ms  ✓ JSON
+   3963.6 ms  ✓ Fontconfig_jll
+   2035.7 ms  ✓ LittleCMS_jll
+  15698.1 ms  ✓ ImageCore
+   8208.9 ms  ✓ Interpolations
+   1332.2 ms  ✓ BitTwiddlingConvenienceFunctions
+   1003.5 ms  ✓ CPUSummary
+    987.2 ms  ✓ MPIABI_jll
+   1005.7 ms  ✓ OpenMPI_jll
+   1971.5 ms  ✓ StaticArrayInterface
+   1479.6 ms  ✓ MPICH_jll
+    904.9 ms  ✓ Roots → RootsForwardDiffExt
+   1180.6 ms  ✓ Unitful → ForwardDiffExt
+  10612.5 ms  ✓ ArrayLayouts
+   2131.8 ms  ✓ ForwardDiff → ForwardDiffStaticArraysExt
+   2377.1 ms  ✓ aws_c_auth_jll
+   8001.7 ms  ✓ FFTW
+   1116.8 ms  ✓ GeometryBasics → IntervalSetsExt
+   1302.8 ms  ✓ Packing
+    883.8 ms  ✓ IntervalArithmetic → IntervalArithmeticDiffRulesExt
+   1154.9 ms  ✓ IntervalArithmetic → IntervalArithmeticLinearAlgebraExt
+    900.8 ms  ✓ IntervalArithmetic → IntervalArithmeticIntervalSetsExt
+   1915.2 ms  ✓ IntervalArithmetic → IntervalArithmeticSparseArraysExt
+   2166.6 ms  ✓ ShaderAbstractions
+    753.7 ms  ✓ IntervalArithmetic → IntervalArithmeticIrrationalConstantsExt
+    609.2 ms  ✓ Xorg_libXrender_jll
+    515.9 ms  ✓ Xorg_libXext_jll
+    533.5 ms  ✓ Xorg_libXfixes_jll
+    645.4 ms  ✓ Xorg_libxkbfile_jll
+   1449.7 ms  ✓ ATK_jll
+   1567.3 ms  ✓ IntervalArithmetic → IntervalArithmeticForwardDiffExt
+    862.9 ms  ✓ gdk_pixbuf_jll
+   1236.6 ms  ✓ StatsFuns → StatsFunsInverseFunctionsExt
+   5566.7 ms  ✓ GridLayoutBase
+   2134.0 ms  ✓ FreeTypeAbstraction
+   2162.8 ms  ✓ StatsFuns → StatsFunsChainRulesCoreExt
+   1517.2 ms  ✓ OpenJpeg_jll
+   3527.6 ms  ✓ ColorBrewer
+   9716.4 ms  ✓ PlotUtils
+   2218.9 ms  ✓ ImageBase
+   2698.2 ms  ✓ JpegTurbo
+   1377.8 ms  ✓ Interpolations → InterpolationsUnitfulExt
+   2417.5 ms  ✓ Sixel
+   1468.1 ms  ✓ Interpolations → InterpolationsForwardDiffExt
+   3562.9 ms  ✓ PNGFiles
+   1469.2 ms  ✓ HostCPUFeatures
+    927.6 ms  ✓ PolyesterWeave
+   1169.4 ms  ✓ CloseOpenIntervals
+   1309.4 ms  ✓ StaticArrayInterface → StaticArrayInterfaceOffsetArraysExt
+    868.0 ms  ✓ LayoutPointers
+    931.9 ms  ✓ mpif_jll
+   1381.3 ms  ✓ StaticArrayInterface → StaticArrayInterfaceStaticArraysExt
+   1002.2 ms  ✓ FFTViews
+    941.0 ms  ✓ NFFTTools
+   1325.9 ms  ✓ Polynomials → PolynomialsFFTWExt
+   1744.8 ms  ✓ ArrayLayouts → ArrayLayoutsSparseArraysExt
+    668.8 ms  ✓ Xorg_libXinerama_jll
+    571.2 ms  ✓ Xorg_libXrandr_jll
+    473.7 ms  ✓ Libglvnd_jll
+    509.7 ms  ✓ Xorg_libXdamage_jll
+    502.7 ms  ✓ Xorg_libXcursor_jll
+    542.9 ms  ✓ Xorg_libXcomposite_jll
+    498.6 ms  ✓ Xorg_libXi_jll
+   3633.5 ms  ✓ aws_c_s3_jll
+    590.4 ms  ✓ libva_jll
+    609.6 ms  ✓ Xorg_xkbcomp_jll
+   2479.1 ms  ✓ Cairo_jll
+   1269.6 ms  ✓ TiledIteration
+   4985.3 ms  ✓ ExactPredicates
+   4063.6 ms  ✓ ImageAxes
+  28370.5 ms  ✓ TiffImages
+   2763.8 ms  ✓ MRIBase
+   1194.3 ms  ✓ Libepoxy_jll
+    449.9 ms  ✓ Xorg_libXtst_jll
+   1970.8 ms  ✓ libwebp_jll
+   8287.3 ms  ✓ MathTeXEngine
+   4157.1 ms  ✓ DSP
+   1265.6 ms  ✓ Xorg_xkeyboard_config_jll
+   3197.1 ms  ✓ HDF5_jll
+  36258.9 ms  ✓ CSV
+    430.5 ms  ✓ at_spi2_core_jll
+   2362.1 ms  ✓ HarfBuzz_jll
+   1567.4 ms  ✓ ImageMetadata
+  11470.2 ms  ✓ Distributions
+  15959.9 ms  ✓ BandedMatrices
+    411.9 ms  ✓ xkbcommon_jll
+  10157.0 ms  ✓ VectorizationBase
+   2298.6 ms  ✓ WebP
+   4736.7 ms  ✓ DelaunayTriangulation
+    349.4 ms  ✓ at_spi2_atk_jll
+   2106.2 ms  ✓ DSP → OffsetArraysExt
+   2773.7 ms  ✓ CSV → CSVInlineStringsExt
+   2714.6 ms  ✓ CSV → CSVFilePathsBaseExt
+   4334.2 ms  ✓ ImageMagick_jll
+   2947.9 ms  ✓ Netpbm
+   3369.4 ms  ✓ libass_jll
+   3356.9 ms  ✓ Pango_jll
+   2839.8 ms  ✓ Distributions → DistributionsTestExt
+   3504.1 ms  ✓ Distributions → DistributionsChainRulesCoreExt
+   2037.1 ms  ✓ ArrayInterface → ArrayInterfaceBandedMatricesExt
+   6654.5 ms  ✓ HDF5
+   1193.5 ms  ✓ ImageIO
+   3684.2 ms  ✓ BandedMatrices → BandedMatricesSparseArraysExt
+   2577.7 ms  ✓ SLEEFPirates
+   3481.1 ms  ✓ ImageMagick
+   2094.2 ms  ✓ Librsvg_jll
+   4125.6 ms  ✓ Cairo
+   4514.9 ms  ✓ MAT
+  35583.5 ms  ✓ DataFrames
+   5583.9 ms  ✓ MRIFiles
+   7866.6 ms  ✓ GTK3_jll
+  13418.2 ms  ✓ FFMPEG_jll
+  15456.6 ms  ✓ KernelDensity
+  15784.9 ms  ✓ BSplineKit
+  14663.6 ms  ✓ Gtk
+  21247.2 ms  ✓ LoopVectorization
+   1228.8 ms  ✓ LoopVectorization → SpecialFunctionsExt
+   1336.9 ms  ✓ LoopVectorization → ForwardDiffExt
+   3078.9 ms  ✓ ImageMorphology
+   1872.1 ms  ✓ ImageDistances
+  28015.3 ms  ✓ KomaMRIBase
+  43966.5 ms  ✓ ImageFiltering
+   3003.5 ms  ✓ KomaMRIBase → KomaMRIBaseUnitfulExt
+   4045.0 ms  ✓ VisualRegressionTests
+  18924.7 ms  ✓ KomaMRIFiles
+  17422.3 ms  ✓ MCMRSimulator
+ 121752.2 ms  ✓ Makie
+   6973.4 ms  ✓ IntervalArithmetic → IntervalArithmeticMakieExt
+   7045.9 ms  ✓ Polynomials → PolynomialsMakieExt
+  12978.9 ms  ✓ MCMRSimulator → MakieMCMRSimulator
+  32694.2 ms  ✓ CairoMakie
+  306 dependencies successfully precompiled in 263 seconds. 154 already precompiled.
+     Testing Running tests...
+┌ Warning: Adjusting maximum readout time (4.00001) to match the TR of 4.0.
+└ @ MCMRSimulator.SequenceParts ~/Documents/mcmrsimulator.jl-main-cc-near-surface-r2/src/sequence_parts.jl:756
+Running collisions
+ 55.280875 seconds (106.83 M allocations: 5.123 GiB, 2.11% gc time, 47.14% compilation time: 2% of which was recompilation)
+Running evolve
+  5.741576 seconds (14.94 M allocations: 737.583 MiB, 1.09% gc time, 97.59% compilation time: 5% of which was recompilation)
+Running permeability
+ 24.799814 seconds (92.79 M allocations: 4.582 GiB, 6.72% gc time, 10.72% compilation time)
+Running transfer
+ 54.917235 seconds (252.69 M allocations: 14.091 GiB, 5.75% gc time, 20.76% compilation time: 1% of which was recompilation)
+Running known_sequences
+135.572458 seconds (24.73 M allocations: 1.145 GiB, 0.10% gc time, 4.59% compilation time)
+Test Summary:       | Pass  Total     Time
+MCMRSimulator tests |  442    442  4m36.4s
+     Testing MCMRSimulator tests passed 
+julia --project -e   1322.57s user 82.23s system 249% cpu 9:23.27 total
+EXIT=0

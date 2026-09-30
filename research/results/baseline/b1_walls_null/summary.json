@@ -1,0 +1,81 @@
+{
+  "binding_constraint_default": "tortuosity 0.03·size_scale²/D with size_scale = w",
+  "geometry": "Walls(repeats=2.0): planes x = k·2.0, both faces, no surface parameters",
+  "pass_criterion": "|M⊥/M⊥0 − 1| ≤ 1.0e-12 and |phase| ≤ 1.0e-9° at every readout",
+  "physics": "D=3.0, R1=R2=0, θ_relax=0, permeability=0, off-resonance=0",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-09-30T11:27:08.064",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "677a7080f9ae34ef3fb34ff9139228e99215a9f8",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "b1_walls_null.jl",
+    "src_modified": false
+  },
+  "results": [
+    {
+      "config": "default_tau",
+      "max_abs_phase_deg": 0.0,
+      "max_abs_signal_deviation": 0.0,
+      "nseeds": 10,
+      "nspins_per_seed": 100000,
+      "pass": true,
+      "readout_times_ms": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ],
+      "runtime_mean_excl_first_s": 1.618834998872545,
+      "runtime_per_seed_s": [
+        4.288767099380493,
+        1.6053431034088135,
+        1.614135980606079,
+        1.6133430004119873,
+        1.6445879936218262,
+        1.7864880561828613,
+        1.6521940231323242,
+        1.5925869941711426,
+        1.5340278148651123,
+        1.5268080234527588
+      ],
+      "tau_max_ms": 0.04,
+      "us_per_spin_per_ms": 0.323766999774509,
+      "us_per_spin_step": 0.01295067999098036
+    },
+    {
+      "config": "tau_1e-3",
+      "max_abs_phase_deg": 0.0,
+      "max_abs_signal_deviation": 0.0,
+      "nseeds": 3,
+      "nspins_per_seed": 10000,
+      "pass": true,
+      "readout_times_ms": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ],
+      "runtime_mean_excl_first_s": 8.10419499874115,
+      "runtime_per_seed_s": [
+        10.624270915985107,
+        8.192807912826538,
+        8.015582084655762
+      ],
+      "tau_max_ms": 0.001,
+      "us_per_spin_per_ms": 16.2083899974823,
+      "us_per_spin_step": 0.016208389997482302
+    }
+  ],
+  "sequence": "empty_sequence() — no RF, no gradients; spins start transverse=1, longitudinal=0, phase=0"
+}

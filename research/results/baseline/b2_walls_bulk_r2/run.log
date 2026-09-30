@@ -1,0 +1,18 @@
+default timestep = MCMRSimulator.TimeSteps.TimeStep(0.04, 3.3333333333333335e-5)
+R2 = 0: runtime 1.57 s per seed (mean over seeds 2…10)
+
+== R2_bulk = 0.0125 ms⁻¹ (T2 = 80.0 ms), τ_max = 0.04 ms
+  ensemble max |S/exp(−R2 t) − 1| = 2.52e-12 (tol 2.2e-11); per spin max = 2.07e-14 (tol 1e-13); max |phase| = 0.00e+00°; positions identical to R2 = 0: true
+  runtime 1.57 s per seed, ratio to R2 = 0: 1.000  → PASS
+
+== R2_bulk = 0.025 ms⁻¹ (T2 = 40.0 ms), τ_max = 0.04 ms
+  ensemble max |S/exp(−R2 t) − 1| = 1.89e-12 (tol 2.2e-11); per spin max = 2.04e-14 (tol 1e-13); max |phase| = 0.00e+00°; positions identical to R2 = 0: true
+  runtime 1.61 s per seed, ratio to R2 = 0: 1.028  → PASS
+
+== R2_bulk = 0.05 ms⁻¹ (T2 = 20.0 ms), τ_max = 0.04 ms
+  ensemble max |S/exp(−R2 t) − 1| = 2.56e-12 (tol 2.2e-11); per spin max = 2.62e-14 (tol 1e-13); max |phase| = 0.00e+00°; positions identical to R2 = 0: true
+  runtime 1.66 s per seed, ratio to R2 = 0: 1.060  → PASS
+
+== R2_bulk = 0.1 ms⁻¹ (T2 = 10.0 ms), τ_max = 0.04 ms
+  ensemble max |S/exp(−R2 t) − 1| = 2.56e-12 (tol 2.2e-11); per spin max = 3.02e-14 (tol 1e-13); max |phase| = 0.00e+00°; positions identical to R2 = 0: true
+  runtime 1.63 s per seed, ratio to R2 = 0: 1.040  → PASS

@@ -1,0 +1,111 @@
+{
+  "bin_width_um": 0.02,
+  "geometry": "Walls(repeats=2.0): planes x = k·2.0, normal along x",
+  "lambdas_um": [
+    0.05,
+    0.1,
+    0.2,
+    0.4
+  ],
+  "nbins": 100,
+  "physics": "D=3.0, all relaxation/permeability/off-resonance/MT off",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-09-30T11:44:56.313",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "677a7080f9ae34ef3fb34ff9139228e99215a9f8",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "b3_walls_density.jl",
+    "src_modified": false
+  },
+  "results": [
+    {
+      "config": "default",
+      "histogram_pass": true,
+      "nseeds": 10,
+      "nspins_per_seed": 100000,
+      "occupancy_comparisons": 48,
+      "occupancy_outside_2sigma": 2,
+      "occupancy_pass": true,
+      "occupancy_worst_z": 2.1969582702057955,
+      "readout_times_ms": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ],
+      "runtime_s": 19.36565637588501,
+      "step_length_um": 0.4898979485566356,
+      "tau_ms": 0.04
+    },
+    {
+      "config": "tau_1e-2",
+      "histogram_pass": true,
+      "nseeds": 10,
+      "nspins_per_seed": 100000,
+      "occupancy_comparisons": 48,
+      "occupancy_outside_2sigma": 1,
+      "occupancy_pass": true,
+      "occupancy_worst_z": -2.2289839009668126,
+      "readout_times_ms": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ],
+      "runtime_s": 57.640902280807495,
+      "step_length_um": 0.2449489742783178,
+      "tau_ms": 0.01
+    },
+    {
+      "config": "tau_1e-3",
+      "histogram_pass": true,
+      "nseeds": 10,
+      "nspins_per_seed": 100000,
+      "occupancy_comparisons": 48,
+      "occupancy_outside_2sigma": 0,
+      "occupancy_pass": true,
+      "occupancy_worst_z": -1.8475,
+      "readout_times_ms": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0
+      ],
+      "runtime_s": 484.49180698394775,
+      "step_length_um": 0.07745966692414834,
+      "tau_ms": 0.001
+    },
+    {
+      "config": "tau_1e-4",
+      "histogram_pass": true,
+      "nseeds": 10,
+      "nspins_per_seed": 100000,
+      "occupancy_comparisons": 32,
+      "occupancy_outside_2sigma": 0,
+      "occupancy_pass": true,
+      "occupancy_worst_z": 1.8446763318346038,
+      "readout_times_ms": [
+        0.0,
+        1.0,
+        2.0,
+        5.0
+      ],
+      "runtime_s": 468.910578250885,
+      "step_length_um": 0.024494897427831782,
+      "tau_ms": 0.0001
+    }
+  ]
+}

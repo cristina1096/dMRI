@@ -1,0 +1,122 @@
+{
+  "criterion_note": "first run used ensemble tol 1e-12, below MCMR summation roundoff (~2.5e-12); replaced by the roundoff bound plus a per-spin check",
+  "geometry": "Walls(repeats=2.0): planes x = k·2.0, no surface parameters",
+  "nseeds": 10,
+  "nspins_per_seed": 100000,
+  "pass_criterion": "ensemble |S/exp(−R2 t) − 1| ≤ 2.248201624865942e-11 ((n_steps+N)·eps); per spin ≤ 1.0e-13; |phase| ≤ 1.0e-9°; positions == R2=0 run (seed 1, t=50 ms)",
+  "physics": "D=3.0, R1=0, global R2 = R2_bulk, θ_relax=0, permeability=0, off-resonance=0",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-09-30T13:36:36.387",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "677a7080f9ae34ef3fb34ff9139228e99215a9f8",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "b2_walls_bulk_r2.jl",
+    "src_modified": false
+  },
+  "readout_times_ms": [
+    0.0,
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0
+  ],
+  "results": [
+    {
+      "R2_bulk": 0.0125,
+      "max_abs_phase_deg": 0.0,
+      "max_abs_rel_dev": 2.524203068787756e-12,
+      "max_abs_rel_dev_per_spin": 2.0650148258027912e-14,
+      "pass": true,
+      "positions_identical_to_R2_0": true,
+      "runtime_per_seed_s": [
+        1.6034700870513916,
+        1.5461540222167969,
+        1.5940890312194824,
+        1.5473239421844482,
+        1.5538721084594727,
+        1.5642509460449219,
+        1.6172490119934082,
+        1.5922150611877441,
+        1.5584840774536133,
+        1.5495920181274414
+      ],
+      "runtime_ratio_to_R2_0": 1.0002388431138616,
+      "tau_max_ms": 0.04
+    },
+    {
+      "R2_bulk": 0.025,
+      "max_abs_phase_deg": 0.0,
+      "max_abs_rel_dev": 1.8887114094923163e-12,
+      "max_abs_rel_dev_per_spin": 2.042810365310288e-14,
+      "pass": true,
+      "positions_identical_to_R2_0": true,
+      "runtime_per_seed_s": [
+        1.6482720375061035,
+        1.5488629341125488,
+        1.5694899559020996,
+        1.5671310424804688,
+        1.6754729747772217,
+        1.661613941192627,
+        1.5876760482788086,
+        1.5703239440917969,
+        1.67877197265625,
+        1.6491060256958008
+      ],
+      "runtime_ratio_to_R2_0": 1.0275208898654467,
+      "tau_max_ms": 0.04
+    },
+    {
+      "R2_bulk": 0.05,
+      "max_abs_phase_deg": 0.0,
+      "max_abs_rel_dev": 2.5588420271560608e-12,
+      "max_abs_rel_dev_per_spin": 2.6201263381153694e-14,
+      "pass": true,
+      "positions_identical_to_R2_0": true,
+      "runtime_per_seed_s": [
+        1.5841658115386963,
+        1.633162021636963,
+        1.7514450550079346,
+        1.67439603805542,
+        1.6452960968017578,
+        1.6316790580749512,
+        1.6300530433654785,
+        1.6444499492645264,
+        1.726219892501831,
+        1.6259257793426514
+      ],
+      "runtime_ratio_to_R2_0": 1.0596868012846905,
+      "tau_max_ms": 0.04
+    },
+    {
+      "R2_bulk": 0.1,
+      "max_abs_phase_deg": 0.0,
+      "max_abs_rel_dev": 2.559064071760986e-12,
+      "max_abs_rel_dev_per_spin": 3.019806626980426e-14,
+      "pass": true,
+      "positions_identical_to_R2_0": true,
+      "runtime_per_seed_s": [
+        1.6950170993804932,
+        1.6673600673675537,
+        1.709007978439331,
+        1.619131088256836,
+        1.6234889030456543,
+        1.6590960025787354,
+        1.6259541511535645,
+        1.649425983428955,
+        1.5646088123321533,
+        1.5618798732757568
+      ],
+      "runtime_ratio_to_R2_0": 1.0396671893016656,
+      "tau_max_ms": 0.04
+    }
+  ],
+  "sequence": "empty_sequence() — no RF; spins start transverse=1, longitudinal=0, phase=0"
+}

@@ -1,0 +1,22 @@
+size_scale = 2.0 µm; default timestep = MCMRSimulator.TimeSteps.TimeStep(0.04, 3.3333333333333335e-5)
+
+== default_tau: τ_max = 0.04 ms, N_spins = 100000, seeds = 10
+  seed  1: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 4.29 s
+  seed  2: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.61 s
+  seed  3: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.61 s
+  seed  4: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.61 s
+  seed  5: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.64 s
+  seed  6: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.79 s
+  seed  7: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.65 s
+  seed  8: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.59 s
+  seed  9: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.53 s
+  seed 10: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 1.53 s
+  max |M⊥/M⊥0 − 1| = 0.00e+00, max |phase| = 0.00e+00°  → PASS
+  runtime: 1.62 s per seed (excl. first), 0.3238 µs per spin per ms of sequence, 0.0130 µs per spin-step
+
+== tau_1e-3: τ_max = 0.001 ms, N_spins = 10000, seeds = 3
+  seed  1: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 10.62 s
+  seed  2: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 8.19 s
+  seed  3: M⊥(50)/M⊥(0) − 1 = 0.00e+00   phase(50) = 0.00e+00°   runtime 8.02 s
+  max |M⊥/M⊥0 − 1| = 0.00e+00, max |phase| = 0.00e+00°  → PASS
+  runtime: 8.10 s per seed (excl. first), 16.2084 µs per spin per ms of sequence, 0.0162 µs per spin-step
