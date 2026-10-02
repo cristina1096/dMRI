@@ -1,0 +1,55 @@
+{
+  "T_ms": 50.0,
+  "cross_check_pass": true,
+  "cross_check_z": 1.7766212315890295,
+  "h_um": 0.1,
+  "note": "toy and MCMR use different random streams; the cross-check is statistical",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-03T09:01:32.751",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "78c6a228e02e056abea2b68e9c3a18e5b8942ae6",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_3_7_endpoint.jl",
+    "src_modified": false
+  },
+  "rate": 0.1,
+  "rows": [
+    {
+      "tau_ms": 0.001,
+      "nspins": 20000,
+      "S_exact": 0.6067876331670611,
+      "S_exact_sem": 2.6035565657305705e-5,
+      "S_endpoint": 0.606782699398655,
+      "S_endpoint_sem": 2.5208693336211116e-5,
+      "bias": -4.933768406045758e-6,
+      "bias_in_sem": -0.13614196329586772
+    },
+    {
+      "tau_ms": 0.01,
+      "nspins": 100000,
+      "S_exact": 0.6068972418618019,
+      "S_exact_sem": 1.441305371520083e-5,
+      "S_endpoint": 0.6068719620070813,
+      "S_endpoint_sem": 1.0864011031809126e-5,
+      "bias": -2.527985472067229e-5,
+      "bias_in_sem": -1.4006311918960264
+    },
+    {
+      "tau_ms": 0.04,
+      "nspins": 100000,
+      "S_exact": 0.6070713506985606,
+      "S_exact_sem": 1.8957696402983753e-5,
+      "S_endpoint": 0.6072076784445626,
+      "S_endpoint_sem": 1.8197072205787612e-5,
+      "bias": 0.00013632774600202957,
+      "bias_in_sem": 5.187925193035573
+    }
+  ]
+}
