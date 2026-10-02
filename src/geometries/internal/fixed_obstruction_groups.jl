@@ -42,6 +42,7 @@ Properties:
 - `volume`: R1, R2, and off-resonance properties of the spins inside the obstructions.
 - `surface`: R1, R2, off-resonance, surface_density and dwell_time properties of particles stuck to the surface. Also, contains the permeability and surface relaxation to process collsions.
 - `vertices`: vector of vertices (only used for a mesh).
+- `layer`: near-surface R2 layer, `nothing` or one `WallLayer` per obstruction (walls only).
 """
 struct FixedObstructionGroup{
     N, 
@@ -51,7 +52,8 @@ struct FixedObstructionGroup{
     V <: NamedTuple{(:R1, :R2, :off_resonance)},
     S <: NamedTuple{(:R1, :R2, :off_resonance, :permeability, :surface_density, :dwell_time, :surface_relaxation)},
     A <: NamedTuple,
-    K
+    K,
+    L
     }
     repeats :: R
     parent_index :: Int
@@ -73,17 +75,20 @@ struct FixedObstructionGroup{
 
     # Additional arguments that should be passed around for the `obstructions` to work
     args :: A
-    function FixedObstructionGroup(obstructions, repeats, parent_index, original_index, rotation, grid, volume, surface, size_scale, args)
+
+    # Near-surface R2 layer: `nothing`, or one `WallLayer` per obstruction (walls only)
+    layer :: L
+    function FixedObstructionGroup(obstructions, repeats, parent_index, original_index, rotation, grid, volume, surface, size_scale, args; layer=nothing)
         N = size(rotation, 2)
         repeats = isnothing(repeats) ? nothing : SVector{N, Float64}(repeats)
         new{
             N, typeof(repeats), eltype(obstructions), typeof(grid),
-            typeof(volume), typeof(surface), typeof(args), 3 * size(rotation, 2)
+            typeof(volume), typeof(surface), typeof(args), 3 * size(rotation, 2), typeof(layer)
         }(
             repeats, parent_index, original_index, 
             rotation, transpose(rotation), 
             grid, volume, surface,
-            size_scale, args,
+            size_scale, args, layer,
         )
     end
 end

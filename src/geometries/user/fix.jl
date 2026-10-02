@@ -48,7 +48,47 @@ function fix_type end
 
 function fix_type(walls::Walls, index::Int, original_index::Int; kwargs...)
     base_obstructions = fill(Internal.Wall(), length(walls))
-    apply_properties(walls, base_obstructions, index, original_index; surface="surface", kwargs...)
+    layer = wall_layers(walls; density=kwargs[:density])
+    apply_properties(walls, base_obstructions, index, original_index; surface="surface", layer=layer, kwargs...)
+end
+
+"""
+    wall_layers(walls; density=0.)
+
+Resolves the near-surface layer parameters of every wall into `Internal.WallLayer` objects.
+Side-specific fields (`layer_rho_positive`, ...) override the both-sides fields (`layer_rho`, `layer_h`).
+
+Returns `nothing` if no wall has a layer, so that simulations without a layer run the unmodified code.
+`density` is the global surface density passed to `Simulation` (used only for the stuck-spin warning).
+"""
+function wall_layers(walls::Walls; density=0.)
+    function resolve(quantity::String, side::String, i::Int)
+        specific = getproperty(walls, Symbol("layer_" * quantity * "_" * side))[i]
+        isnothing(specific) || return Float64(specific)
+        both = getproperty(walls, Symbol("layer_" * quantity))[i]
+        return isnothing(both) ? 0.0 : Float64(both)
+    end
+    spacing = size_scale(walls; ignore_user_value=true)
+    positions = value_as_vector(walls.position)
+    layers = Internal.WallLayer[]
+    for i in 1:length(walls)
+        sides = map(("positive", "negative")) do side
+            rho = resolve("rho", side, i)
+            h = resolve("h", side, i)
+            rho < 0 && error("Wall $i, $side side: layer_rho must be >= 0, got $rho.")
+            h < 0 && error("Wall $i, $side side: layer_h must be >= 0, got $h.")
+            rho > 0 && iszero(h) && error("Wall $i, $side side: layer_h must be > 0 when layer_rho > 0.")
+            rho > 0 && h > spacing && error("Wall $i, $side side: layer_h = $h um exceeds the spacing between walls ($spacing um), so the layer would pass through a neighbouring wall.")
+            Internal.LayerSide(rho, h)
+        end
+        push!(layers, Internal.WallLayer(Float64(positions[i]), sides...))
+    end
+    if all(l -> iszero(l.positive.rho) && iszero(l.negative.rho), layers)
+        return nothing
+    end
+    stuck_possible = density > 0 || any(d -> !isnothing(d) && d > 0, value_as_vector(walls.density))
+    stuck_possible && @warn "The near-surface layer is not applied while a spin is stuck to a wall (surface density > 0)."
+    return layers
 end
 
 function fix_type(cylinders::Cylinders, index::Int, original_index::Int; kwargs...)
@@ -136,7 +176,7 @@ This function applies (if appropriate):
 - repeats
 - mesh vertices
 """
-function apply_properties(user_obstructions::ObstructionGroup, internal_obstructions::Vector{<:Internal.FixedObstruction}, index::Int, original_index::Int; surface=nothing, volume=nothing, apply_shift=true, kwargs...)
+function apply_properties(user_obstructions::ObstructionGroup, internal_obstructions::Vector{<:Internal.FixedObstruction}, index::Int, original_index::Int; surface=nothing, volume=nothing, apply_shift=true, layer=nothing, kwargs...)
     # apply shifts
     if apply_shift && hasproperty(user_obstructions, :position)
         shifts = isglobal(user_obstructions.position) ? fill(user_obstructions.position.value, length(user_obstructions)) : user_obstructions.position.value
@@ -204,7 +244,8 @@ function apply_properties(user_obstructions::ObstructionGroup, internal_obstruct
         volume,
         surface,
         size_scale(user_obstructions),
-        args
+        args;
+        layer=layer,
     )
     return result
 end

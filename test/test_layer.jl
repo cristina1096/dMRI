@@ -33,3 +33,63 @@
         @test Layers.side_exponent(Layers.LayerSide(0.0, 0.0), 0.1, 0.3, 0.2) == 0.0
     end
 end
+
+@testset "test_layer.jl: wall layer parameters" begin
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+
+    @testset "no layer gives nothing" begin
+        @test geom(mr.Walls(repeats=2.))[1].layer === nothing
+        @test geom(mr.Walls(repeats=2., layer_h=0.5))[1].layer === nothing
+    end
+
+    @testset "same layer on both sides" begin
+        l = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5))[1].layer[1]
+        @test l.position == 0.0
+        @test (l.positive.rho, l.positive.h) == (0.05, 0.5)
+        @test (l.negative.rho, l.negative.h) == (0.05, 0.5)
+    end
+
+    @testset "one side only" begin
+        l = geom(mr.Walls(repeats=2., layer_rho_positive=0.05, layer_h_positive=0.5))[1].layer[1]
+        @test (l.positive.rho, l.positive.h) == (0.05, 0.5)
+        @test l.negative.rho == 0.0
+    end
+
+    @testset "side-specific values override both-sides values" begin
+        l = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5,
+            layer_rho_negative=0.2, layer_h_negative=0.4))[1].layer[1]
+        @test (l.positive.rho, l.positive.h) == (0.05, 0.5)
+        @test (l.negative.rho, l.negative.h) == (0.2, 0.4)
+    end
+
+    @testset "per-wall values reach the right wall" begin
+        layers = geom(mr.Walls(position=[0., 1.], layer_rho=[0.05, 0.], layer_h=0.4))[1].layer
+        @test [l.position for l in layers] == [0.0, 1.0]
+        @test layers[1].positive.rho == 0.05
+        @test layers[2].positive.rho == 0.0
+    end
+
+    @testset "validation" begin
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=-0.1, layer_h=0.5))
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=-0.5))
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.1))              # h = 0
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=2.5)) # h > spacing 2
+        @test_throws ErrorException geom(mr.Walls(position=[0., 1.], layer_rho=0.1, layer_h=1.5))
+    end
+
+    @testset "warning when spins can stick to the wall" begin
+        @test_logs (:warn, r"not applied while a spin is stuck") geom(
+            mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, density=1., dwell_time=1.))
+    end
+
+    @testset "JSON round trip keeps the layer fields" begin
+        walls = mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_rho_negative=0.)
+        io = IOBuffer()
+        mr.write_geometry(io, walls)
+        back = mr.read_geometry_json(String(take!(io)))
+        @test back.layer_rho.value == 0.05
+        @test back.layer_h.value == 0.5
+        @test back.layer_rho_negative.value == 0.0
+        @test isnothing(back.layer_h_positive.value)
+    end
+end
