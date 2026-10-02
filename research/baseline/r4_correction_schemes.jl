@@ -70,7 +70,7 @@ end
 
 toy_rows = NamedTuple[]
 toy = Dict{String, Any}()
-for T in DURATIONS
+for T in DURATIONS # whether the attenuation at time T stays the same as τ shrinks
     θ = 1 / T
     att = Dict(m => zeros(NSEEDS, length(NSTEPS)) for m in SCHEMES)
     for seed in 1:NSEEDS, (j, ns) in enumerate(NSTEPS)

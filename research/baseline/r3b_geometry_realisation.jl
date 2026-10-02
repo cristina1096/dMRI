@@ -17,7 +17,7 @@ const NGEOM = parse(Int, get(ENV, "NGEOM", "10"))
 const NSPINS = 10_000
 const TAU = 1e-3
 const T_EVOLVE = 10.0
-const DENSITY = π / 3.0^2
+const DENSITY = π / 3.0^2 # random_low with r = 1, gap 1
 
 vals = Float64[]
 for g in 1:NGEOM

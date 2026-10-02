@@ -81,8 +81,8 @@ for name in configs
     end
     ref = mean(means[1:3]); σref = sqrt(mean(sigmas[1:3] .^ 2) / 3)
     # onset: largest τ such that all smaller τ' are within tolerance
-    ok2σ = [abs(means[i] - ref) <= 2 * sqrt(sigmas[i]^2 + σref^2) for i in eachindex(TIMESTEPS)]
-    ok1 = [abs(means[i] - ref) / ref <= 0.01 for i in eachindex(TIMESTEPS)]
+    ok2σ = [abs(means[i] - ref) <= 2 * sqrt(sigmas[i]^2 + σref^2) for i in eachindex(TIMESTEPS)] # 2 * sigma
+    ok1 = [abs(means[i] - ref) / ref <= 0.01 for i in eachindex(TIMESTEPS)] # fixed tolerance
     lastok(v) = (k = findfirst(!, v); isnothing(k) ? TIMESTEPS[end] : TIMESTEPS[max(k - 1, 1)])
     onset2σ = lastok(ok2σ); onset1pct = lastok(ok1)
     idx_default = argmin(abs.(log10.(TIMESTEPS) .- log10(default_tau)))

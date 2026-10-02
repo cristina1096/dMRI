@@ -1,5 +1,7 @@
 # Phase 1 · Baseline Record (P1.3, P1.4)
 
+*Naming:* Rep1–Rep5 are the Phase 1 reproduction targets P1.3.1–P1.3.5 (formerly labelled R1–R5; renamed 2026-10-01 to avoid confusion with the relaxation rates R₁, R₂). Script and result folder names (`r1_…`, `r2_…`) keep the old prefix. "Walls (w = …)" is the parallel-plane geometry `Walls(repeats=w)`, previously called "slab".
+
 Baseline results of the **unmodified** MCMRSimulator. Each run lists every setting needed to regenerate it, so that any later signal change can be attributed to the R₂(d) modification rather than to the setup.
 
 - Code map and trace: [phase1_code_log.md](phase1_code_log.md)
@@ -10,12 +12,12 @@ Baseline results of the **unmodified** MCMRSimulator. Each run lists every setti
 
 | ID | Result | Reference | Criterion | Outcome |
 |---|---|---|---|---|
-| P1.3.1 | **R1** surface relaxation, slab | Eq. 17 | within 2σ | **PASS**: −1.87σ (vs exact Brownstein–Tarr: +0.53σ) |
-| P1.3.1 | **R1** surface relaxation, single cylinder | Eq. 17 | within 2σ | **Not met against Eq. 17 (−3.15σ). Cause identified:** Eq. 17 is the fast-diffusion limit and exceeds the exact Brownstein–Tarr rate by 0.081%. At 7.9 × 10⁴ spins/config, σ = 0.027% resolves that gap. Against the exact rate: **−0.17σ, PASS** |
-| P1.3.2 | **R2** compartment T₂ (spin echo, MT = 5e-3) | Fig. 8 (notebook `se_grid_plot`) | 5% (read off figure) | **PASS**: every TE compared within 5% of the digitised notebook figure (max 4.9%, mean \|Δ\| ≤ 2.4%), with and without myelin susceptibility |
-| P1.3.3 | **R3** timestep plateau, ADC vs τ | Supp. Fig. S1 | plateau onset near τ ≈ 0.01 ms | **PASS**: onset (2σ) 6.3 × 10⁻³ – 2.5 × 10⁻² ms in all 4 packings |
-| P1.3.4 | **R4** correction schemes, 1D slab | Supp. Fig. S2C | log scheme flat to τ ≈ 10⁻³ ms; record θ_relax | **PASS**: flat within 2σ to 3.3 × 10⁻³ ms (toy) and 1.25 × 10⁻² ms (MCMR) at θ = 10; MCMR matches the toy log scheme at every τ |
-| P1.3.5 | R5 (optional) | Fig. 5 | — | not run |
+| P1.3.1 | **Rep1** surface relaxation, walls (w = 2 µm) | exact solution (Brownstein–Tarr lowest mode); Eq. 17 recorded | within 2 SEM of the exact rate | **PASS**: +1.7 SEM vs exact (relative +2.4 × 10⁻⁴). Eq. 17 (first-order approximation) is 0.11% above the exact rate: −5.9 SEM, resolved by the data |
+| P1.3.1 | **Rep1** surface relaxation, single cylinder | exact solution (Brownstein–Tarr lowest mode); Eq. 17 recorded | within 2 SEM of the exact rate | **PASS**: −0.5 SEM vs exact (relative −4.6 × 10⁻⁵). Eq. 17 is 0.08% above the exact rate: −10 SEM, resolved by the data |
+| P1.3.2 | **Rep2** compartment T₂ (spin echo, MT = 5e-3) | Fig. 8 (notebook `se_grid_plot`) | 5% (read off figure) | **PASS**: every TE compared within 5% of the digitised notebook figure (max 4.9%, mean \|Δ\| ≤ 2.4%), with and without myelin susceptibility |
+| P1.3.3 | **Rep3** timestep plateau, ADC vs τ | Supp. Fig. S1 | plateau onset near τ ≈ 0.01 ms | **PASS**: onset (2σ) 6.3 × 10⁻³ – 2.5 × 10⁻² ms in all 4 packings |
+| P1.3.4 | **Rep4** correction schemes, walls (w = 1 µm) | Supp. Fig. S2C | log scheme flat to τ ≈ 10⁻³ ms; record θ_relax | **PASS**: flat within 2σ to 3.3 × 10⁻³ ms (toy) and 1.25 × 10⁻² ms (MCMR) at θ = 10; MCMR matches the toy log scheme at every τ |
+| P1.3.5 | Rep5 (optional) | Fig. 5 | — | not run |
 | B0 | Existing test suite (collisions, evolve, permeability, transfer, known_sequences) | package tests | all pass | **PASS**: 442 / 442 |
 | B1 | Wall reference config, null run (no relaxation) | exact: M⊥ = 1 | \|M⊥/M⊥0 − 1\| ≤ 1e-12 | **PASS**: deviation exactly 0 at every readout, both τ |
 | B2 | Wall reference config, bulk R2 only | exact: exp(−R2·t) | roundoff bound (n_steps + N)·ε; positions == R2 = 0 | **PASS** for R2 = 1/80 – 0.1 ms⁻¹: 2.6e-12 ensemble, 3e-14 per spin; trajectories unchanged by R2 |
@@ -30,12 +32,12 @@ All tests run on unmodified `src/`. P1.x tests reproduce the paper (Phase 1). B-
 | ID | What is tested | Why (what it protects later) | Result | Section |
 |---|---|---|---|---|
 | P1.2.6 | One cylinder, 100 spins, spin echo; one spin's position and M logged every step | Confirms the reading of the code (step draw, reflection, `θ_relax` application) before editing it | PASS (max rel. error 6e-16) | [trace](#run-p126-single-spin-trace) |
-| R1 slab | Surface relaxation `θ_relax` on walls, w = 2 µm, vs Eq. 17 | Paper reproduction. Phase 2 uses B4 (reference curves in the wall reference config) instead | PASS (−1.87σ; +0.53σ vs Brownstein–Tarr) | [R1](#run-r1-surface-relaxation-p131) |
-| R1 cylinder | Same, one cylinder a = 1 µm | Curved-geometry reference for Phase 3 | −3.15σ vs Eq. 17, −0.17σ vs exact BT (Eq. 17 bias 0.08%). **Decision open** | [R1](#run-r1-surface-relaxation-p131) |
-| R2 | Compartment T₂ in myelinated white matter | Confirms the full simulator reproduces a published result with realistic settings | PASS (≤ 4.9% vs digitised Fig. 8) | [R2](#run-r2-compartment-t-in-myelinated-white-matter-p132) |
-| R3 | Extra-axonal ADC vs τ, 4 cylinder packings | Where diffusion/collision results stop depending on τ; the default τ sits at the knee for tight packings | PASS (onset 6e-3–2.5e-2 ms) | [R3](#run-r3-timestep-plateau-of-extra-axonal-adc-p133) |
-| R4 | Linear / logarithmic / log+return correction schemes, 1D slab | Identifies the `θ_relax` scheme used (logarithmic), i.e. what the B4 reference curves are made of | PASS (log scheme flat to 1.25e-2 ms at θ = 10) | [R4](#run-r4-surface-relaxation-correction-schemes-1d-slab-p134) |
-| R5 | Diffusion vs Mitra / van Gelderen (optional) | — | not run | — |
+| Rep1 walls | Surface relaxation `θ_relax` on walls, w = 2 µm, vs Eq. 17 | Paper reproduction. Phase 2 uses B4 (reference curves in the wall reference config) instead | PASS vs exact (+1.7 SEM); Eq. 17 off by 0.11% (−5.9 SEM) | [Rep1](#run-rep1-surface-relaxation-p131) |
+| Rep1 cylinder | Same, one cylinder a = 1 µm | Curved-geometry reference for Phase 3 | PASS vs exact (−0.5 SEM); Eq. 17 off by 0.08% (−10 SEM). Decided 2026-10-02 | [Rep1](#run-rep1-surface-relaxation-p131) |
+| Rep2 | Compartment T₂ in myelinated white matter | Confirms the full simulator reproduces a published result with realistic settings | PASS (≤ 4.9% vs digitised Fig. 8) | [Rep2](#run-rep2-compartment-t-in-myelinated-white-matter-p132) |
+| Rep3 | Extra-axonal ADC vs τ, 4 cylinder packings | Where diffusion/collision results stop depending on τ; the default τ sits at the knee for tight packings | PASS (onset 6e-3–2.5e-2 ms) | [Rep3](#run-rep3-timestep-plateau-of-extra-axonal-adc-p133) |
+| Rep4 | Linear / logarithmic / log+return correction schemes, walls (w = 1 µm) | Identifies the `θ_relax` scheme used (logarithmic), i.e. what the B4 reference curves are made of | PASS (log scheme flat to 1.25e-2 ms at θ = 10) | [Rep4](#run-rep4-surface-relaxation-correction-schemes-walls-w--1-µm-p134) |
+| Rep5 | Diffusion vs Mitra / van Gelderen (optional) | — | not run | — |
 | **B0** | Existing package tests for collisions, evolve, permeability, transfer, known_sequences | A test that fails after the R₂(d) change must be one you broke, not one already failing | **PASS** 442 / 442 | [B0](#run-b0-existing-test-suite) |
 | **B1** | Wall reference config with nothing relaxing: M⊥(t)/M⊥(0) and phase; τ_max chosen; runtime | Target for V0b (λ = 0 must reproduce this) and for P2.2.8 (λ = 0 must not slow down) | **PASS**: exactly 1 and 0°; τ_max = 0.04 ms (tortuosity); 0.013 µs per spin-step | [B1](#run-b1-wall-reference-configuration-null-run) |
 | **B2** | Bulk R2 alone (1/80, 0.025, 0.05, 0.1 ms⁻¹) in the reference config: signal, phase, trajectories, runtime | Fixes how the old code applies R2_bulk, the first term of R2_total = R2_bulk + ΔR2(d). Phase 2 must keep it intact (P2.2.5, P2.2.7, P2.2.8, V0b, additivity test) | **PASS**: S = exp(−R2·t) to 2.6e-12 (per spin 3e-14); positions bit-identical to R2 = 0; runtime +0–6% | [B2](#run-b2-bulk-r2-in-the-wall-reference-configuration) |
@@ -45,7 +47,7 @@ All tests run on unmodified `src/`. P1.x tests reproduce the paper (Phase 1). B-
 | B6 | Route A: layer built from permeable boundaries + inside R2 | Independent check on the step profile (V10). Walls have no inside volume, so this probably needs meshes | **deferred to future work** (decision 2026-09-30) | — |
 
 **Two findings about the paper's figure notebooks** (they affect how references are read):
-1. **Supp. Fig. S1 x-axis mislabelled.** `turtuosity.ipynb` computes ADC at τ = 10^(−3:0.2:1) (cell 17) but plots it against τ = 10^(−4:0.25:1) (cell 18). The saved figure is therefore shifted: its first point is τ = 10⁻³ ms, not 10⁻⁴. R3 is compared at the true τ.
+1. **Supp. Fig. S1 x-axis mislabelled.** `turtuosity.ipynb` computes ADC at τ = 10^(−3:0.2:1) (cell 17) but plots it against τ = 10^(−4:0.25:1) (cell 18). The saved figure is therefore shifted: its first point is τ = 10⁻³ ms, not 10⁻⁴. Rep3 is compared at the true τ.
 2. **Supp. Fig. S2C x-axis.** In the saved image, all three rows use the x-axis and dashed line of the T = 0.1 ms row (dashed line at τ = 10⁻³ ms = 0.01·T). The tracker's "flat to τ ≈ 10⁻³ ms" therefore refers to T = 0.1 ms, θ_relax = 10.
 
 ## Common environment (all runs)
@@ -80,18 +82,18 @@ julia --project=research/baseline -t 8 research/baseline/b2_walls_bulk_r2.jl
 julia --project=research/baseline -t 8 research/baseline/b3_walls_density.jl
 julia --project=research/baseline -t 8 research/baseline/b4_theta_reference.jl   # ≈ 45 min
 julia --project=research/baseline -t 8 research/baseline/b5_runtime_vs_tau.jl    # ≈ 3 min
-# R2 figure comparison (needs a clone of mcmr_paper_figures):
+# Rep2 figure comparison (needs a clone of mcmr_paper_figures):
 python3 research/baseline/r2_digitise_notebook_fig8.py <mcmr_paper_figures>/Figure_8_9/gradient_spin_echo.ipynb
 ```
 `NSPINS`, `NSEEDS` (and `NSPINS_TOY`, `NSPINS_MCMR`, `NGEOM`) can be overridden by environment variables. The values below are the defaults.
 
 ---
 
-## Run R1: surface relaxation (P1.3.1)
+## Run Rep1: surface relaxation (P1.3.1)
 
 Script [r1_surface_relaxation.jl](baseline/r1_surface_relaxation.jl) → [results/baseline/r1_surface_relaxation/](results/baseline/r1_surface_relaxation/)
 
-| Field | Slab | Single cylinder |
+| Field | Walls (w = 2 µm) | Single cylinder |
 |---|---|---|
 | Geometry | `Walls(repeats=2)`: walls every w = 2 µm, both faces active | `Cylinders(radius=1)`: one cylinder, not repeating |
 | Exact S/V | 2/w = **1.0 µm⁻¹** | 2/a = **2.0 µm⁻¹** (inside) |
@@ -113,11 +115,13 @@ Script [r1_surface_relaxation.jl](baseline/r1_surface_relaxation.jl) → [result
 | Eq. 17 / BT − 1 | 1.09 × 10⁻³ | 8.1 × 10⁻⁴ |
 | Runtime (10 seeds) | 14 s | 61 s |
 
+**Criterion decision (2026-10-02).** The original tracker criterion was "within 2σ of Eq. 17", with σ the spread of one seed's fitted rate. Two problems: the tested value is the mean of 10 seeds, whose uncertainty is the SEM = σ/√10 (so 2σ ≈ 6 SEM, lenient); and Eq. 17 is a first-order approximation, measurably above the exact rate at this precision. Rep1 is therefore judged **against the exact Brownstein–Tarr rate within 2 SEM**: walls +1.7 SEM, cylinder −0.5 SEM → **PASS** for both. Against Eq. 17 both geometries are resolved as different (walls −5.9 SEM, cylinder −10 SEM), which is the approximation error of Eq. 17, not a simulator error. The σ-based numbers in the table above are kept for the record.
+
 **Interpretation.** The simulator reproduces surface relaxation to 0.03% of the exact solution. The cylinder "failure" against Eq. 17 is a real, resolvable difference between Eq. 17 (the first-order fast-diffusion approximation, κ = ρa/D = 3.3 × 10⁻³) and the exact eigenvalue. It is not a simulator error. (Phase 2 does not compare against Eq. 17 or Brownstein–Tarr: the R₂(d) model is fitted to the baseline reference curves of B4 instead.)
 
 ---
 
-## Run R2: compartment T₂ in myelinated white matter (P1.3.2)
+## Run Rep2: compartment T₂ in myelinated white matter (P1.3.2)
 
 Script [r2_compartment_t2.jl](baseline/r2_compartment_t2.jl) → [results/baseline/r2_compartment_t2_myelin_false/](results/baseline/r2_compartment_t2_myelin_false/) and [..._myelin_true/](results/baseline/r2_compartment_t2_myelin_true/). Figure comparison: [r2_digitise_notebook_fig8.py](baseline/r2_digitise_notebook_fig8.py) → `notebook_fig8_comparison.csv` in each folder.
 
@@ -152,7 +156,7 @@ Apparent T₂ = −TE / log(S(TE)/N) (notebook definition), mean ± σ over 10 s
 
 ---
 
-## Run R3: timestep plateau of extra-axonal ADC (P1.3.3)
+## Run Rep3: timestep plateau of extra-axonal ADC (P1.3.3)
 
 Scripts [r3_timestep_plateau.jl](baseline/r3_timestep_plateau.jl) and [r3b_geometry_realisation.jl](baseline/r3b_geometry_realisation.jl) → [results/baseline/r3_timestep_plateau/](results/baseline/r3_timestep_plateau/)
 
@@ -180,7 +184,7 @@ Scripts [r3_timestep_plateau.jl](baseline/r3_timestep_plateau.jl) and [r3b_geome
 
 ---
 
-## Run R4: surface-relaxation correction schemes, 1D slab (P1.3.4)
+## Run Rep4: surface-relaxation correction schemes, walls (w = 1 µm) (P1.3.4)
 
 Script [r4_correction_schemes.jl](baseline/r4_correction_schemes.jl) → [results/baseline/r4_correction_schemes/](results/baseline/r4_correction_schemes/)
 
@@ -431,17 +435,17 @@ Script [b5_runtime_vs_tau.jl](baseline/b5_runtime_vs_tau.jl) → [results/baseli
 
 | Configuration | Observable | σ across seeds | Relative σ | Spins per seed |
 |---|---|---|---|---|
-| R1 slab | R₂ fit | 4.4 × 10⁻⁶ ms⁻¹ | 0.045% | 10 000 |
-| R1 slab | S(100 ms) | see `summary.json` `sigma_signal` | — | 10 000 |
-| R1 cylinder | R₂ fit | 5.3 × 10⁻⁶ ms⁻¹ | 0.027% | ≈ 7 860 inside |
-| R2 intra | T₂(TE = 50) | 2.0 ms | 2.3% | ≈ 348 |
-| R2 extra | T₂(TE = 50) | 1.0 ms | 1.9% | ≈ 305 |
-| R2 myelin | T₂(TE = 50) | 0.7 ms | 1.6% | ≈ 347 |
-| R3 ordered_high | ADC plateau | 0.013 µm²/ms | 1.0% | ≈ 2 880 extra |
-| R3 ordered_low | ADC plateau | 0.013 | 0.6% | ≈ 6 500 |
-| R3 random_high | ADC plateau | 0.009 | 1.1% | ≈ 3 030 |
-| R3 random_low | ADC plateau | 0.013 (geometry-to-geometry: 0.030) | 0.6% (1.5%) | ≈ 6 620 |
-| R4 MCMR, T = 10 / 1 / 0.1 | attenuation | ≤ 0.0017 / ≤ 0.0027 / ≤ 0.0053 | ≤ 0.3% / 0.5% / 1.6% | 10 000 |
+| Rep1 walls | R₂ fit | 4.4 × 10⁻⁶ ms⁻¹ | 0.045% | 10 000 |
+| Rep1 walls | S(100 ms) | see `summary.json` `sigma_signal` | — | 10 000 |
+| Rep1 cylinder | R₂ fit | 5.3 × 10⁻⁶ ms⁻¹ | 0.027% | ≈ 7 860 inside |
+| Rep2 intra | T₂(TE = 50) | 2.0 ms | 2.3% | ≈ 348 |
+| Rep2 extra | T₂(TE = 50) | 1.0 ms | 1.9% | ≈ 305 |
+| Rep2 myelin | T₂(TE = 50) | 0.7 ms | 1.6% | ≈ 347 |
+| Rep3 ordered_high | ADC plateau | 0.013 µm²/ms | 1.0% | ≈ 2 880 extra |
+| Rep3 ordered_low | ADC plateau | 0.013 | 0.6% | ≈ 6 500 |
+| Rep3 random_high | ADC plateau | 0.009 | 1.1% | ≈ 3 030 |
+| Rep3 random_low | ADC plateau | 0.013 (geometry-to-geometry: 0.030) | 0.6% (1.5%) | ≈ 6 620 |
+| Rep4 MCMR, T = 10 / 1 / 0.1 | attenuation | ≤ 0.0017 / ≤ 0.0027 / ≤ 0.0053 | ≤ 0.3% / 0.5% / 1.6% | 10 000 |
 
 Per-τ and per-TE σ are stored in each `summary.json` (`*_sigma` arrays).
 
@@ -451,6 +455,7 @@ All raw outputs are in `research/results/baseline/<run>/`. They are regenerable 
 
 ## Open items (Phase 1 exit)
 
-- **P1.4.4 tag `baseline-v1`:** not created yet. It needs a decision on the R1 cylinder criterion (Eq. 17 vs exact Brownstein–Tarr) and a commit of `research/`.
-- **P1.1.1 version pin:** the baseline was taken on MCMRSimulator 1.1.0 (this repo), not the paper's v1.0.0. R1–R4 agreement with the v1.0.0 notebook outputs suggests no behavioural difference for these features.
-- **R5** (optional) not run.
+- **P1.4.4 tag `baseline-v1`:** created 2026-09-30 on commit `06eccf3`.
+- **Rep1 criterion:** decided 2026-10-02: judged against the exact rate within 2 SEM; both geometries pass (see Run Rep1).
+- **P1.1.1 version pin:** decided 2026-10-02 to keep MCMRSimulator 1.1.0 (this repo, the code Phase 2 modifies) instead of the paper's v1.0.0. Rep1–Rep4 agree with the v1.0.0 notebook outputs, so no behavioural difference was found for these features.
+- **Rep5** (optional) not run.

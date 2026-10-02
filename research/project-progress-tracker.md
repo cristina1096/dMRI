@@ -12,7 +12,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
-| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 15 | ◐ |
+| **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 0 | ☐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
@@ -25,16 +25,16 @@ Update the "Done" column at the end of each week.
 
 **Goal.** Understand the existing code, reproduce published results with the **unmodified** simulator, and record every setting, so that any later change in signal can be attributed to the modification rather than to the setup.
 
-**Exit criterion.** R1–R4 pass, the baseline record is complete, and the `baseline-v1` commit is tagged. Phase 2 does not start until this is met.
+**Exit criterion.** Rep1–Rep4 pass, the baseline record is complete, and the `baseline-v1` commit is tagged. Phase 2 does not start until this is met.
 
 ## 1.1 Environment
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P1.1.1 | ☐ | Install Julia; install MCMRSimulator.jl **pinned to the paper's version (v1.0)** and MRIBuilder.jl | Package loads, bundled tutorial runs | — |
-| P1.1.2 | ☐ | Create git repository; commit `Project.toml` and `Manifest.toml` | Environment reproducible from a clean clone | repo |
+| P1.1.1 | ☑ | Install Julia; install MCMRSimulator.jl **pinned to the paper's version (v1.0)** and MRIBuilder.jl | Package loads, bundled tutorial runs | Julia 1.12.7, MRIBuilder 0.4.1. **Decision 2026-10-02:** keep MCMRSimulator 1.1.0 (this repo, the code Phase 2 modifies) instead of v1.0.0; Rep1–Rep4 agree with the v1.0.0 notebooks |
+| P1.1.2 | ☑ | Create git repository; commit `Project.toml` and `Manifest.toml` | Environment reproducible from a clean clone | branch `cc/near-surface-r2`; `research/baseline/Project.toml` + `Manifest.toml` committed (the root `Manifest.toml` is git-ignored by the project's rule) |
 | P1.1.3 | ☐ | Set up Revise.jl and a persistent Julia session | Code edits reload without restart | — |
-| P1.1.4 | ☐ | Clone the figure notebooks (`git.fmrib.ox.ac.uk/ndcn0236/mcmr_paper_figures`) | Notebooks open; note which are usable | notes |
+| P1.1.4 | ☑ | Clone the figure notebooks (`git.fmrib.ox.ac.uk/ndcn0236/mcmr_paper_figures`) | Notebooks open; note which are usable | used for Rep2 (`Figure_8_9/gradient_spin_echo.ipynb`), Rep3 (`Figure_S1/turtuosity.ipynb`), Rep4 (`Figure_S2/toy_model.ipynb`); notebook @ `c7b86f9`; two figure-axis issues recorded in `baseline_record.md` |
 | P1.1.5 | ☐ | Apply for cluster access | Application submitted (lead time for Phase 3) | confirmation |
 
 ## 1.2 Code study
@@ -57,11 +57,11 @@ Use notebook values where available; values read off figures carry a few percent
 
 | ID | ☐ | Result | Reference | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P1.3.1 | ◐ | **R1** — surface relaxation, slab and single cylinder: R₂ = θ_relax·√(D/π)·(S/V) | Eq. 17, analytic | Within 2σ | fig + numbers — slab PASS; cylinder −3.15σ vs Eq. 17 but −0.17σ vs exact Brownstein–Tarr (Eq. 17 bias 0.08%) — decision needed, see `baseline_record.md` |
-| P1.3.2 | ☑ | **R2** — compartment T₂: ~80 ms intra-, ~60 ms extra-axonal, ~45 ms myelin | §3.3, Fig. 8 | Within 2σ, or 5% if read off figure | fig + numbers — within 5% of digitised notebook Fig. 8 at all TEs |
-| P1.3.3 | ☑ | **R3** — timestep plateau, ADC vs τ, cylinder packings | Supp. Fig. S1 | Plateau onset near τ ≈ 0.01 ms | fig — onset 6e-3–2.5e-2 ms; notebook S1 x-axis mislabelled |
-| P1.3.4 | ☑ | **R4** — surface-relaxation correction schemes, 1D slab | Supp. Fig. S2C | Logarithmic scheme flat to τ ≈ 10⁻³ ms; confirm θ_relax used | fig + θ_relax value — θ_relax = 1/T (θ = 10 for the τ≈1e-3 row) |
-| P1.3.5 | ☐ | *(optional)* **R5** — diffusion vs Mitra / van Gelderen | Fig. 5 | Qualitative agreement | fig |
+| P1.3.1 | ☑ | **Rep1** — surface relaxation, walls (w = 2 µm) and single cylinder: R₂ = θ_relax·√(D/π)·(S/V) | Exact Brownstein–Tarr rate; Eq. 17 recorded | Within 2 SEM of the exact rate (decided 2026-10-02; originally "within 2σ of Eq. 17") | fig + numbers — PASS vs exact: walls +1.7 SEM, cylinder −0.5 SEM. Eq. 17 is 0.08–0.11% above the exact rate (resolved: −5.9 / −10 SEM); see `baseline_record.md` |
+| P1.3.2 | ☑ | **Rep2** — compartment T₂: ~80 ms intra-, ~60 ms extra-axonal, ~45 ms myelin | §3.3, Fig. 8 | Within 2σ, or 5% if read off figure | fig + numbers — within 5% of digitised notebook Fig. 8 at all TEs |
+| P1.3.3 | ☑ | **Rep3** — timestep plateau, ADC vs τ, cylinder packings | Supp. Fig. S1 | Plateau onset near τ ≈ 0.01 ms | fig — onset 6e-3–2.5e-2 ms; notebook S1 x-axis mislabelled |
+| P1.3.4 | ☑ | **Rep4** — surface-relaxation correction schemes, walls (w = 1 µm) | Supp. Fig. S2C | Logarithmic scheme flat to τ ≈ 10⁻³ ms; confirm θ_relax used | fig + θ_relax value — θ_relax = 1/T (θ = 10 for the τ≈1e-3 row) |
+| P1.3.5 | ☐ | *(optional)* **Rep5** — diffusion vs Mitra / van Gelderen | Fig. 5 | Qualitative agreement | fig |
 
 **If a result fails:** find the cause before continuing. It is usually a parameter mismatch, and the cause is worth recording.
 
@@ -72,14 +72,14 @@ Use notebook values where available; values read off figures carry a few percent
 | P1.4.1 | ☑ | Baseline record for every run (software versions + commit hashes, hardware, geometry with exact S/V, physics, sequence, τ_max and binding constraint, N_spins, seeds, signal, apparent T₂, σ, runtime, reference, pass/fail) | Every run has a complete entry | `baseline_record.md` — `research/baseline_record.md` |
 | P1.4.2 | ☑ | Noise floor σ for each baseline configuration, ≥ 10 seeds | σ reported per configuration | table |
 | P1.4.3 | ☑ | Save raw outputs with generating script and seed | Any result regenerable from the repo | `research/results/baseline/` + scripts in `research/baseline/`, committed |
-| P1.4.4 | ☑ | Tag commit `baseline-v1` | Tag exists | git tag `baseline-v1` (2026-09-30). R1 cylinder criterion (Eq. 17 vs exact) left open: not used by Phase 2 |
+| P1.4.4 | ☑ | Tag commit `baseline-v1` | Tag exists | git tag `baseline-v1` (2026-09-30). Rep1 cylinder criterion (Eq. 17 vs exact) left open: not used by Phase 2 |
 | P1.4.5 | ☑ | Wall-geometry baselines for Phase 2 (B0–B5): test suite, null run, bulk R₂, density/occupancy, θ_relax reference curves, runtime vs τ | Each recorded with settings, σ and pass/fail or reference role | `baseline_record.md` B-series; B6 deferred |
 
 ## Phase 1 deliverables
 
 - ☑ Code map with insertion points
-- ◐ R1–R4 reproduced with pass/fail (R1 cylinder criterion open)
-- ◐ Baseline record ☑, `baseline-v1` tag ☑; pinned environment ◐ (MCMRSimulator 1.1.0 of this repo, not the paper's v1.0.0 — see P1.1.1)
+- ☑ Rep1–Rep4 reproduced with pass/fail
+- ☑ Baseline record, `baseline-v1` tag, pinned environment (MCMRSimulator 1.1.0 of this repo by decision, see P1.1.1)
 - ☑ Noise floor σ per baseline configuration
 
 ---
@@ -98,7 +98,7 @@ Use this for every Phase 2 test unless a task says otherwise, so results are com
 
 | Parameter | Value | Note |
 |---|---|---|
-| Geometry | Repeating planar walls, spacing *w* = 2 µm | Layer on **both faces** of every gap, matching the baseline θ_relax reference (B4). For *h* > *w*/2 the two layers overlap and their contributions add (proposal Eq. 10) |
+| Geometry | Repeating planar walls, spacing *w* = 2 µm (`Walls(repeats=2)`) | Layer on **both faces** of every gap (symmetric setting `layer_rho`, `layer_h`), matching the baseline θ_relax reference (B4). For *h* > *w*/2 the two layers overlap and their contributions add (proposal Eq. 10). Side-specific settings are used only in P2.3.12 |
 | D | 3 µm²·ms⁻¹ | |
 | R₂^bulk | 0 | Isolates the layer term. Bulk is switched on only in the additivity test (P2.3.11) and in one V4 case |
 | R₁ | off | |
@@ -124,8 +124,8 @@ Everything else is **measured**, not predicted, and compared with the B4 referen
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P2.1.1 | ☐ | Define the parameter interface (proposal §3.2 III): `rho` (integrated relaxivity ρ), `h` (length scale), `shape` (*g*) as **surface** parameters; ΔR₂(0) = (ρ/*h*)·*g*(0) derived internally, never user-settable | Interface agreed and documented | design note |
-| P2.1.2 | ☐ | Construction-time validation: reject *h* < 0, ρ < 0; warn if ΔR₂(0) exceeds the rigid-lattice ceiling; warn if *h* > object size; state how overlapping layers (*h* > *w*/2) are summed (Eq. 10) | Invalid inputs rejected with clear messages | code + tests |
+| P2.1.1 | ☐ | Define the parameter interface (proposal §3.2 III), **side-specific**: on `Walls`, `layer_rho` (ρ, µm/ms) and `layer_h` (*h*, µm) apply to both sides; `layer_rho_positive`, `layer_h_positive`, `layer_rho_negative`, `layer_h_negative` override one side (positive = side where the wall's local coordinate is larger, +x for `rotation=:x`). ΔR₂(0) = (ρ/*h*)·*g*(0) derived internally, never user-settable. Shape *g*: step only for now; a `layer_shape` field is added with the other profiles (P2.4) | Interface implemented and documented in field descriptions; both-sides, one-side and two-different-sides settings tested | plan Task 2 |
+| P2.1.2 | ☐ | Construction-time validation: reject ρ < 0, *h* < 0, and *h* = 0 with ρ > 0; reject *h* larger than the wall spacing (the layer would pass through the neighbouring wall); overlapping layers (*w*/2 < *h* ≤ *w*) are allowed and summed (Eq. 10); warn that the layer is not applied while a spin is stuck (surface density > 0). *Not yet:* warning when ΔR₂(0) exceeds the rigid-lattice ceiling (needs a physical value) | Invalid inputs rejected with clear messages | plan Task 2 |
 | P2.1.3 | ☐ | Test harness: runs a configuration over seeds, returns mean, σ, runtime, layer-visit count; computes ρ from a target ΔR₂(0) and *h* (fixed-ΔR₂(0) mode used by V4/V5); loads the B4 reference curves | Harness reproduces B1, B2 and one B4 curve exactly (same seeds) | `harness.jl` |
 | P2.1.4 | ☐ | Noise floor of the model at ΔR₂(0) = 0.1 ms⁻¹, *h* = 0.1 and 0.5 µm (at *h* = 0 σ is exactly 0, B1) | σ of *S*(*t*) recorded per readout; N_spins adjusted so neighbouring *h* in the P2.3.4 sweep differ by > 10σ | σ table |
 | P2.1.5 | ☐ | Expectations script: the exact cases above, plus loading and interpolating the B4 reference curves (θ ↔ *S*(*t*)) | Exact tables and reference interpolation available before any run | `expected.jl` |
@@ -134,16 +134,20 @@ Everything else is **measured**, not predicted, and compared with the B4 referen
 
 Implement and test each component separately, in this order. Each has its own unit test, so a failure points to one component.
 
+**Implementation plan:** [docs/superpowers/plans/2026-10-01-near-surface-layer-walls.md](../docs/superpowers/plans/2026-10-01-near-surface-layer-walls.md) covers P2.1.1, P2.1.2 and P2.2.1–P2.2.8 step by step (code, tests, commands). Tick the rows here when the plan's task passes.
+
+**Design note (step profile, no RF).** Along a straight free segment the distance to a wall changes linearly, so the entry and exit points of the layer and the time spent inside it have an exact closed form (`segment_overlap`). The existing `draw_step!` already splits each step at every reflection; within each straight piece no further splitting is needed. The layer factor exp(−∫ΔR₂ d*t*) multiplies the bulk factor from `relax!`, which is R₂_total = R₂_bulk + ΔR₂(*d*). Finite RF (where the order of sub-segments matters) is Phase 3.
+
 | ID | ☐ | Component | What it does | Unit test | Pass criterion |
 |---|---|---|---|---|---|
-| P2.2.1 | ☐ | **Distance evaluation** | Signed distance from a point to the nearest wall face carrying a layer | Random points in a cell vs hand-computed distance | Exact to floating-point precision |
-| P2.2.2 | ☐ | **Crossing detection — entry** | Detect when a step segment crosses the offset plane *d* = λ inward | Constructed segments with known crossings, including ones with **neither endpoint inside the layer** | All crossings found, times exact |
-| P2.2.3 | ☐ | **Crossing detection — exit** | Same, outward | As above | All crossings found |
-| P2.2.4 | ☐ | **Crossing detection — with reflection** | Segment enters layer, reflects off wall, exits, within one step | Constructed cases | Correct sequence of sub-segments |
-| P2.2.5 | ☐ | **Trajectory segmentation** | Split each step into sub-segments at every crossing and reflection, each labelled inside/outside | Sub-segment durations sum to τ; labels correct; bulk term summed over sub-segments = R₂_bulk·τ (no piece missed or counted twice) | Exact |
-| P2.2.6 | ☐ | **Local relaxation evaluation** | ∫ΔR₂(*d*(*t*)) d*t* over each sub-segment; for the step profile this is ΔR₂(0)·(time inside) | Constructed segments vs hand calculation | Exact |
-| P2.2.7 | ☐ | **Transverse magnetisation update** | *M*ₓᵧ ← *M*ₓᵧ·exp(−∫ΔR₂ d*t*), applied per sub-segment in time order; phase untouched | Single spin held inside the layer decays at exactly R₂_bulk + ΔR₂(0); outside at exactly R₂_bulk | Exact |
-| P2.2.8 | ☐ | **λ = 0 short-circuit** | No layer code executes when λ = 0 | Code-path check; with R₂_bulk ≠ 0, result bit-identical to B2; runtime vs B1/B5 | Bit-identical; no measurable slowdown |
+| P2.2.1 | ☐ | **Distance evaluation** | Signed distance from a point to each wall face carrying a layer, per side (*x* − *c* on the positive side, *c* − *x* on the negative side), over all repeated wall copies a segment can reach | Hand-computed segments near, between and far from walls; rotated and shifted walls; wall copies | Exact to floating-point precision (plan Task 3) |
+| P2.2.2 | ☐ | **Crossing detection — entry** | Entry point of a straight segment into the layer 0 ≤ *d* ≤ *h* (`segment_overlap`) | Constructed segments with known crossings, including ones with **neither endpoint inside the layer**; points exactly at *d* = 0 and *d* = *h* | All crossings found, times exact (plan Task 1) |
+| P2.2.3 | ☐ | **Crossing detection — exit** | Exit point, same function | As above | All crossings found (plan Task 1) |
+| P2.2.4 | ☐ | **Crossing detection — with reflection** | Segment enters layer, reflects off wall, exits, within one step | Single spin moved 0.8 → −0.4 µm onto a wall at 0 with layer [0, 0.5]: ends at 0.4, time in layer 0.9 of 1.2 ms | *M*ₓᵧ = exp(−ΔR₂(0)·0.9 ms) to 10⁻¹² (plan Task 4) |
+| P2.2.5 | ☐ | **Trajectory segmentation** | Existing `draw_step!` splits each step at every reflection; the layer is evaluated on each straight piece with the same start, end and duration as `relax!` | Durations of the pieces sum to τ; bulk factor bit-identical with and without layer (B2 comparison); bulk × layer = exact product per spin | Exact (plan Task 4) |
+| P2.2.6 | ☐ | **Local relaxation evaluation** | ∫ΔR₂(*d*(*t*)) d*t* over each straight piece; for the step profile this is ΔR₂(0)·(time inside); overlapping layers add | Constructed segments vs hand calculation, one side, both sides, different sides, overlap (*h* > *w*/2) | Exact (plan Tasks 1, 3) |
+| P2.2.7 | ☐ | **Transverse magnetisation update** | *M*ₓᵧ ← *M*ₓᵧ·exp(−∫ΔR₂ d*t*) after `relax!` for each piece; phase and *M*_z untouched; finite RF pulses rejected with an error | *h* = *w*/2, both sides: every spin decays at exactly ΔR₂(0); bulk on: per-spin product exp(−R₂_bulk·*t*)·*S*_layer | Exact to roundoff (plan Task 4) |
+| P2.2.8 | ☐ | ***h* = 0 / ρ = 0 short-circuit** | No layer stored when every ρ is 0; `apply_layer!` returns before any work | Positions and magnetisation bit-identical to the unmodified code (bulk on); runtime per spin-step vs B1 (0.013 µs) | Bit-identical; < 10% slowdown (plan Tasks 4, 5) |
 | P2.2.9 | ☐ | End-to-end single-spin trace, as in P1.2.6, with the layer on | Logged decay matches manual integration of the logged path | Exact |
 
 ## 2.3 Step profile — verification (weeks 5–6)
@@ -160,6 +164,7 @@ Implement and test each component separately, in this order. Each has its own un
 | P2.3.8 | ✖ | **V10** Route A cross-check — *deferred to future work (decision 2026-09-30)* | Same step profile built from perfectly permeable walls with per-compartment R₂ | Within 2σ of Route B | table |
 | P2.3.9 | ☐ | **V4 fit *h*\*(θ) to the baseline** | For each θ in the B4 reference set (τ = 1e-2 ms curves): step profile, fixed ΔR₂(0) (≥ 0.046 ms⁻¹ so every θ is reachable, e.g. 0.1 ms⁻¹), same seeds 1–10 and 10⁵ spins as B4; find *h*\* minimising Σₜ[(*S*_model − *S*_θ)/σ]² over the readouts; bulk off, then one θ repeated with R₂_bulk = 1/80 | *h*\*(θ) found for every θ in the grid, with its uncertainty and the residual at every readout. **The baseline is a reference, not the truth:** residuals are reported as the difference between the two models, not as pass/fail | fig + table |
 | P2.3.11 | ☐ | **Additivity** R₂_total = R₂_bulk + ΔR₂(*d*) | Same seeds, *h* = 0.2 µm, R₂_bulk = 0 and 1/80 ms⁻¹ | *S*_bulk+layer(*t*) = exp(−R₂_bulk·*t*)·*S*_layer(*t*) to the roundoff bound (as in B2/B4) | table |
+| P2.3.12 | ☐ | **Side-specific layer** (characterisation) | (a) Mirror check: positive-only vs negative-only layer, same ρ and *h*. (b) One-sided and two-different-sides runs in the reference configuration, *S*(*t*) with σ | (a) Equal within noise (a plan Task 4 unit test checks this at small size). (b) Recorded; no baseline exists for asymmetric surfaces (MCMR's θ_relax is the same on both sides) | table + fig |
 | P2.3.10 | ☐ | **Tag** `rd-step-v1` | — | Tag exists | git tag |
 
 **Gate:** do not start 2.4 until P2.3.3, P2.3.4(a) (exact *h* = *w*/2 end point) and P2.2.9 (single-spin trace) pass. Failure there means distance or segmentation is wrong, and every later profile would inherit it.
@@ -269,7 +274,7 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | Week | Dates | Planned | Completed | Blockers / notes |
 |---|---|---|---|---|
 | 1 | 21–25 Sep | P1.1, P1.2.1–P1.2.3 | | |
-| 2 | 28 Sep – 2 Oct | P1.2.4–P1.2.7, P1.3, P1.4 | P1.2.4–P1.2.7, R1–R4, P1.4.1–P1.4.4, wall baselines B0–B5 | R1 cylinder criterion open; V4/V5 and fast-diffusion-based Phase 2 tests rewritten as fitting/characterisation (2026-09-30) |
+| 2 | 28 Sep – 2 Oct | P1.2.4–P1.2.7, P1.3, P1.4 | P1.2.4–P1.2.7, Rep1–Rep4, P1.4.1–P1.4.4, wall baselines B0–B5 | Rep1 judged vs exact rate within 2 SEM (2026-10-02); V4/V5 and fast-diffusion-based Phase 2 tests rewritten as fitting/characterisation (2026-09-30) |
 | 3 | 5–9 Oct | P2.1, P2.2.1 | | |
 | 4 | 12–16 Oct | P2.2.2–P2.2.6 | | |
 | 5 | 19–23 Oct | P2.2.7–P2.2.9, P2.3.1–P2.3.4 | | |

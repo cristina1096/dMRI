@@ -72,7 +72,7 @@ end
 function run_config(name, geometry, SV, kind, a; bounding_box, subset)
     seq = GradientEcho(TE=200., TR=1000., scanner=MRIBuilder.Siemens_Prisma, excitation=(phase=90.,))
     sim = Simulation(seq; diffusivity=D, geometry=geometry, verbose=false)
-    ts = sim.timestep.max_timestep
+    ts = sim.timestep.max_timestep # MC timestep, 0.04 for wall, 0.01 for cylinder
     ρ = THETA * sqrt(D / π)
     R2_eq17 = eq17(THETA, D, SV)
     R2_bt = brownstein_tarr(kind, ρ, a, D)
