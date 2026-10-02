@@ -10,14 +10,14 @@ import StaticArrays: SVector, MVector
 import LinearAlgebra: norm, ⋅
 import Rotations
 import Bessels: besseli0
-import ..SequenceParts: SequencePart, MultSequencePart, InstantSequencePart, get_readouts, IndexedReadout, empty_sequence, GradientEvent, PulseEvent, parts, repetition_time
+import ..SequenceParts: SequencePart, MultSequencePart, InstantSequencePart, get_readouts, IndexedReadout, empty_sequence, GradientEvent, PulseEvent, parts, repetition_time, PulsePart
 import ..Methods: get_time
 import ..Spins: @spin_rng, Spin, Snapshot, stuck, SpinOrientationSum, get_sequence, orientation, SpinOrientation, static_vector_type
 import ..Simulations: Simulation, _to_snapshot
 import ..Relax: relax!
 import ..Properties: GlobalProperties, stick_probability
 import ..Subsets: Subset, get_subset
-import ..Geometries.Internal: Reflection, detect_intersection, empty_intersection, has_intersection, surface_relaxation, permeability, surface_density, direction, previous_hit, dwell_time, empty_reflection, FixedGeometry
+import ..Geometries.Internal: Reflection, detect_intersection, empty_intersection, has_intersection, surface_relaxation, permeability, surface_density, direction, previous_hit, dwell_time, empty_reflection, FixedGeometry, layer_exponent, has_layer
 
 """
 Supertype for any Readout accumulator.
@@ -479,6 +479,26 @@ function draw_step!(spins::Vector{<:Spin{N}}, simulation::Simulation{N}, sequenc
 end
 
 
+"""
+    apply_layer!(spin, geometry, start, dest, dt, parts)
+
+Multiplies the transverse magnetisation by exp(-∫ΔR2(d(t))dt) for the straight free segment `start → dest`
+of duration `dt` (ms). Bulk R2 is applied separately by [`relax!`](@ref); the two factors multiply,
+which gives R2_total = R2_bulk + ΔR2(d). Phase and longitudinal magnetisation are not changed.
+"""
+function apply_layer!(spin::Spin, geometry::FixedGeometry, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64, parts::MultSequencePart)
+    has_layer(geometry) || return
+    if any(p -> p isa PulsePart, parts.parts)
+        error("The near-surface R2 layer does not support finite RF pulses yet. Use instantaneous pulses.")
+    end
+    exponent = layer_exponent(geometry, start, dest, dt)
+    iszero(exponent) && return
+    attenuation = exp(-exponent)
+    for orientation in spin.orientations
+        orientation.transverse *= attenuation
+    end
+end
+
 function draw_step!(spin::Spin{N}, simulation::Simulation{N}, parts::MultSequencePart{N}, B0s::AbstractVector{Float64}, test_new_pos=nothing) where {N}
     if ~isnothing(test_new_pos)
         all_positions = [spin.position]
@@ -545,6 +565,7 @@ function draw_step!(spin::Spin{N}, simulation::Simulation{N}, parts::MultSequenc
 
             # spin relaxation
             relax!(spin, collision_pos, simulation, parts, fraction_timestep, next_fraction_timestep, B0s)
+            apply_layer!(spin, simulation.geometry, current_pos, collision_pos, (next_fraction_timestep - fraction_timestep) * timestep, parts)
 
             if ~has_intersection(collision)
                 spin.position = new_pos

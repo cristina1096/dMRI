@@ -164,3 +164,87 @@ end
         @test Layers.has_layer(both)
     end
 end
+
+@testset "test_layer.jl: layer applied during the simulation" begin
+    per_spin_transverse(snap) = [s.orientations[1].transverse for s in snap.spins]
+
+    @testset "crossing with reflection in one step (P2.2.4)" begin
+        # wall at 0, layer [0, 0.5] on the positive side, ΔR2(0) = 0.1 /ms
+        walls = mr.Walls(position=0., layer_rho_positive=0.05, layer_h_positive=0.5)
+        seq = build_sequence([1.2, :readout])
+        sim = mr.Simulation(seq; geometry=walls, diffusivity=3., verbose=false)
+        # the first part is the zero-length instant at t = 0; take the 1.2 ms step after it
+        part = first(p for p in mr.parts([seq], 0., mr.TimeStep(1.2, Inf)) if p.duration > 0)
+        @test part.duration ≈ 1.2
+        spin = mr.Spin(position=[0.8, 0., 0.], transverse=1., longitudinal=0.)
+        # proposed move 0.8 → -0.4 reflects at 0 and ends at 0.4.
+        # in layer: last 0.5 of the 0.8 um before the wall (time 0.5) + all 0.4 um after (time 0.4) = 0.9 of 1.2 ms
+        mr.Evolve.draw_step!(spin, sim, part, [3.], [-0.4, 0., 0.])
+        @test spin.position[1] ≈ 0.4 atol=1e-12
+        @test spin.orientations[1].transverse ≈ exp(-0.1 * 0.9) rtol=1e-12
+        @test spin.orientations[1].phase == 0.0
+    end
+
+    @testset "no layer: bit-identical to the unmodified code (P2.2.8)" begin
+        function run(walls)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=walls, diffusivity=3., R2=1/80, verbose=false)
+            Random.seed!(7)
+            snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+            return mr.readout(snap, sim, [50.]; return_snapshot=true)[1]
+        end
+        a = run(mr.Walls(repeats=2.))
+        b = run(mr.Walls(repeats=2., layer_h=0.5))          # ρ = 0: no layer
+        @test mr.position.(a) == mr.position.(b)
+        @test per_spin_transverse(a) == per_spin_transverse(b)
+    end
+
+    @testset "h = w/2: every spin decays at exactly ΔR2(0)" begin
+        walls = mr.Walls(repeats=2., layer_rho=0.1, layer_h=1.0)                # ΔR2(0) = 0.1 /ms
+        sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=walls, diffusivity=3., verbose=false)
+        Random.seed!(1)
+        snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+        res = mr.readout(snap, sim, [10., 50.]; return_snapshot=true)
+        for (t, s) in zip((10., 50.), res)
+            @test all(isapprox.(per_spin_transverse(s), exp(-0.1 * t); rtol=1e-10))
+        end
+    end
+
+    @testset "bulk R2 and the layer multiply exactly (R2_total = R2_bulk + ΔR2)" begin
+        walls = mr.Walls(repeats=2., layer_rho=0.03, layer_h=0.3)
+        function run(R2)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=walls, diffusivity=3., R2=R2, verbose=false)
+            Random.seed!(3)
+            snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+            return mr.readout(snap, sim, [50.]; return_snapshot=true)[1]
+        end
+        layer_only = run(0.)
+        with_bulk = run(1/80)
+        @test mr.position.(layer_only) == mr.position.(with_bulk)
+        @test all(isapprox.(per_spin_transverse(with_bulk), per_spin_transverse(layer_only) .* exp(-50 / 80); rtol=1e-10))
+        @test minimum(per_spin_transverse(layer_only)) < 1.0                     # the layer did act
+    end
+
+    @testset "positive-only and negative-only layers are mirror images" begin
+        function mean_signal(walls)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=walls, diffusivity=3., verbose=false)
+            Random.seed!(11)
+            snap = mr.Snapshot(20000, sim, 500; transverse=1., longitudinal=0.)
+            m = per_spin_transverse(mr.readout(snap, sim, [50.]; return_snapshot=true)[1])
+            return (mean(m), std(m) / sqrt(length(m)))
+        end
+        (p, ep) = mean_signal(mr.Walls(repeats=2., layer_rho_positive=0.05, layer_h_positive=0.5))
+        (n, en) = mean_signal(mr.Walls(repeats=2., layer_rho_negative=0.05, layer_h_negative=0.5))
+        @test abs(p - n) < 5 * sqrt(ep^2 + en^2)
+        @test p < 0.99                                                          # the layer did act
+    end
+
+    @testset "finite RF pulse with a layer is rejected" begin
+        seq = mr.SequenceParts.SequenceWaveform(
+            (([], []), ([], []), ([], [])),
+            [(0., 9., [mr.SequenceParts.ConstantPulse(0.25 / 9, 0., 0.)])],
+            [], [10.], 10.,
+        )
+        sim = mr.Simulation(seq; geometry=mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5), verbose=false)
+        @test_throws Exception mr.readout(100, sim, [10.])
+    end
+end
