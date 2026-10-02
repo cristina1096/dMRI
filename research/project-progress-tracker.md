@@ -122,6 +122,8 @@ Everything else is **measured**, not predicted, and compared with the B4 referen
 
 ## 2.1 Design and test harness (week 3)
 
+**Implementation plan for P2.1.3–P2.1.5 and P2.2.9:** [docs/superpowers/plans/2026-10-03-phase2-harness-and-trace.md](../docs/superpowers/plans/2026-10-03-phase2-harness-and-trace.md).
+
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
 | P2.1.1 | ☑ | Define the parameter interface (proposal §3.2 III), **side-specific**: on `Walls`, `layer_rho` (ρ, µm/ms) and `layer_h` (*h*, µm) apply to both sides; `layer_rho_positive`, `layer_h_positive`, `layer_rho_negative`, `layer_h_negative` override one side (positive = side where the wall's local coordinate is larger, +x for `rotation=:x`). ΔR₂(0) = (ρ/*h*)·*g*(0) derived internally, never user-settable. Shape *g*: step only for now; a `layer_shape` field is added with the other profiles (P2.4) | Interface implemented and documented in field descriptions; both-sides, one-side and two-different-sides settings tested | plan Task 2 |
@@ -151,6 +153,8 @@ Implement and test each component separately, in this order. Each has its own un
 | P2.2.9 | ☐ | End-to-end single-spin trace, as in P1.2.6, with the layer on | Logged decay matches manual integration of the logged path | Exact |
 
 ## 2.3 Step profile — verification (weeks 5–6)
+
+**Implementation plan for section 2.3 (P2.3.1–P2.3.12, tag `rd-step-v1`):** [docs/superpowers/plans/2026-10-03-phase2-step-verification.md](../docs/superpowers/plans/2026-10-03-phase2-step-verification.md). Depends on the harness plan above.
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
