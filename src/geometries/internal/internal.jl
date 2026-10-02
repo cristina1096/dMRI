@@ -11,10 +11,12 @@ include("hit_grids.jl")
 include("intersections.jl")
 include("reflections.jl")
 include("fixed_obstruction_groups.jl")
+include("layers.jl")
 include("properties.jl")
 include("susceptibility/susceptibility.jl")
 
 import .FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, isinside, detect_intersection, prepare_isinside!
+import .Layers: LayerSide, WallLayer
 import .Reflections: Reflection, direction, previous_hit, has_hit, has_intersection, empty_reflection
 import .Intersections: Intersection, empty_intersection
 import .HitGrids: HitGrid, detect_intersection_grid, obstructions
