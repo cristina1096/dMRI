@@ -93,3 +93,74 @@ end
         @test isnothing(back.layer_h_positive.value)
     end
 end
+
+@testset "test_layer.jl: layer exponent on walls" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+    v(x) = SVector{3, Float64}(x, 0.3, -1.2)
+    both = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5))   # ΔR2(0) = 0.1 /ms on both sides
+
+    @testset "inside, outside and partly inside" begin
+        @test Layers.layer_exponent(both, v(0.1), v(0.3), 0.2) ≈ 0.1 * 0.2        # positive side of wall 0
+        @test Layers.layer_exponent(both, v(1.7), v(1.9), 0.2) ≈ 0.1 * 0.2        # negative side of wall 2
+        @test Layers.layer_exponent(both, v(0.6), v(1.4), 1.0) == 0.0             # middle of the gap
+        @test Layers.layer_exponent(both, v(0.4), v(0.6), 1.0) ≈ 0.1 * 1.0 * 0.5
+    end
+
+    @testset "neither endpoint inside a layer" begin
+        # 0.6 → -0.6 crosses both layers of wall 0: 1.0 of 1.2 um inside
+        @test Layers.layer_exponent(both, v(0.6), v(-0.6), 1.2) ≈ 0.1 * 1.2 * (1.0 / 1.2)
+    end
+
+    @testset "repeated wall images" begin
+        @test Layers.layer_exponent(both, v(10.1), v(10.3), 0.2) ≈ 0.1 * 0.2
+        @test Layers.layer_exponent(both, v(-7.9), v(-7.7), 0.2) ≈ 0.1 * 0.2
+        # segment longer than the spacing: 0.1 → 4.1 is inside layers for 2.0 of its 4.0 um
+        @test Layers.layer_exponent(both, v(0.1), v(4.1), 1.0) ≈ 0.1 * 1.0 * 0.5
+    end
+
+    @testset "one side only" begin
+        pos = geom(mr.Walls(repeats=2., layer_rho_positive=0.05, layer_h_positive=0.5))
+        @test Layers.layer_exponent(pos, v(0.1), v(0.3), 0.2) ≈ 0.1 * 0.2
+        @test Layers.layer_exponent(pos, v(1.7), v(1.9), 0.2) == 0.0
+    end
+
+    @testset "different on each side" begin
+        asym = geom(mr.Walls(repeats=2., layer_rho_positive=0.05, layer_h_positive=0.5,
+            layer_rho_negative=0.2, layer_h_negative=0.4))                       # 0.1 /ms and 0.5 /ms
+        @test Layers.layer_exponent(asym, v(0.1), v(0.3), 1.0) ≈ 0.1
+        @test Layers.layer_exponent(asym, v(1.7), v(1.9), 1.0) ≈ 0.5
+    end
+
+    @testset "overlapping layers add (Eq. 10)" begin
+        wide = geom(mr.Walls(repeats=2., layer_rho=0.15, layer_h=1.5))           # 0.1 /ms, h > w/2
+        @test Layers.layer_exponent(wide, v(0.9), v(1.1), 1.0) ≈ 2 * 0.1         # inside both layers
+    end
+
+    @testset "h = w/2 covers every point exactly once" begin
+        half = geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=1.0))            # 0.1 /ms
+        for (a, b) in ((0.05, 0.3), (0.8, 1.2), (1.0, 1.9), (0.01, 1.99))
+            @test Layers.layer_exponent(half, v(a), v(b), 1.0) ≈ 0.1 rtol=1e-14
+        end
+    end
+
+    @testset "rotation and shifted position" begin
+        rot = geom(mr.Walls(repeats=2., rotation=:y, layer_rho=0.05, layer_h=0.5))
+        @test Layers.layer_exponent(rot, SVector(5.0, 0.1, 7.0), SVector(9.0, 0.3, 7.0), 0.2) ≈ 0.1 * 0.2
+        shifted = geom(mr.Walls(repeats=2., position=0.5, layer_rho=0.05, layer_h=0.5))
+        @test Layers.layer_exponent(shifted, v(0.6), v(0.8), 0.2) ≈ 0.1 * 0.2
+    end
+
+    @testset "per-wall values" begin
+        two = geom(mr.Walls(position=[0., 1.], layer_rho=[0.05, 0.], layer_h=0.4))  # only wall at 0
+        @test Layers.layer_exponent(two, v(0.1), v(0.3), 1.0) ≈ 0.05 / 0.4
+        @test Layers.layer_exponent(two, v(0.7), v(0.9), 1.0) == 0.0
+    end
+
+    @testset "no layer" begin
+        none = geom(mr.Walls(repeats=2.))
+        @test !Layers.has_layer(none)
+        @test Layers.layer_exponent(none, v(0.1), v(0.3), 0.2) == 0.0
+        @test Layers.has_layer(both)
+    end
+end

@@ -8,6 +8,9 @@ Each side of a wall has its own (ρ, h).
 """
 module Layers
 
+import StaticArrays: SVector
+import ..FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, rotate_from_global
+
 """
     LayerSide(rho, h)
 
@@ -75,5 +78,52 @@ function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     iszero(side.rho) && return 0.0
     return surface_rate(side) * dt * segment_fraction(d0, d1, 0.0, side.h)
 end
+
+"""
+    layer_exponent(group/geometry, start, dest, dt)
+
+∫ΔR2(d(t)) dt (dimensionless) for a spin moving in a straight line from `start` to `dest` (global coordinates, um)
+in `dt` ms. For a geometry, the contributions of all groups and all walls are added (proposal Eq. 10).
+Returns 0 when no layer is defined.
+"""
+layer_exponent(g::FixedObstructionGroup, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64) = layer_exponent(g.layer, g, start, dest, dt)
+
+layer_exponent(::Nothing, ::FixedObstructionGroup, ::SVector{3, Float64}, ::SVector{3, Float64}, ::Float64) = 0.0
+
+function layer_exponent(layers::Vector{WallLayer}, g::FixedObstructionGroup, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64)
+    x0 = rotate_from_global(g, start)[1]
+    x1 = rotate_from_global(g, dest)[1]
+    lo = min(x0, x1)
+    hi = max(x0, x1)
+    spacing = repeating(g) ? g.repeats[1] : 0.0
+    total = 0.0
+    for layer in layers
+        if repeating(g)
+            # wall images c = position + k·spacing whose layers can reach [lo, hi]
+            reach = max(layer.positive.h, layer.negative.h)
+            kmin = ceil(Int, (lo - reach - layer.position) / spacing)
+            kmax = floor(Int, (hi + reach - layer.position) / spacing)
+        else
+            kmin = kmax = 0
+        end
+        for k in kmin:kmax
+            c = layer.position + k * spacing
+            total += side_exponent(layer.positive, x0 - c, x1 - c, dt)
+            total += side_exponent(layer.negative, c - x0, c - x1, dt)
+        end
+    end
+    return total
+end
+
+function layer_exponent(geometry::FixedGeometry, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64)
+    return sum(g -> layer_exponent(g, start, dest, dt), geometry; init=0.0)
+end
+
+"""
+    has_layer(geometry)
+
+Whether any group in the [`FixedGeometry`](@ref) has a near-surface layer.
+"""
+has_layer(geometry::FixedGeometry) = any(g -> !isnothing(g.layer), geometry)
 
 end
