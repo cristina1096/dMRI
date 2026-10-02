@@ -287,6 +287,8 @@ These are the minimum places a distance-dependent layer term touches. No code is
 | 4 | Timestep constraint τ ≤ c_λ·λ²/D (P2.6.5) | [timesteps.jl:39-45](../src/timesteps.jl#L39-L45) `options` tuple (+ verbose message L47–75) and a `max_timestep_layer` helper next to [timesteps.jl:101](../src/timesteps.jl#L101) | Same pattern as the existing constraints |
 | 5 | λ = 0 short-circuit (P2.2.8) | branch at the top of the new code in `draw_step!` / geometry type parameter | Keeps baseline runtime |
 
+**Status (2026-10-02):** 1a, 1b, 1d, 2a, 2c, 3a and 5 are implemented for walls (step profile, per-side ρ and h) in `src/geometries/internal/layers.jl`, `src/geometries/user/fix.jl` (`wall_layers`) and `src/evolve.jl` (`apply_layer!`). 2c uses the exact linear overlap (`segment_overlap`) instead of the hit grid. 3b and 4 are not yet implemented.
+
 ---
 
 ## §8 Observations and possible issues (recorded, not changed)
