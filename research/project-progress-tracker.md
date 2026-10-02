@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 10 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 14 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -128,9 +128,9 @@ Everything else is **measured**, not predicted, and compared with the B4 referen
 |---|---|---|---|---|
 | P2.1.1 | ☑ | Define the parameter interface (proposal §3.2 III), **side-specific**: on `Walls`, `layer_rho` (ρ, µm/ms) and `layer_h` (*h*, µm) apply to both sides; `layer_rho_positive`, `layer_h_positive`, `layer_rho_negative`, `layer_h_negative` override one side (positive = side where the wall's local coordinate is larger, +x for `rotation=:x`). ΔR₂(0) = (ρ/*h*)·*g*(0) derived internally, never user-settable. Shape *g*: step only for now; a `layer_shape` field is added with the other profiles (P2.4) | Interface implemented and documented in field descriptions; both-sides, one-side and two-different-sides settings tested | plan Task 2 |
 | P2.1.2 | ☑ | Construction-time validation: reject ρ < 0, *h* < 0, and *h* = 0 with ρ > 0; reject *h* larger than the wall spacing (the layer would pass through the neighbouring wall); overlapping layers (*w*/2 < *h* ≤ *w*) are allowed and summed (Eq. 10); warn that the layer is not applied while a spin is stuck (surface density > 0). *Not yet:* warning when ΔR₂(0) exceeds the rigid-lattice ceiling (needs a physical value) | Invalid inputs rejected with clear messages | plan Task 2 |
-| P2.1.3 | ☐ | Test harness: runs a configuration over seeds, returns mean, σ, runtime, layer-visit count; computes ρ from a target ΔR₂(0) and *h* (fixed-ΔR₂(0) mode used by V4/V5); loads the B4 reference curves | Harness reproduces B1, B2 and one B4 curve exactly (same seeds) | `harness.jl` |
-| P2.1.4 | ☐ | Noise floor of the model at ΔR₂(0) = 0.1 ms⁻¹, *h* = 0.1 and 0.5 µm (at *h* = 0 σ is exactly 0, B1) | σ of *S*(*t*) recorded per readout; N_spins adjusted so neighbouring *h* in the P2.3.4 sweep differ by > 10σ | σ table |
-| P2.1.5 | ☐ | Expectations script: the exact cases above, plus loading and interpolating the B4 reference curves (θ ↔ *S*(*t*)) | Exact tables and reference interpolation available before any run | `expected.jl` |
+| P2.1.3 | ☑ | Test harness: runs a configuration over seeds, returns mean, σ, runtime, layer-visit count; computes ρ from a target ΔR₂(0) and *h* (fixed-ΔR₂(0) mode used by V4/V5); loads the B4 reference curves | Harness reproduces B1, B2 and one B4 curve exactly (same seeds) | `harness.jl` — `research/phase2/harness.jl`, tests in `research/phase2/test/` |
+| P2.1.4 | ☑ | Noise floor of the model at ΔR₂(0) = 0.1 ms⁻¹, *h* = 0.1 and 0.5 µm (at *h* = 0 σ is exactly 0, B1) | σ of *S*(*t*) recorded per readout; N_spins adjusted so neighbouring *h* in the P2.3.4 sweep differ by > 10σ | σ table — `research/results/phase2/p2_1_4_noise_floor/` |
+| P2.1.5 | ☑ | Expectations script: the exact cases above, plus loading and interpolating the B4 reference curves (θ ↔ *S*(*t*)) | Exact tables and reference interpolation available before any run | `expected.jl` — `research/phase2/expected.jl` |
 
 ## 2.2 Step profile — component implementation (weeks 3–5)
 
@@ -150,7 +150,7 @@ Implement and test each component separately, in this order. Each has its own un
 | P2.2.6 | ☑ | **Local relaxation evaluation** | ∫ΔR₂(*d*(*t*)) d*t* over each straight piece; for the step profile this is ΔR₂(0)·(time inside); overlapping layers add | Constructed segments vs hand calculation, one side, both sides, different sides, overlap (*h* > *w*/2) | Exact (plan Tasks 1, 3) |
 | P2.2.7 | ☑ | **Transverse magnetisation update** | *M*ₓᵧ ← *M*ₓᵧ·exp(−∫ΔR₂ d*t*) after `relax!` for each piece; phase and *M*_z untouched; finite RF pulses rejected with an error | *h* = *w*/2, both sides: every spin decays at exactly ΔR₂(0); bulk on: per-spin product exp(−R₂_bulk·*t*)·*S*_layer | Exact to roundoff (plan Task 4) |
 | P2.2.8 | ☑ | ***h* = 0 / ρ = 0 short-circuit** | No layer stored when every ρ is 0; `apply_layer!` returns before any work | Positions and magnetisation bit-identical to the unmodified code (bulk on); runtime per spin-step vs B1 (0.013 µs) | Bit-identical; < 10% slowdown (plan Tasks 4, 5); measured 0.0127 µs per spin-step with no layer (B1: 0.0130) |
-| P2.2.9 | ☐ | End-to-end single-spin trace, as in P1.2.6, with the layer on | Logged decay matches manual integration of the logged path | Exact |
+| P2.2.9 | ☑ | End-to-end single-spin trace, as in P1.2.6, with the layer on | Logged decay matches manual integration of the logged path | Exact — `research/results/phase2/p2_2_9_layer_trace/` (max error 5e-8) |
 
 ## 2.3 Step profile — verification (weeks 5–6)
 
