@@ -85,3 +85,42 @@ function read_sweep(path)
     end
     return (hgrid, S_by_h)
 end
+
+"χ² = Σ_t [(S_model − S_ref)/σ_t]² with σ_t = √(sem_model² + sem_ref²); readouts with σ_t = 0 are excluded."
+function chi2_of(model_mean, model_sem, ref_mean, ref_sem)
+    σ = sqrt.(model_sem .^ 2 .+ ref_sem .^ 2)
+    ok = σ .> 0
+    return sum(((model_mean .- ref_mean)[ok] ./ σ[ok]) .^ 2)
+end
+
+"h at the vertex of the parabola through three points (h, χ²)."
+function parabola_vertex(hs, ys)
+    (h1, h2, h3), (y1, y2, y3) = hs, ys
+    d = (h1 - h2) * (h1 - h3) * (h2 - h3)
+    A = (h3 * (y2 - y1) + h2 * (y1 - y3) + h1 * (y3 - y2)) / d
+    B = (h3^2 * (y1 - y2) + h2^2 * (y3 - y1) + h1^2 * (y2 - y3)) / d
+    return -B / (2A)
+end
+
+"""
+    gauss_newton_step(model_mean, model_sem, ref_mean, ref_sem, dSdh)
+
+One Gauss–Newton correction Δh for χ²(h) = Σ_t [(S_model − S_ref)/σ_t]², linearising S_model around the current h
+with slope `dSdh` per readout: Δh = −Σ r J/σ² / Σ J²/σ². Readouts with σ_t = 0 are excluded.
+"""
+function gauss_newton_step(model_mean, model_sem, ref_mean, ref_sem, dSdh)
+    σ2 = model_sem .^ 2 .+ ref_sem .^ 2
+    ok = σ2 .> 0
+    r = (model_mean .- ref_mean)[ok]
+    J = dSdh[ok]
+    return -sum(r .* J ./ σ2[ok]) / sum(J .^ 2 ./ σ2[ok])
+end
+
+"dS/dh per readout at h from the sweep curves: ln S interpolated linearly in h between the neighbouring grid points."
+function sweep_slope(hgrid, curves, h)
+    j = clamp(searchsortedlast(hgrid, h), 1, length(hgrid) - 1)
+    Δ = hgrid[j + 1] - hgrid[j]
+    dlog = (log.(curves[j + 1]) .- log.(curves[j])) ./ Δ
+    S = exp.(log.(curves[j]) .+ (h - hgrid[j]) .* dlog)
+    return S .* dlog
+end
