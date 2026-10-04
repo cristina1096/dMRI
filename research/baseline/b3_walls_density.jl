@@ -75,7 +75,7 @@ function run_config(label, timestep, nspins, times, io)
         for (it, s) in enumerate(res)
             u = [mod(p[1], W) for p in mr.position.(s)]
             for x in u
-                hist[min(NBINS, floor(Int, x / W * NBINS) + 1), it] += 1
+                hist[min(NBINS, floor(Int, x / W * NBINS) + 1), it] += 1 # sum 10 seeds
             end
             for (il, λ) in enumerate(LAMBDAS)
                 occ[seed, it, il, 1] = count(<(λ), u)
@@ -105,12 +105,12 @@ function run_config(label, timestep, nspins, times, io)
 
     hist_rows = NamedTuple[]
     chi_rows = NamedTuple[]
-    e = ntot / NBINS
+    e = ntot / NBINS    # expected count per bin
     hist_pass = true
     for (it, t) in enumerate(times)
         h = hist[:, it]
         χ² = sum((h .- e) .^ 2 ./ e)
-        dof = NBINS - 1
+        dof = NBINS - 1    # degree of freedom
         zχ = (χ² - dof) / sqrt(2dof)
         wall_z = [(h[1] - e) / sqrt(e), (h[end] - e) / sqrt(e)]
         ok = abs(zχ) <= 3 && all(abs.(wall_z) .<= 3)

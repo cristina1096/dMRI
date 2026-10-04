@@ -57,7 +57,7 @@ function run(θ, τ, R2, nseeds)
     return (S=S, tau=sim.timestep.max_timestep, runtime=rt)
 end
 
-function fit_rate(S)
+function fit_rate(S)    # decay rate of a straight-line fit to -ln S(t)
     X = hcat(ones(length(TIMES)), TIMES)
     return (X \ (-log.(S)))[2]
 end
