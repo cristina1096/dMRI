@@ -272,3 +272,56 @@ end
         Logging.disable_logging(Logging.Info)
     end
 end
+
+@testset "test_layer.jl: linear profile maths" begin
+    Layers = mr.Geometries.Internal.Layers
+
+    @testset "profile values and normalisation (P2.4.2)" begin
+        @test Layers.profile_g(:linear, 0.0) == 2.0
+        @test Layers.profile_g(:linear, 0.5) == 1.0
+        @test Layers.profile_g(:linear, 1.0) == 0.0
+        @test Layers.profile_g(:linear, 1.5) == 0.0
+        @test Layers.profile_g(:step, 0.3) == 1.0
+        @test Layers.profile_g(:step, 1.2) == 0.0
+        n = 100_000
+        for shape in (:step, :linear)
+            @test sum(Layers.profile_g(shape, (k - 0.5) / n) for k in 1:n) / n ≈ 1.0 atol=1e-10
+        end
+    end
+
+    @testset "step is unchanged" begin
+        side = Layers.LayerSide(0.05, 0.5)
+        @test side.shape == :step
+        @test Layers.side_exponent(side, 0.1, 0.3, 0.2) ≈ 0.1 * 0.2
+        @test Layers.side_exponent(side, 0.4, 0.6, 1.0) ≈ 0.1 * 1.0 * 0.5
+    end
+
+    @testset "linear: surface rate and edges" begin
+        side = Layers.LayerSide(0.05, 0.5, :linear)            # ρ/h = 0.1, ΔR2(0) = 0.2
+        @test Layers.surface_rate(side) ≈ 0.2
+        @test Layers.side_exponent(side, 0.0, 0.0, 1.0) ≈ 0.2  # sitting on the wall
+        @test Layers.side_exponent(side, 0.5, 0.5, 1.0) ≈ 0.0  # sitting at d = h
+        @test Layers.side_exponent(side, 0.7, 0.7, 1.0) == 0.0 # outside
+    end
+
+    @testset "linear: pieces" begin
+        side = Layers.LayerSide(0.05, 0.5, :linear)            # ρ/h = 0.1
+        # whole layer crossed, 0 → h: average g = 1 → exponent = (ρ/h)·dt
+        @test Layers.side_exponent(side, 0.0, 0.5, 1.0) ≈ 0.1
+        # 0.8 → 0.2: inside for the second half (d 0.5 → 0.2, mean d = 0.35, g = 2(1 − 0.7) = 0.6)
+        @test Layers.side_exponent(side, 0.8, 0.2, 1.0) ≈ 0.1 * 0.6 * 0.5
+        # matches brute-force sampling on random pieces
+        Random.seed!(5)
+        for _ in 1:200
+            d0, d1, h = 1.2 * rand() - 0.1, 1.2 * rand() - 0.1, 0.1 + 0.9 * rand()
+            s = Layers.LayerSide(0.3 * h, h, :linear)
+            n = 200_000
+            brute = sum(Layers.profile_g(:linear, (d0 + (d1 - d0) * (k - 0.5) / n) / h) for k in 1:n) / n * (s.rho / h)
+            @test Layers.side_exponent(s, d0, d1, 1.0) ≈ brute atol=2e-5
+        end
+    end
+
+    @testset "timestep constraint uses the profile's ΔR2(0)" begin
+        @test Layers.max_layer_rate([Layers.WallLayer(0.0, Layers.LayerSide(0.01, 0.1, :linear), Layers.LayerSide(0.0, 0.0))]) ≈ 0.2
+    end
+end

@@ -12,22 +12,37 @@ import StaticArrays: SVector
 import ..FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, rotate_from_global
 
 """
-    LayerSide(rho, h)
+    LayerSide(rho, h[, shape])
 
-Near-surface layer on one side of a surface: integrated relaxivity `rho` (um/ms) and length scale `h` (um).
-A side with `rho == 0` has no layer.
+Near-surface layer on one side of a surface: integrated relaxivity `rho` (um/ms), length scale `h` (um) and
+profile `shape` (`:step` or `:linear`; default `:step`). A side with `rho == 0` has no layer.
 """
 struct LayerSide
     rho :: Float64
     h :: Float64
+    shape :: Symbol
+end
+LayerSide(rho, h) = LayerSide(rho, h, :step)
+
+"""
+    profile_g(shape, u)
+
+Normalised profile g(u), ∫₀¹ g(u) du = 1 (proposal §3.2 III). Zero outside 0 ≤ u ≤ 1.
+`:step`: g = 1. `:linear`: g = 2(1 − u).
+"""
+function profile_g(shape::Symbol, u::Real)
+    (0 <= u <= 1) || return 0.0
+    shape == :step && return 1.0
+    shape == :linear && return 2 * (1 - u)
+    error("Unknown layer profile $shape")
 end
 
 """
     surface_rate(side)
 
-Excess transverse relaxation rate at the surface, ΔR2(0) = (ρ/h)·g(0), in 1/ms (g(0) = 1 for the step profile).
+Excess transverse relaxation rate at the surface, ΔR2(0) = (ρ/h)·g(0), in 1/ms.
 """
-surface_rate(side::LayerSide) = iszero(side.rho) ? 0.0 : side.rho / side.h
+surface_rate(side::LayerSide) = iszero(side.rho) ? 0.0 : side.rho / side.h * profile_g(side.shape, 0.0)
 
 """
     WallLayer(position, positive, negative)
@@ -70,13 +85,21 @@ end
 """
     side_exponent(side, d0, d1, dt)
 
-∫ΔR2(d(t)) dt over a straight segment of duration `dt` (ms).
-`d0` and `d1` are the distances from the surface at the start and end, positive into this side.
-For the step profile this is ΔR2(0)·(time spent with 0 ≤ d ≤ h).
+∫ΔR2(d(t)) dt over a straight segment of duration `dt` (ms), where `d0` and `d1` are the distances from the
+surface at the start and end, positive into this side. d is linear along the segment, so for both profiles
+the integral is exact in closed form:
+- `:step`: ΔR2(0)·(time spent with 0 ≤ d ≤ h);
+- `:linear`: g(d/h) is linear along the segment, so its average over the part inside the layer is its value
+  at the midpoint of that part.
 """
 function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     iszero(side.rho) && return 0.0
-    return surface_rate(side) * dt * segment_fraction(d0, d1, 0.0, side.h)
+    (s_enter, s_exit) = segment_overlap(d0, d1, 0.0, side.h)
+    fraction = max(0.0, s_exit - s_enter)
+    iszero(fraction) && return 0.0
+    side.shape == :step && return surface_rate(side) * dt * fraction
+    d_mid = d0 + (d1 - d0) * (s_enter + s_exit) / 2
+    return side.rho / side.h * profile_g(side.shape, d_mid / side.h) * dt * fraction
 end
 
 """
@@ -130,7 +153,7 @@ has_layer(geometry::FixedGeometry) = any(g -> !isnothing(g.layer), geometry)
 """
     max_layer_rate(geometry)
 
-Largest near-surface rate ΔR2(0) = ρ/h (1/ms) over all layer sides with ρ > 0 in the geometry; 0 if there is no layer.
+Largest near-surface rate ΔR2(0) = (ρ/h)·g(0) (1/ms) over all layer sides with ρ > 0 in the geometry; 0 if there is no layer.
 """
 max_layer_rate(::Nothing) = 0.0
 max_layer_rate(layers::Vector{WallLayer}) = maximum((surface_rate(s) for l in layers for s in (l.positive, l.negative)); init=0.0)
