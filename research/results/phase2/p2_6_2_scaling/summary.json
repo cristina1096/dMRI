@@ -4,9 +4,9 @@
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-10-06T21:26:41.171",
+    "date": "2026-10-07T07:37:02.633",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "77ed1bdb0b83b0445ea11f2845126630f7cceeb0",
+    "git_commit": "b9b9dec0a1954d4d8dc640d2cef8aba9501c9116",
     "julia": "1.12.7",
     "julia_threads": 1,
     "memory_GB": 16.0,
@@ -127,12 +127,12 @@
       "rate": 10.0,
       "rho": 0.1,
       "D": 3.0,
-      "R_ref": 0.09890682936260096,
-      "bias_at_0p1ms": -0.031060471598300294,
-      "tau_conv_1pct": 0.012788607381834266,
+      "R_ref": 0.09889295481714767,
+      "bias_at_0p1ms": -0.030924530716028582,
+      "tau_conv_1pct": 0.013063871269080773,
       "lower_bound_1pct": false,
       "noise_1pct": false,
-      "tau_conv_0p1pct": 0.0005606460331457832,
+      "tau_conv_0p1pct": 0.0006513172571555129,
       "lower_bound_0p1pct": false,
       "noise_0p1pct": false
     },
@@ -165,11 +165,41 @@
       "tau_conv_0p1pct": 0.08884310754166203,
       "lower_bound_0p1pct": false,
       "noise_0p1pct": false
+    },
+    {
+      "label": "V2_h0.4_rate1",
+      "h_um": 0.4,
+      "rate": 1.0,
+      "rho": 0.4,
+      "D": 3.0,
+      "R_ref": 0.3936245186643964,
+      "bias_at_0p1ms": -0.014438617909608407,
+      "tau_conv_1pct": 0.061592267943369194,
+      "lower_bound_1pct": false,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.004909889942330297,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V3_D1_rate1",
+      "h_um": 0.1,
+      "rate": 1.0,
+      "rho": 0.1,
+      "D": 1.0,
+      "R_ref": 0.09736840926593576,
+      "bias_at_0p1ms": -0.01721465068220057,
+      "tau_conv_1pct": 0.04822002993569267,
+      "lower_bound_1pct": false,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.002830424335629349,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
     }
   ],
   "same_rho_bias": [
     -0.013412197183121454,
-    -0.031060471598300294
+    -0.030924530716028582
   ],
   "tests": {
     "0.001": {
@@ -203,6 +233,23 @@
         "max_dev": 0.9162605923002427,
         "pass": false
       },
+      "coverage_tau_times_rate": {
+        "n": 4,
+        "labels": [
+          "V2_rate1",
+          "V2_h0.4_rate1",
+          "V3_D1_rate1",
+          "V2_h0.01_rate10"
+        ],
+        "values": [
+          0.002948725134601632,
+          0.004909889942330297,
+          0.002830424335629349,
+          0.006513172571555129
+        ],
+        "max_dev": 0.5144965258116898,
+        "pass": false
+      },
       "rate_tau_times_rate": {
         "n": 4,
         "labels": [
@@ -233,6 +280,23 @@
         "values": [],
         "max_dev": null,
         "pass": null
+      },
+      "coverage_tau_times_rate": {
+        "n": 4,
+        "labels": [
+          "V2_rate1",
+          "V2_h0.4_rate1",
+          "V3_D1_rate1",
+          "V2_h0.01_rate10"
+        ],
+        "values": [
+          0.06331913389305864,
+          0.061592267943369194,
+          0.04822002993569267,
+          0.13063871269080773
+        ],
+        "max_dev": 0.7202311033137192,
+        "pass": false
       },
       "rate_tau_times_rate": {
         "n": 2,

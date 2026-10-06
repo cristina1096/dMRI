@@ -1,18 +1,18 @@
 {
   "D": 3.0,
-  "R_ref": 0.09889295481714767,
-  "R_ref_sem": 1.2938529695768339e-5,
+  "R_ref": 0.3936245186643964,
+  "R_ref_sem": 4.155210317516364e-5,
   "T_ms": 10.0,
-  "bias_at_largest_tau": -0.030924530716028582,
-  "h2_over_D": 3.3333333333333335e-5,
-  "h_um": 0.01,
+  "bias_at_largest_tau": -0.014438617909608407,
+  "h2_over_D": 0.053333333333333344,
+  "h_um": 0.4,
   "nseeds": 10,
   "nspins": 100000,
   "provenance": {
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-10-07T07:36:23.238",
+    "date": "2026-10-07T07:00:03.840",
     "git_branch": "cc/near-surface-r2",
     "git_commit": "b9b9dec0a1954d4d8dc640d2cef8aba9501c9116",
     "julia": "1.12.7",
@@ -23,26 +23,23 @@
     "script": "p2_6_scan.jl",
     "src_modified": false
   },
-  "rate": 10.0,
-  "step_length_at_tau_conv_1pct": 0.27997004770954453,
+  "rate": 1.0,
+  "step_length_at_tau_conv_1pct": 0.6079092100472037,
   "tau_conv": {
     "0.001": {
       "lower_bound": false,
       "noise_limited": false,
-      "tau_conv": 0.0006513172571555129,
-      "tau_conv_grid": 0.00046415888336127773
+      "tau_conv": 0.004909889942330297,
+      "tau_conv_grid": 0.004641588833612777
     },
     "0.01": {
       "lower_bound": false,
       "noise_limited": false,
-      "tau_conv": 0.013063871269080773,
-      "tau_conv_grid": 0.010000000000000002
+      "tau_conv": 0.061592267943369194,
+      "tau_conv_grid": 0.046415888336127795
     }
   },
   "taus": [
-    1.0e-5,
-    2.1544346900318823e-5,
-    4.641588833612782e-5,
     0.0001,
     0.00021544346900318845,
     0.00046415888336127773,

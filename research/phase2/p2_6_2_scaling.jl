@@ -14,7 +14,7 @@ include(joinpath(@__DIR__, "harness.jl"))
 include(joinpath(@__DIR__, "timestep.jl"))
 
 const OUT = phase2_outdir("p2_6_2_scaling")
-const LABELS = ["V2_h0.01", "V2_h0.05", "V1_h0.1", "V2_h0.2", "V2_rate0.5", "V2_rate1", "V2_rate2", "V2_h0.01_rate10", "V3_D1", "V3_D6"]
+const LABELS = ["V2_h0.01", "V2_h0.05", "V1_h0.1", "V2_h0.2", "V2_rate0.5", "V2_rate1", "V2_rate2", "V2_h0.01_rate10", "V3_D1", "V3_D6", "V2_h0.4_rate1", "V3_D1_rate1"]
 load(label) = JSON.parsefile(joinpath(REPO_ROOT, "research", "results", "phase2", "p2_6_scan_" * label, "summary.json"))
 scans = Dict(l => load(l) for l in LABELS)
 conv(s, tol) = s["tau_conv"][string(tol)]
@@ -45,12 +45,15 @@ end
 h_set = ["V2_h0.01", "V2_h0.05", "V1_h0.1", "V2_h0.2"]
 D_set = ["V3_D1", "V1_h0.1", "V3_D6"]
 rate_set = ["V1_h0.1", "V2_rate0.5", "V2_rate1", "V2_rate2"]
+# coverage of c = ΔR2(0)·τ_conv away from h = 0.1, D = 3 (review I3): all at ΔR2(0) ≥ 1
+cover_set = ["V2_rate1", "V2_h0.4_rate1", "V3_D1_rate1", "V2_h0.01_rate10"]
 tests = Dict{String, Any}()
 for tol in (0.01, 0.001)
     t = Dict(
         "V2_tau_D_over_h2" => ratio_test(h_set, s -> s["D"] / s["h_um"]^2, tol),
         "V3_tau_D" => ratio_test(D_set, s -> s["D"], tol),
-        "rate_tau_times_rate" => ratio_test(rate_set, s -> s["rate"], tol))
+        "rate_tau_times_rate" => ratio_test(rate_set, s -> s["rate"], tol),
+        "coverage_tau_times_rate" => ratio_test(cover_set, s -> s["rate"], tol))
     tests[string(tol)] = t
     for (k, r) in sort(collect(t), by=first)
         @printf("tol %.1f %%, %-20s: %d usable scans, values %s, max deviation %s → %s\n", 100tol, k, r.n,
