@@ -1,0 +1,46 @@
+{
+  "nspins": 100000,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-07T08:21:50.283",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "8fe504af34bada9f597d9167143045a015c4c043",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_4_3_linear_exact.jl",
+    "src_modified": false
+  },
+  "results": {
+    "V0b": {
+      "R2_bulk": 0.0125,
+      "pass": true
+    },
+    "additivity": {
+      "bound": 2.3314683517128287e-11,
+      "max_rel_dev_ensemble": 8.659739592076221e-14,
+      "max_rel_dev_per_spin": 6.52811138479592e-14,
+      "pass": true,
+      "positions_identical": true
+    },
+    "uniform_bulk_off": {
+      "R2_bulk": 0.0,
+      "bound": 2.3314683517128287e-11,
+      "max_rel_dev_ensemble": 2.561062473205311e-12,
+      "max_rel_dev_per_spin": 8.504308368628699e-14,
+      "pass": true
+    },
+    "uniform_bulk_on": {
+      "R2_bulk": 0.0125,
+      "bound": 2.3314683517128287e-11,
+      "max_rel_dev_ensemble": 1.8751666885918894e-12,
+      "max_rel_dev_per_spin": 1.4077627952246985e-13,
+      "pass": true
+    }
+  },
+  "shape": "linear"
+}
