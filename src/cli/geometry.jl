@@ -48,6 +48,11 @@ function ArgParse.parse_item(::Type{FieldParser{T}}, text::AbstractString) where
     return FieldParser{T}(T.(as_vec))
 end
 
+function ArgParse.parse_item(::Type{FieldParser{String}}, text::AbstractString)
+    parts = split(text, ',')
+    return length(parts) == 1 ? FieldParser{String}(String(text)) : FieldParser{String}(String.(parts))
+end
+
 function ArgParse.parse_item(::Type{FieldParser{MVector{1, T}}}, text::AbstractString) where {T}
     sub_parse = ArgParse.parse_item(FieldParser{T}, text).value
     if sub_parse isa T

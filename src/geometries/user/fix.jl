@@ -68,6 +68,13 @@ function wall_layers(walls::Walls; density=0.)
         both = getproperty(walls, Symbol("layer_" * quantity))[i]
         return isnothing(both) ? 0.0 : Float64(both)
     end
+    function resolve_shape(side::String, i::Int)
+        specific = getproperty(walls, Symbol("layer_shape_" * side))[i]
+        shape = isnothing(specific) ? walls.layer_shape[i] : specific
+        shape = isnothing(shape) ? "step" : shape
+        shape in ("step", "linear") || error("Wall $i, $side side: layer_shape must be \"step\" or \"linear\", got \"$shape\".")
+        return Symbol(shape)
+    end
     spacing = size_scale(walls; ignore_user_value=true)
     positions = value_as_vector(walls.position)
     layers = Internal.WallLayer[]
@@ -79,7 +86,7 @@ function wall_layers(walls::Walls; density=0.)
             h < 0 && error("Wall $i, $side side: layer_h must be >= 0, got $h.")
             rho > 0 && iszero(h) && error("Wall $i, $side side: layer_h must be > 0 when layer_rho > 0.")
             rho > 0 && h > spacing && error("Wall $i, $side side: layer_h = $h um exceeds the spacing between walls ($spacing um), so the layer would pass through a neighbouring wall.")
-            Internal.LayerSide(rho, h)
+            Internal.LayerSide(rho, h, resolve_shape(side, i))
         end
         push!(layers, Internal.WallLayer(Float64(positions[i]), sides...))
     end

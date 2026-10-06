@@ -56,6 +56,15 @@ end
                 @test result["R2"] == 0.
             end
         end
+        @testset "create walls with a linear layer" begin
+            in_tmpdir() do
+                _, err = run_main_test("geometry create walls 1 test.json --repeats 2 --layer_rho 0.05 --layer_h 0.5 --layer_shape linear")
+                @test length(err) == 0
+                result = JSON.parse(open("test.json", "r"))
+                @test result["layer_shape"] == "linear"
+                @test result["layer_rho"] == 0.05
+            end
+        end
         @testset "create annuli" begin
             in_tmpdir() do 
                 _, err = run_main_test("geometry create annuli 2 test.json --inner 1,2 --outer 3 --myelin")

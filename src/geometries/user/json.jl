@@ -35,7 +35,7 @@ function write_geometry(io::IO, group::ObstructionGroup)
     print(io, "    \"number\": $(group.n_obstructions),\n")
     for unique_key in group.unique_keys
         fv = group.field_values[unique_key]
-        print(io, "    \"#$(unique_key)_description\": \"$(description(fv))\",\n")
+        print(io, "    \"#$(unique_key)_description\": ", JSON_pkg.json(description(fv)), ",\n")
         print(io, "    \"$unique_key\": ")
         print(io, JSON_pkg.json(fv.value))
         if unique_key != last(group.unique_keys)

@@ -325,3 +325,53 @@ end
         @test Layers.max_layer_rate([Layers.WallLayer(0.0, Layers.LayerSide(0.01, 0.1, :linear), Layers.LayerSide(0.0, 0.0))]) ≈ 0.2
     end
 end
+
+@testset "test_layer.jl: layer_shape on Walls" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+    v(x) = SVector{3, Float64}(x, 0.3, -1.2)
+
+    @testset "resolution" begin
+        l = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5))[1].layer[1]
+        @test (l.positive.shape, l.negative.shape) == (:step, :step)
+        l = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_shape="linear"))[1].layer[1]
+        @test (l.positive.shape, l.negative.shape) == (:linear, :linear)
+        l = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_shape_negative="linear"))[1].layer[1]
+        @test (l.positive.shape, l.negative.shape) == (:step, :linear)
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_shape="gaussian"))
+    end
+
+    @testset "mixed shapes use their own formula" begin
+        # positive side step, negative side linear; ρ/h = 0.1
+        g = geom(mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_shape_negative="linear"))
+        @test Layers.layer_exponent(g, v(0.1), v(0.1), 1.0) ≈ 0.1            # positive (step) side of wall 0: g = 1
+        @test Layers.layer_exponent(g, v(1.9), v(1.9), 1.0) ≈ 0.16           # negative (linear) side of wall 2, d = 0.1: g = 1.6
+        @test Layers.layer_exponent(g, v(0.0), v(0.0), 1.0) ≈ 0.1 + 0.2      # on wall 0: inside both of its layers (step 1 + linear 2)
+    end
+
+    @testset "linear, h = w: uniform rate" begin
+        g = geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=2.0, layer_shape="linear"))   # 2ρ/w = 0.1
+        for (a, b) in ((0.05, 0.3), (0.8, 1.2), (1.0, 1.9), (0.01, 1.99), (0.3, 0.3))
+            @test Layers.layer_exponent(g, v(a), v(b), 1.0) ≈ 0.1 rtol=1e-12
+        end
+    end
+
+    @testset "linear, h = w: every spin decays at exactly 0.1 /ms" begin
+        walls = mr.Walls(repeats=2., layer_rho=0.1, layer_h=2.0, layer_shape="linear")
+        sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=walls, diffusivity=3., verbose=false)
+        Random.seed!(1)
+        snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+        res = mr.readout(snap, sim, [10., 50.]; return_snapshot=true)
+        for (t, s) in zip((10., 50.), res)
+            @test all(isapprox.([x.orientations[1].transverse for x in s.spins], exp(-0.1 * t); rtol=1e-10))
+        end
+    end
+
+    @testset "JSON round trip keeps layer_shape" begin
+        io = IOBuffer()
+        mr.write_geometry(io, mr.Walls(repeats=2., layer_rho=0.05, layer_h=0.5, layer_shape="linear"))
+        back = mr.read_geometry_json(String(take!(io)))
+        @test back.layer_shape.value == "linear"
+        @test isnothing(back.layer_shape_positive.value)
+    end
+end
