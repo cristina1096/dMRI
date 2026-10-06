@@ -175,6 +175,8 @@ Implement and test each component separately, in this order. Each has its own un
 
 ## 2.4 Additional profiles (weeks 6–8)
 
+**Implementation plan for the linear profile (P2.4.1–P2.4.3, P2.4.7–P2.4.8, linear part):** [docs/superpowers/plans/2026-10-06-linear-profile.md](../docs/superpowers/plans/2026-10-06-linear-profile.md).
+
 All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 
 | Profile | *g*(*u*) | ∫*g* | Wall value *g*(0) | Note |
