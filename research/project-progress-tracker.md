@@ -221,6 +221,8 @@ This is preliminary — the full sensitivity study in Phase 3 uses curved geomet
 
 ## 2.6 Timestep, tolerance and computational cost (weeks 9–11)
 
+**Implementation plan (P2.6.1–P2.6.3, P2.6.5, P2.6.8, P2.6.10–P2.6.12; step profile, walls):** [docs/superpowers/plans/2026-10-06-timestep-study.md](../docs/superpowers/plans/2026-10-06-timestep-study.md). P2.6.4 follows the linear plan; P2.6.6, P2.6.7 and P2.6.9 have no numerical-integration path yet.
+
 Converge one control at a time. Use the **same seed** across each sweep, then confirm with other seeds.
 
 ### Timestep
