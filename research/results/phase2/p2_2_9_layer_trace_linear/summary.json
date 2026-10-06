@@ -1,0 +1,34 @@
+{
+  "max_rel_error": 2.398303777795263e-12,
+  "n_steps_with_reflection_in_layer": 4848,
+  "params": {
+    "D": 3.0,
+    "R2_bulk": 0.0125,
+    "h_um": 0.5,
+    "nspins": 100,
+    "nsteps": 500,
+    "rate_per_ms": 0.1,
+    "samples_per_piece": 10000,
+    "seed": 20261003,
+    "shape": "linear",
+    "tau_ms": 0.01,
+    "w_um": 2.0
+  },
+  "pass": true,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-07T08:11:16.348",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "67610adaed6b3488b754c15a01529310e665a736",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_2_9_layer_trace.jl",
+    "src_modified": false
+  },
+  "tolerance": 1.0e-6
+}

@@ -46,3 +46,13 @@
         @test occupancy(snap, 0.2) == 0.5          # 0.1 and 1.95 are within 0.2 of a face
     end
 end
+
+@testset "harness: shapes" begin
+    @test rho_for(0.1, 0.5; shape="linear") == 0.025
+    @test rho_for(0.1, 0.5) == 0.05
+    l = Simulation([]; geometry=layer_walls(h=0.5, rate=0.1, shape="linear"), verbose=false).geometry[1].layer[1]
+    @test (l.positive.shape, l.positive.rho) == (:linear, 0.025)
+    @test H_GRID_LINEAR[end] == 2.0
+    r = run_walls(layer_walls(h=2.0, rate=0.1, shape="linear"); times=[0.0, 50.0], seeds=1:2, nspins=1000)
+    @test all(isapprox.(r.S, exp.(-0.1 .* [0.0 50.0]); rtol=1e-10))            # exact h = w case
+end

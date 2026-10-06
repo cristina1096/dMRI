@@ -24,22 +24,29 @@ function phase2_outdir(name::AbstractString)
     return d
 end
 
-"ρ (µm/ms) of a step-profile layer with surface excess rate `rate` (1/ms) and thickness `h` (µm): ρ = rate·h."
-rho_for(rate, h) = Float64(rate * h)
+"Layer thicknesses (µm) for the linear-profile sweep: as H_GRID, extended to h = w (the linear exact case)."
+const H_GRID_LINEAR = [0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0]
+
+"g(0) of a profile: 1 for step, 2 for linear."
+profile_g0(shape) = shape == "step" ? 1.0 : shape == "linear" ? 2.0 : error("Unknown shape $shape")
+
+"ρ (µm/ms) giving surface excess rate ΔR2(0) = `rate` (1/ms) for thickness `h` (µm): ρ = rate·h / g(0)."
+rho_for(rate, h; shape="step") = Float64(rate * h / profile_g0(shape))
 
 """
-    layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate)
+    layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step")
 
-Reference walls with a step-profile layer. `side` is `:both`, `:positive`, `:negative`, or `:asymmetric`
-(positive side `h`, `rate`; negative side `h_neg`, `rate_neg`). `rate = 0` or `h = 0` gives no layer.
+Reference walls with a layer of profile `shape` ("step" or "linear") and surface excess rate `rate`.
+`side` is `:both`, `:positive`, `:negative`, or `:asymmetric` (positive side `h`, `rate`; negative side `h_neg`, `rate_neg`).
 """
-function layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate)
-    side == :both && return Walls(repeats=W_REF, layer_rho=rho_for(rate, h), layer_h=h)
-    side == :positive && return Walls(repeats=W_REF, layer_rho_positive=rho_for(rate, h), layer_h_positive=h)
-    side == :negative && return Walls(repeats=W_REF, layer_rho_negative=rho_for(rate, h), layer_h_negative=h)
+function layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step")
+    ρ(r, hh) = rho_for(r, hh; shape=shape)
+    side == :both && return Walls(repeats=W_REF, layer_rho=ρ(rate, h), layer_h=h, layer_shape=shape)
+    side == :positive && return Walls(repeats=W_REF, layer_rho_positive=ρ(rate, h), layer_h_positive=h, layer_shape=shape)
+    side == :negative && return Walls(repeats=W_REF, layer_rho_negative=ρ(rate, h), layer_h_negative=h, layer_shape=shape)
     side == :asymmetric && return Walls(repeats=W_REF,
-        layer_rho_positive=rho_for(rate, h), layer_h_positive=h,
-        layer_rho_negative=rho_for(rate_neg, h_neg), layer_h_negative=h_neg)
+        layer_rho_positive=ρ(rate, h), layer_h_positive=h,
+        layer_rho_negative=ρ(rate_neg, h_neg), layer_h_negative=h_neg, layer_shape=shape)
     error("Unknown side $side; use :both, :positive, :negative or :asymmetric.")
 end
 

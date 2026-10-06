@@ -15,7 +15,8 @@ include(joinpath(@__DIR__, "harness.jl"))
 include(joinpath(@__DIR__, "p2_2_9_layer_trace_lib.jl"))
 using StaticArrays
 
-const OUT = phase2_outdir("p2_2_9_layer_trace")
+const SHAPE = get(ENV, "SHAPE", "step")
+const OUT = phase2_outdir(SHAPE == "step" ? "p2_2_9_layer_trace" : "p2_2_9_layer_trace_" * SHAPE)
 const TAU = 0.01
 const NSTEPS = 500
 const NTRACE = 100
@@ -25,7 +26,8 @@ const R2B = 1 / 80
 const TOL = 1e-6
 
 seq = mr.SequenceParts.SequenceWaveform((([], []), ([], []), ([], [])), [], [], [NSTEPS * TAU], NSTEPS * TAU)
-sim = Simulation(seq; geometry=layer_walls(h=H, rate=RATE), diffusivity=D_REF, R2=R2B, verbose=false)
+sim = Simulation(seq; geometry=layer_walls(h=H, rate=RATE, shape=SHAPE), diffusivity=D_REF, R2=R2B, verbose=false)
+const RHO_OVER_H = rho_for(RATE, H; shape=SHAPE) / H
 # the first part is the zero-length instant at t = 0; take the τ-long step after it
 part = first(p for p in mr.parts([seq], 0., mr.TimeStep(TAU, Inf)) if p.duration > 0)
 @assert part.duration ≈ TAU
@@ -46,7 +48,7 @@ for i in 1:NTRACE
         for k in eachindex(lens)
             iszero(lens[k]) && continue
             dt = TAU * lens[k] / total_len
-            expo += RATE * dt * sampled_layer_fraction(path[k][1], path[k + 1][1], H)
+            expo += RHO_OVER_H * dt * sampled_profile_average(path[k][1], path[k + 1][1], H; shape=Symbol(SHAPE))
         end
         predicted = m0 * exp(-expo) * exp(-R2B * TAU)
         m1 = spin.orientations[1].transverse
@@ -66,6 +68,6 @@ pass = max_err <= TOL && n_reflect_in_layer > 0
 write_csv(joinpath(OUT, "trace_spin1.csv"), rows)
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(),
     "params" => Dict("tau_ms" => TAU, "nsteps" => NSTEPS, "nspins" => NTRACE, "h_um" => H, "rate_per_ms" => RATE,
-        "R2_bulk" => R2B, "D" => D_REF, "w_um" => W_REF, "seed" => 20261003, "samples_per_piece" => 10_000),
+        "R2_bulk" => R2B, "D" => D_REF, "w_um" => W_REF, "seed" => 20261003, "samples_per_piece" => 10_000, "shape" => SHAPE),
     "max_rel_error" => max_err, "tolerance" => TOL, "n_steps_with_reflection_in_layer" => n_reflect_in_layer, "pass" => pass))
 println("saved to $OUT")
