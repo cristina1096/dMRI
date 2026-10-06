@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 28 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 33 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -232,8 +232,8 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | P2.6.1 | ☑ | **V1** timestep plateau | Step profile, *h* = 0.1 µm; τ from 10⁻⁵ to 10⁻¹ ms, 3 per decade (B5: 10⁻⁵ ms costs ≈ 2 h per seed at 10⁵ spins × 50 ms, so use 10⁴ spins or a shorter sequence below 10⁻⁴ ms). If no plateau by 10⁻⁵ ms, record that and restrict *h* (see risks) | Plateau found; halving τ changes signal < 1σ; large-τ bias has the sign expected in proposal §3.2 V (too little attenuation) | toy scan + MCMR check: plateau to 0.1 ms at 1 % (τ_conv ≥ 0.1), 0.086 ms at 0.1 %; bias −1.1e-3 at 0.1 ms (less attenuation, as expected); MCMR = toy (\|z\| ≤ 1.3). `phase2_record.md` P2.6.1 |
 | P2.6.2 | ☑ | **V2** *h*² scaling | Repeat at *h* = 0.05, 0.1, 0.2 µm; plot τ_conv vs *h*²/D (proposal Eq. 11) | Line through origin; slope = *c*_h | **FAIL**: τ_conv not ∝ *h*² (falls slightly with *h*). Decision point measured: ΔR₂(0)·τ_conv ≈ 0.05 (1 %), 0.003 (0.1 %); bias ∝ ΔR₂(0); ΔR₂(0) not ρ. `phase2_record.md` P2.6.2 |
 | P2.6.3 | ☑ | **V3** 1/D scaling | λ = 0.1 µm, D = 1, 3, 6 | τ_conv ∝ 1/D | **FAIL**: τ_conv(0.1 %) = 0.043/0.086/0.089 ms for D = 1/3/6 (rises with D). `phase2_record.md` P2.6.3 |
-| P2.6.4 | ☐ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_h depends on shape; if so, report per shape or use the most demanding | table |
-| P2.6.5 | ☐ | Adopt constraint τ ≤ *c*_h·*h*²/D with one-decade margin; add to τ_max selection | Constraint active; report which term binds | code |
+| P2.6.4 | ☐ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_h depends on shape; if so, report per shape or use the most demanding | after the linear plan: rerun `p2_6_scan.jl` with a shape option; check ΔR₂(0)·τ_conv per shape |
+| P2.6.5 | ☑ | Adopt constraint τ ≤ *c*_h·*h*²/D with one-decade margin; add to τ_max selection | Constraint active; report which term binds | **Done, changed form** (user decision 2026-10-06, since V2/V3 failed): τ ≤ c/ΔR₂(0)_max, option `layer`, default c = 0.005 (10× margin on 1 %); binds for ΔR₂(0) > 0.125 at w = 2 µm; verbose message names it. `phase2_record.md` P2.6.5 |
 
 **Decision point:** if V2 does not give λ² scaling, test τ_conv against λ/ρ (the timescale 1/ΔR₂). Re-derive the constraint before adopting it.
 
@@ -241,18 +241,18 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P2.6.6 | ☐ | **V12** tolerance sweep | Quadrature path, ε_R₂ from 10⁻¹ to 10⁻⁶, each profile; compare to closed form | Signal error vs ε_R₂; fix ε_R₂ where error < 1σ | fig + chosen ε_R₂ |
-| P2.6.7 | ☐ | Sub-division count vs ε_R₂ | Log sub-segments per step | Cost of tightening quantified | table |
+| P2.6.6 | ☐ | **V12** tolerance sweep | Quadrature path, ε_R₂ from 10⁻¹ to 10⁻⁶, each profile; compare to closed form | Signal error vs ε_R₂; fix ε_R₂ where error < 1σ | not applicable yet: every implemented profile has a closed form; revisit when one needs numerical integration |
+| P2.6.7 | ☐ | Sub-division count vs ε_R₂ | Log sub-segments per step | Cost of tightening quantified | not applicable yet (see P2.6.6) |
 
 ### Computational cost
 
 | ID | ☐ | Test | Method | Pass criterion | Output |
 |---|---|---|---|---|---|
-| P2.6.8 | ☐ | Runtime vs τ | Wall-clock per spin per ms of sequence, for the V1 sweep; ratio to the old code at the same τ (B5) | Cost curve alongside accuracy curve | fig |
-| P2.6.9 | ☐ | Runtime: closed form vs quadrature | Same configuration, both paths | Speed-up quantified | table |
-| P2.6.10 | ☐ | Runtime vs *h* at converged τ | *h* = 0.01–0.5 µm | Confirms feasible working range (proposal Table 1, risk "excessive timestep cost") | table |
-| P2.6.11 | ☐ | Noise cost at fixed budget | Fewer spins required by smaller τ → σ increase (√ ratio) | σ penalty tabulated per *h* | table |
-| P2.6.12 | ☐ | Accuracy–cost summary | One figure: error vs runtime, points labelled by τ and ε_R₂ | Recommended settings stated | fig + note |
+| P2.6.8 | ☑ | Runtime vs τ | Wall-clock per spin per ms of sequence, for the V1 sweep; ratio to the old code at the same τ (B5) | Cost curve alongside accuracy curve | overhead ×1.2–1.4 vs B5 at τ = 0.1–1e-4. `phase2_record.md` P2.6.8 |
+| P2.6.9 | ☐ | Runtime: closed form vs quadrature | Same configuration, both paths | Speed-up quantified | not applicable yet (see P2.6.6) |
+| P2.6.10 | ☑ | Runtime vs *h* at converged τ | *h* = 0.01–0.5 µm | Confirms feasible working range (proposal Table 1, risk "excessive timestep cost") | ≈ 0.03–0.05 h per full run for h = 0.01–0.5 (τ not h-limited); vs ΔR₂(0): 0.01 h (0.1) to 0.63 h (10). `phase2_record.md` |
+| P2.6.11 | ☑ | Noise cost at fixed budget | Fewer spins required by smaller τ → σ increase (√ ratio) | σ penalty tabulated per *h* | σ penalty √(0.04/τ): 1.0 / 2.0 / 2.8 / 4.0 / 8.9 for ΔR₂(0) = 0.1 / 0.5 / 1 / 2 / 10 (independent of h). `phase2_record.md` |
+| P2.6.12 | ☑ | Accuracy–cost summary | One figure: error vs runtime, points labelled by τ and ε_R₂ | Recommended settings stated | `results/phase2/p2_6_8_cost/cost.png`; recommended: default c = 0.005 (≈ 0.1 %), c = 0.05 for ≈ 1 %. Earlier τ = 1e-2 results: bias ≤ 6.4e-4, no reruns |
 | P2.6.13 | ☐ | Tag `rd-walls-v1` | Tag exists | git tag |
 
 ## Phase 2 deliverables

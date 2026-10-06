@@ -1,0 +1,253 @@
+{
+  "c_layer": 0.005,
+  "consequences": [
+    {
+      "scan": "V2_h0.01",
+      "h_um": 0.01,
+      "rate": 0.1,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.0004389455486470961,
+      "bias_at_4p6e_2": -0.00022062413389389857
+    },
+    {
+      "scan": "V2_h0.05",
+      "h_um": 0.05,
+      "rate": 0.1,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.00045322336961950427,
+      "bias_at_4p6e_2": -0.0006782473377878739
+    },
+    {
+      "scan": "V1_h0.1",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.00025735733630749547,
+      "bias_at_4p6e_2": -0.00047570531028950924
+    },
+    {
+      "scan": "V2_h0.2",
+      "h_um": 0.2,
+      "rate": 0.1,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.0004103160812825024,
+      "bias_at_4p6e_2": -0.0007883605387990489
+    },
+    {
+      "scan": "V3_D1",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "D": 1.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.0006364656072002095,
+      "bias_at_4p6e_2": -0.0010264015088551348
+    },
+    {
+      "scan": "V3_D6",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "D": 6.0,
+      "rate_tau_at_1e_2": 0.001,
+      "bias_at_1e_2": -0.0005211985369527605,
+      "bias_at_4p6e_2": -0.0007610878148438527
+    },
+    {
+      "scan": "V2_rate0.5",
+      "h_um": 0.1,
+      "rate": 0.5,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.005,
+      "bias_at_1e_2": -0.0013966103496744209,
+      "bias_at_4p6e_2": -0.0038387697445344537
+    },
+    {
+      "scan": "V2_rate1",
+      "h_um": 0.1,
+      "rate": 1.0,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.01,
+      "bias_at_1e_2": -0.0025180636467942996,
+      "bias_at_4p6e_2": -0.007681217589404876
+    },
+    {
+      "scan": "V2_rate2",
+      "h_um": 0.1,
+      "rate": 2.0,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.02,
+      "bias_at_1e_2": -0.004728272370021713,
+      "bias_at_4p6e_2": -0.015143425137114641
+    },
+    {
+      "scan": "V2_h0.01_rate10",
+      "h_um": 0.01,
+      "rate": 10.0,
+      "D": 3.0,
+      "rate_tau_at_1e_2": 0.1,
+      "bias_at_1e_2": -0.008395958048331154,
+      "bias_at_4p6e_2": -0.02063318633511202
+    }
+  ],
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-07T05:45:52.717",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "e4bbe2fe9a523f2853ba7b264ef18ec2534b6a31",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_6_8_cost.jl",
+    "src_modified": false
+  },
+  "rows": [
+    {
+      "kind": "tau",
+      "tau_ms": 0.1,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.03192386507987976,
+      "b5_us_per_spin_step": 0.0264842999,
+      "overhead": 1.2053882942127443,
+      "hours_full_run": null
+    },
+    {
+      "kind": "tau",
+      "tau_ms": 0.01,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.02355254530906677,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 1.396845809263162,
+      "hours_full_run": null
+    },
+    {
+      "kind": "tau",
+      "tau_ms": 0.001,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.022619611024856566,
+      "b5_us_per_spin_step": 0.01626244068,
+      "overhead": 1.3909112088368623,
+      "hours_full_run": null
+    },
+    {
+      "kind": "tau",
+      "tau_ms": 0.0001,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.019523075819015502,
+      "b5_us_per_spin_step": 0.01550110936,
+      "overhead": 1.2594631368380658,
+      "hours_full_run": null
+    },
+    {
+      "kind": "h",
+      "tau_ms": 0.01,
+      "h_um": 0.01,
+      "rate": 0.1,
+      "us_per_spin_step": 0.03528320789337158,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 2.0925636884028926,
+      "hours_full_run": 0.04900445540746053
+    },
+    {
+      "kind": "h",
+      "tau_ms": 0.01,
+      "h_um": 0.05,
+      "rate": 0.1,
+      "us_per_spin_step": 0.024567294120788574,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 1.457028163505899,
+      "hours_full_run": 0.03412124183442858
+    },
+    {
+      "kind": "h",
+      "tau_ms": 0.01,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.02074580192565918,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 1.2303844913316033,
+      "hours_full_run": 0.02881361378563775
+    },
+    {
+      "kind": "h",
+      "tau_ms": 0.01,
+      "h_um": 0.2,
+      "rate": 0.1,
+      "us_per_spin_step": 0.020121097564697266,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 1.193334751815673,
+      "hours_full_run": 0.027945968839857314
+    },
+    {
+      "kind": "h",
+      "tau_ms": 0.01,
+      "h_um": 0.5,
+      "rate": 0.1,
+      "us_per_spin_step": 0.021518588066101074,
+      "b5_us_per_spin_step": 0.0168612349,
+      "overhead": 1.2762166112816016,
+      "hours_full_run": 0.029886927869584825
+    },
+    {
+      "kind": "rate",
+      "tau_ms": 0.04,
+      "h_um": 0.1,
+      "rate": 0.1,
+      "us_per_spin_step": 0.02192201614379883,
+      "b5_us_per_spin_step": null,
+      "overhead": null,
+      "hours_full_run": 0.00761181116104126
+    },
+    {
+      "kind": "rate",
+      "tau_ms": 0.01,
+      "h_um": 0.1,
+      "rate": 0.5,
+      "us_per_spin_step": 0.019106292724609376,
+      "b5_us_per_spin_step": null,
+      "overhead": null,
+      "hours_full_run": 0.02653651767306858
+    },
+    {
+      "kind": "rate",
+      "tau_ms": 0.005,
+      "h_um": 0.1,
+      "rate": 1.0,
+      "us_per_spin_step": 0.019974899291992188,
+      "b5_us_per_spin_step": null,
+      "overhead": null,
+      "hours_full_run": 0.055485831366644964
+    },
+    {
+      "kind": "rate",
+      "tau_ms": 0.0025,
+      "h_um": 0.1,
+      "rate": 2.0,
+      "us_per_spin_step": 0.02043622136116028,
+      "b5_us_per_spin_step": null,
+      "overhead": null,
+      "hours_full_run": 0.11353456311755712
+    },
+    {
+      "kind": "rate",
+      "tau_ms": 0.0005,
+      "h_um": 0.1,
+      "rate": 10.0,
+      "us_per_spin_step": 0.022693464756011965,
+      "b5_us_per_spin_step": null,
+      "overhead": null,
+      "hours_full_run": 0.6303740210003324
+    }
+  ],
+  "tau_default": 0.04
+}
