@@ -1,0 +1,252 @@
+{
+  "note": "τ_conv that is a lower bound or noise-limited is not used in any ratio test; no c_h is adopted here (ledger ruling, Task 2)",
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-06T21:26:41.171",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "77ed1bdb0b83b0445ea11f2845126630f7cceeb0",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_6_2_scaling.jl",
+    "src_modified": false
+  },
+  "rows": [
+    {
+      "label": "V2_h0.01",
+      "h_um": 0.01,
+      "rate": 0.1,
+      "rho": 0.001,
+      "D": 3.0,
+      "R_ref": 0.000999991687702245,
+      "bias_at_0p1ms": -0.00046141175973315324,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.1,
+      "lower_bound_0p1pct": true,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_h0.05",
+      "h_um": 0.05,
+      "rate": 0.1,
+      "rho": 0.005000000000000001,
+      "D": 3.0,
+      "R_ref": 0.004997743170472626,
+      "bias_at_0p1ms": -0.0010772148061963607,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.08619613311382612,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V1_h0.1",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "rho": 0.010000000000000002,
+      "D": 3.0,
+      "R_ref": 0.009988986662979812,
+      "bias_at_0p1ms": -0.0011256430137349966,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.08621076705277098,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_h0.2",
+      "h_um": 0.2,
+      "rate": 0.1,
+      "rho": 0.020000000000000004,
+      "D": 3.0,
+      "R_ref": 0.01997172515336054,
+      "bias_at_0p1ms": -0.0015616781630713593,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.05726541056245399,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_rate0.5",
+      "h_um": 0.1,
+      "rate": 0.5,
+      "rho": 0.05,
+      "D": 3.0,
+      "R_ref": 0.04977689017776672,
+      "bias_at_0p1ms": -0.0068033100946018315,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.006323852897117126,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_rate1",
+      "h_um": 0.1,
+      "rate": 1.0,
+      "rho": 0.1,
+      "D": 3.0,
+      "R_ref": 0.09910707790134174,
+      "bias_at_0p1ms": -0.013412197183121454,
+      "tau_conv_1pct": 0.06331913389305864,
+      "lower_bound_1pct": false,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.002948725134601632,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_rate2",
+      "h_um": 0.1,
+      "rate": 2.0,
+      "rho": 0.2,
+      "D": 3.0,
+      "R_ref": 0.19644494382026317,
+      "bias_at_0p1ms": -0.026011048805020334,
+      "tau_conv_1pct": 0.02532046855944381,
+      "lower_bound_1pct": false,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.001542075527189759,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V2_h0.01_rate10",
+      "h_um": 0.01,
+      "rate": 10.0,
+      "rho": 0.1,
+      "D": 3.0,
+      "R_ref": 0.09890682936260096,
+      "bias_at_0p1ms": -0.031060471598300294,
+      "tau_conv_1pct": 0.012788607381834266,
+      "lower_bound_1pct": false,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.0005606460331457832,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V3_D1",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "rho": 0.010000000000000002,
+      "D": 1.0,
+      "R_ref": 0.009973341729704543,
+      "bias_at_0p1ms": -0.0014756750928777663,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.04283852321374384,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    },
+    {
+      "label": "V3_D6",
+      "h_um": 0.1,
+      "rate": 0.1,
+      "rho": 0.010000000000000002,
+      "D": 6.0,
+      "R_ref": 0.009996165819188918,
+      "bias_at_0p1ms": -0.001043532922581801,
+      "tau_conv_1pct": 0.1,
+      "lower_bound_1pct": true,
+      "noise_1pct": false,
+      "tau_conv_0p1pct": 0.08884310754166203,
+      "lower_bound_0p1pct": false,
+      "noise_0p1pct": false
+    }
+  ],
+  "same_rho_bias": [
+    -0.013412197183121454,
+    -0.031060471598300294
+  ],
+  "tests": {
+    "0.001": {
+      "V2_tau_D_over_h2": {
+        "n": 3,
+        "labels": [
+          "V2_h0.05",
+          "V1_h0.1",
+          "V2_h0.2"
+        ],
+        "values": [
+          103.43535973659132,
+          25.86323011583129,
+          4.294905792184048
+        ],
+        "max_dev": 1.3227633779062762,
+        "pass": false
+      },
+      "V3_tau_D": {
+        "n": 3,
+        "labels": [
+          "V3_D1",
+          "V1_h0.1",
+          "V3_D6"
+        ],
+        "values": [
+          0.04283852321374384,
+          0.2586323011583129,
+          0.5330586452499722
+        ],
+        "max_dev": 0.9162605923002427,
+        "pass": false
+      },
+      "rate_tau_times_rate": {
+        "n": 4,
+        "labels": [
+          "V1_h0.1",
+          "V2_rate0.5",
+          "V2_rate1",
+          "V2_rate2"
+        ],
+        "values": [
+          0.008621076705277097,
+          0.003161926448558563,
+          0.002948725134601632,
+          0.003084151054379518
+        ],
+        "max_dev": 0.9355938686805334,
+        "pass": false
+      }
+    },
+    "0.01": {
+      "V2_tau_D_over_h2": {
+        "n": 0,
+        "values": [],
+        "max_dev": null,
+        "pass": null
+      },
+      "V3_tau_D": {
+        "n": 0,
+        "values": [],
+        "max_dev": null,
+        "pass": null
+      },
+      "rate_tau_times_rate": {
+        "n": 2,
+        "labels": [
+          "V2_rate1",
+          "V2_rate2"
+        ],
+        "values": [
+          0.06331913389305864,
+          0.05064093711888762
+        ],
+        "max_dev": 0.1112512186206166,
+        "pass": true
+      }
+    }
+  }
+}

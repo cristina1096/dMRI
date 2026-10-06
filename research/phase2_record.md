@@ -27,6 +27,8 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.3.7 | V11: endpoint rule vs exact overlap (toy, h = 0.1) | bias quantified (sign not assumed); toy exact = MCMR within 2 SEM | bias at τ = 1e-3 / 1e-2 / 4e-2: -0.1 / -1.4 / +5.2 SEM; cross-check **PASS** (+1.8 SEM) |
 | P2.3.12 | Side-specific layer: exact mirror check + characterisation | positive layer on −x walls == negative layer on +x walls (identical) | **PASS** (bit-identical); paired statistical difference reported (max 3.2 SEM, 1.3 SEM at 50 ms); S(50): both 0.36847, one side 0.60771, asymmetric 0.36834 |
 | P2.3.9 | V4: h*(θ) fit to the B4 reference (τ = 1e-2, ΔR₂(0) = 0.1) | h* found for every θ, with uncertainty and residuals (no pass/fail) | **12 of 12 θ fitted**; h* from 0.00977 to 0.48681 µm; at h* the model matches the reference curve within 4e-05 relative (≤ 0.4 combined SEM) at every readout |
+| P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
+| P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (trends opposite to h²/D; 1 % not reached at ΔR₂(0) = 0.1). τ_conv set by ΔR₂(0): ΔR₂(0)·τ_conv ≈ 0.05–0.06 (1 %), ≈ 0.003 (0.1 %, ΔR₂(0) ≥ 0.5); bias at 0.1 ms ∝ ΔR₂(0) |
 
 ## P2.2.9: single-spin trace with the layer on
 
@@ -198,3 +200,67 @@ Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) (start and parabola refinement
 ## Gate for section 2.4 (2026-10-03)
 
 P2.2.9 single-spin trace: **PASS**. P2.3.3 occupancy: **PASS**. P2.3.4(a) exact end point h = w/2: **PASS**. → Section 2.4 (other profiles) may start. Characterisation results above are at τ = 1e-2 ms. The V4 timestep check moved the fitted model by at most about 1 SEM, while the V11 toy shows a τ-shift of the exact rule of order 10⁻⁴ relative. The timestep study (P2.6) settles convergence.
+
+## P2.6.1: V1, timestep plateau
+
+Toy 1D walk (exact segment rule, step profile, both faces, w = 2 µm, D = 3 µm²/ms), h = 0.1 µm, ΔR₂(0) = 0.1 ms⁻¹, T = 10 ms, 100000 spins × 10 seeds, τ = 1e-5 … 0.1 ms (3 per decade). Observable R = −ln S(T_eff)/T_eff; reference = τ = 1e-5. Script `research/phase2/p2_6_scan.jl`; output `research/results/phase2/p2_6_scan_V1_h0.1/`.
+
+| τ (ms) | R (ms⁻¹) | SEM | R/R_ref − 1 |
+|---|---|---|---|
+| 1e-5 | 9.98899e-03 | 1.1e-06 | 0 |
+| 2.15e-5 | 9.98741e-03 | 8.7e-07 | −1.6e-04 |
+| 4.64e-5 | 9.98803e-03 | 1.5e-06 | −9.6e-05 |
+| 1e-4 | 9.99133e-03 | 1.7e-06 | +2.3e-04 |
+| 2.15e-4 | 9.99159e-03 | 1.3e-06 | +2.6e-04 |
+| 4.64e-4 | 9.99037e-03 | 1.2e-06 | +1.4e-04 |
+| 1e-3 | 9.99025e-03 | 1.5e-06 | +1.3e-04 |
+| 2.15e-3 | 9.98823e-03 | 1.1e-06 | −7.6e-06 |
+| 4.64e-3 | 9.98849e-03 | 1.3e-06 | +5.0e-05 |
+| 1e-2 | 9.98642e-03 | 1.6e-06 | −2.6e-04 |
+| 2.15e-2 | 9.98557e-03 | 1.6e-06 | −3.4e-04 |
+| 4.64e-2 | 9.98424e-03 | 1.7e-06 | −4.8e-04 |
+| 0.1 | 9.97774e-03 | 1.5e-06 | −1.13e-03 |
+
+- τ_conv at 1 %: **≥ 0.1 ms** (no τ in the range fails; lower bound). τ_conv at 0.1 %: **0.086 ms**.
+- Bias at the largest τ: −1.13e-3 relative, i.e. **less attenuation** at large τ, the sign the proposal (§3.2 V) expects.
+- Points from 1e-5 to 1e-3 scatter by up to ±2.6e-4 (about 2 SEM): this is the precision floor of the scan, and it is below the 0.1 % tolerance.
+
+**MCMR confirmation** (`p2_6_1_mcmr_check.jl`, same configuration, 100000 spins × 10 seeds, independent random stream):
+
+| τ (ms) | R MCMR | R toy | z |
+|---|---|---|---|
+| 0.1 | 9.97614e-03 ± 2.0e-06 | 9.97774e-03 ± 1.5e-06 | −0.65 |
+| 1e-2 | 9.98929e-03 ± 1.5e-06 | 9.98642e-03 ± 1.6e-06 | +1.31 |
+| 1e-3 | 9.99003e-03 ± 1.1e-06 | 9.99025e-03 ± 1.5e-06 | −0.12 |
+| 1e-4 | 9.99071e-03 ± 1.6e-06 | 9.99133e-03 ± 1.7e-06 | −0.27 |
+
+→ **PASS**: the toy represents MCMR's τ dependence at this precision, so the dense scans below use the toy.
+
+Sizing (ledger rulings): 100000 spins per seed (relative SEM of R ≈ 1.6e-4 < tol/3 at 0.1 %); reference τ = 1e-5 for V1 only and 1e-4 for the other scans, since R is flat from 1e-5 to 1e-3 (V1, and a probe at h = 0.01).
+
+## P2.6.2, P2.6.3: scaling of τ_conv
+
+Same toy, 100000 spins × 10 seeds, T = 10 ms, τ = 1e-4 … 0.1 ms, reference τ = 1e-4 (V1: 1e-5). Besides the planned V2/V3 scans, the probes during sizing showed no τ dependence for a thin layer but a growing one with the rate, so the tracker's decision point (τ_conv vs ΔR₂(0)) was measured too: ΔR₂(0) = 0.5, 1, 2 at h = 0.1, and h = 0.01 at ΔR₂(0) = 10 (same ρ = ΔR₂(0)·h as h = 0.1 at 1) to separate ΔR₂(0) from ρ. Script `research/phase2/p2_6_2_scaling.jl`; output `research/results/phase2/p2_6_2_scaling/`.
+
+| scan | h (µm) | ΔR₂(0) (ms⁻¹) | ρ (µm/ms) | D | bias at τ = 0.1 ms | τ_conv 1 % (ms) | τ_conv 0.1 % (ms) |
+|---|---|---|---|---|---|---|---|
+| V2_h0.01 | 0.01 | 0.1 | 0.001 | 3 | −4.6e-04 | ≥ 0.1 | ≥ 0.1 |
+| V2_h0.05 | 0.05 | 0.1 | 0.005 | 3 | −1.08e-03 | ≥ 0.1 | 0.086 |
+| V1_h0.1 | 0.1 | 0.1 | 0.01 | 3 | −1.13e-03 | ≥ 0.1 | 0.086 |
+| V2_h0.2 | 0.2 | 0.1 | 0.02 | 3 | −1.56e-03 | ≥ 0.1 | 0.057 |
+| V3_D1 | 0.1 | 0.1 | 0.01 | 1 | −1.48e-03 | ≥ 0.1 | 0.043 |
+| V3_D6 | 0.1 | 0.1 | 0.01 | 6 | −1.04e-03 | ≥ 0.1 | 0.089 |
+| V2_rate0.5 | 0.1 | 0.5 | 0.05 | 3 | −6.80e-03 | ≥ 0.1 | 6.3e-03 |
+| V2_rate1 | 0.1 | 1 | 0.1 | 3 | −1.34e-02 | 0.063 | 3.0e-03 |
+| V2_rate2 | 0.1 | 2 | 0.2 | 3 | −2.60e-02 | 0.025 | 1.5e-03 |
+| V2_h0.01_rate10 | 0.01 | 10 | 0.1 | 3 | −3.11e-02 | 0.013 | 5.6e-04 |
+
+Every bias is negative: large τ gives less attenuation.
+
+- **V2 (τ_conv ∝ h²/D): FAIL.** At 1 % nothing is testable (no scan at ΔR₂(0) = 0.1 reaches 1 %). At 0.1 %, τ_conv·D/h² = 103, 26, 4.3 for h = 0.05, 0.1, 0.2 (h = 0.01: lower bound): τ_conv *falls* slightly as h grows instead of rising as h². A thin layer (h = 0.01 µm, step length up to 25× h) shows no τ effect beyond 5e-4.
+- **V3 (τ_conv ∝ 1/D): FAIL.** At 0.1 %, τ_conv = 0.043, 0.086, 0.089 ms for D = 1, 3, 6: τ_conv rises with D instead of falling.
+- **Decision point (τ_conv vs 1/ΔR₂(0)).** The bias at τ = 0.1 ms is proportional to ΔR₂(0) (−1.1e-3, −6.8e-3, −1.34e-2, −2.6e-2 for ΔR₂(0) = 0.1, 0.5, 1, 2; figure, right panel). ΔR₂(0)·τ_conv is 0.063 and 0.051 at 1 % (ΔR₂(0) = 1, 2; within 11 %) and 0.0032, 0.0030, 0.0031 at 0.1 % (ΔR₂(0) = 0.5, 1, 2; within 4 %). At ΔR₂(0) = 0.1 the 0.1 % value (0.0086) is set by the small h- and D-dependent part of the bias (≈ 1e-3 at 0.1 ms), not by the rate.
+- **ΔR₂(0), not ρ.** At the same ρ = 0.1 µm/ms, h = 0.01/ΔR₂(0) = 10 has a larger bias (−3.1e-2) than h = 0.1/ΔR₂(0) = 1 (−1.3e-2). ΔR₂(0)·τ_conv there is 0.13 (1 %) and 0.0056 (0.1 %), about 2× the h = 0.1 values: ΔR₂(0)·τ is the leading control, with a factor-2 dependence on h left over.
+- Empirical summary: the per-step layer exponent ΔR₂(0)·τ controls the timestep error, roughly ΔR₂(0)·τ ≲ 0.05 for 1 % and ≲ 0.003 for 0.1 % (h = 0.01–0.1 µm, D = 3). The spec's form τ ≤ c_h·h²/D (Eq. 11) is not supported in this geometry. The form of the simulator constraint (P2.6.5) is left to the user.
+
+![scaling](results/phase2/p2_6_2_scaling/scaling.png)
