@@ -15,6 +15,7 @@
 ## Global Constraints
 
 - Work only on branch `cc/near-surface-r2`.
+- **Timestep constraint (added after the timestep study, 2026-10-07):** `Layers.max_layer_rate` (used by `TimeStep`'s `layer` option, τ ≤ c/ΔR₂(0)_max) currently returns `surface_rate(side)` = ρ/h, the step-profile ΔR₂(0). In Task 1 make it return the profile's ΔR₂(0) = (ρ/h)·g(0) (= 2ρ/h for linear), with a test: linear side ρ = 0.01, h = 0.1 → 0.2.
 - **Step-profile behaviour must stay bit-identical.** All existing package tests (`test_args=["layer"]`) and research tests must still pass unchanged.
 - Units as before: ρ in µm/ms, h in µm, ΔR₂ in 1/ms. **ΔR₂(0) = (ρ/h)·g(0)**: g(0) = 1 for step, **2 for linear**. So at fixed ΔR₂(0) the linear profile has **half the ρ** of the step profile: ρ = ΔR₂(0)·h/2.
 - Reference configuration as in Phase 2: walls every 2 µm, D = 3 µm²/ms, no RF, readouts 0:5:50 ms, τ = 1e-2 ms (provisional until P2.6), seeds 1–10, 10⁵ spins, ΔR₂(0) = 0.1 ms⁻¹, layer on both faces.
