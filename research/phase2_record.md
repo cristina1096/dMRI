@@ -29,6 +29,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.3.9 | V4: h*(θ) fit to the B4 reference (τ = 1e-2, ΔR₂(0) = 0.1) | h* found for every θ, with uncertainty and residuals (no pass/fail) | **12 of 12 θ fitted**; h* from 0.00977 to 0.48681 µm; at h* the model matches the reference curve within 4e-05 relative (≤ 0.4 combined SEM) at every readout |
 | P2.4.3 (trace) | Single-spin trace, linear profile | every step: \|M⊥_sim/M⊥_pred − 1\| ≤ 1e-6; ≥ 1 reflection inside the layer | **PASS**: max error 2.4e-12; 4848 steps with a reflection inside the layer |
 | P2.4.3 (exact) | Linear profile: V0b, uniform case h = w (bulk off / on), additivity | bit-identical; per spin ≤ 1e-10; ensemble ≤ roundoff bound | **PASS** (all four): uniform per spin ≤ 1.4e-13, ensemble ≤ 2.6e-12; additivity 6.5e-14 / 8.7e-14 |
+| P2.4.3 (sweep) | Linear profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.3 SEM); S(50) from 1 to 0.00674 (h = 2.0) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
@@ -337,3 +338,41 @@ Script [p2_4_3_linear_exact.jl](phase2/p2_4_3_linear_exact.jl) → [results/phas
 | h = w, bulk on | same + R₂_bulk = 1/80 | 1.4e-13 | 1.9e-12 | 2.3e-11 | **PASS** |
 | additivity | linear, h = 0.2, ΔR₂(0) = 0.1, R₂_bulk 0 vs 1/80; positions identical: true | 6.5e-14 | 8.7e-14 | 2.3e-11 | **PASS** |
 
+## P2.4.3: linear profile — h sweep, monotonicity, decay shape
+
+Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=linear` → [results/phase2/p2_3_4_h_sweep_linear/](results/phase2/p2_3_4_h_sweep_linear/). Linear profile, both faces, ΔR₂(0) = 0.1 ms⁻¹ (ρ = ΔR₂(0)·h/2), h ∈ H_GRID_LINEAR (to h = w = 2 µm), τ = 1e-2 ms, 100000 spins × 10 seeds.
+
+| h (µm) | S(25) | S(50) ± SEM | 1 − S(50) | curvature c ± SEM (ms⁻²) |
+|---|---|---|---|---|
+| 0 | 1.00000 | 1.00000 ± 0.0e+00 | 0.00000 | -0.0e+00 ± 0.0e+00 |
+| 0.005 | 0.99377 | 0.98758 ± 1.1e-06 | 0.01242 | 7.0e-10 ± 7.9e-10 |
+| 0.01 | 0.98758 | 0.97531 ± 1.9e-06 | 0.02469 | 1.8e-09 ± 1.5e-09 |
+| 0.02 | 0.97531 | 0.95123 ± 3.6e-06 | 0.04877 | 3.5e-09 ± 3.0e-09 |
+| 0.03 | 0.96320 | 0.92776 ± 4.7e-06 | 0.07224 | 4.7e-09 ± 4.4e-09 |
+| 0.05 | 0.93943 | 0.88253 ± 6.4e-06 | 0.11747 | 6.3e-09 ± 7.0e-09 |
+| 0.07 | 0.91625 | 0.83952 ± 7.8e-06 | 0.16048 | 8.3e-09 ± 9.7e-09 |
+| 0.1 | 0.88255 | 0.77891 ± 9.7e-06 | 0.22109 | 1.2e-08 ± 1.3e-08 |
+| 0.15 | 0.82914 | 0.68749 ± 1.2e-05 | 0.31251 | 1.8e-08 ± 1.9e-08 |
+| 0.2 | 0.77898 | 0.60682 ± 1.3e-05 | 0.39318 | 2.0e-08 ± 2.5e-08 |
+| 0.3 | 0.68758 | 0.47278 ± 1.3e-05 | 0.52722 | 2.7e-08 ± 3.5e-08 |
+| 0.5 | 0.53569 | 0.28697 ± 1.1e-05 | 0.71303 | 3.4e-08 ± 4.9e-08 |
+| 0.7 | 0.41726 | 0.17411 ± 7.2e-06 | 0.82589 | 3.3e-08 ± 5.2e-08 |
+| 1 | 0.28672 | 0.08221 ± 3.0e-06 | 0.91779 | 3.2e-08 ± 4.4e-08 |
+| 1.5 | 0.15337 | 0.02352 ± 3.1e-07 | 0.97648 | 1.1e-08 ± 1.6e-08 |
+| 2 | 0.08208 | 0.00674 ± 2.9e-19 | 0.99326 | -4.5e-16 ± 0.0e+00 |
+
+**Interpretation.**
+- Attenuation rises with h at every step: 15 of 15 by more than 2 SEM → **monotonicity PASS**.
+- Curvature of ln S is zero within noise at every h (max |c|/SEM = 1.3); h = 0 and h = w = 2.0 (the exact uniform case, S(50) = e⁻⁵ = 0.00674) are single-exponential by construction.
+- 1 − S(50) spans 0.0124 (h = 0.005) to 0.993 (h = 2.0), covering the B4 range 0.048–0.912 needed for V4.
+- Empirical observation: S(50) of the linear layer at h is close to S(50) of the step layer at h/2 (same ΔR₂(0)): within 2e-5 relative for h ≤ 0.1 µm, with the linear layer attenuating increasingly more as h grows (−1.7e-4 at h = 0.3, −2.3e-3 at h = 1.0, both far beyond the SEM of ≈ 1e-5–6e-5), and equal again at h = 2.0 / 1.0, where both are exact uniform cases:
+
+| h linear (µm) | S(50) linear | S(50) step at h/2 | ratio − 1 |
+|---|---|---|---|
+| 0.01 | 0.97531 | 0.97531 | -5.9e-07 |
+| 0.02 | 0.95123 | 0.95123 | -1.3e-07 |
+| 0.1 | 0.77891 | 0.77893 | -1.8e-05 |
+| 0.2 | 0.60682 | 0.60686 | -7.2e-05 |
+| 0.3 | 0.47278 | 0.47286 | -1.7e-04 |
+| 1 | 0.08221 | 0.08240 | -2.3e-03 |
+| 2 | 0.00674 | 0.00674 | +0.0e+00 |
