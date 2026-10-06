@@ -16,7 +16,7 @@ include("properties.jl")
 include("susceptibility/susceptibility.jl")
 
 import .FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, isinside, detect_intersection, prepare_isinside!
-import .Layers: LayerSide, WallLayer, layer_exponent, has_layer
+import .Layers: LayerSide, WallLayer, layer_exponent, has_layer, max_layer_rate
 import .Reflections: Reflection, direction, previous_hit, has_hit, has_intersection, empty_reflection
 import .Intersections: Intersection, empty_intersection
 import .HitGrids: HitGrid, detect_intersection_grid, obstructions

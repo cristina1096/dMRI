@@ -126,4 +126,14 @@ Whether any group in the [`FixedGeometry`](@ref) has a near-surface layer.
 """
 has_layer(geometry::FixedGeometry) = any(g -> !isnothing(g.layer), geometry)
 
+
+"""
+    max_layer_rate(geometry)
+
+Largest near-surface rate ΔR2(0) = ρ/h (1/ms) over all layer sides with ρ > 0 in the geometry; 0 if there is no layer.
+"""
+max_layer_rate(::Nothing) = 0.0
+max_layer_rate(layers::Vector{WallLayer}) = maximum((surface_rate(s) for l in layers for s in (l.positive, l.negative)); init=0.0)
+max_layer_rate(geometry::FixedGeometry) = maximum((max_layer_rate(g.layer) for g in geometry); init=0.0)
+
 end

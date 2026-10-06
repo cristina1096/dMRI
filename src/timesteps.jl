@@ -5,8 +5,11 @@ module TimeSteps
 import ..Constants: gyromagnetic_ratio
 import ..Geometries: Internal
 
+"Default `layer` scaling c in τ ≤ c/ΔR2(0) (P2.6.5): the measured ΔR2(0)·τ for a 1 % rate error (≈ 0.05) divided by 10."
+const DEFAULT_LAYER_SCALING = 0.005
+
 """
-    Simulation(timestep=(tortuosity=3e-2, gradient=1e-4, permeability=0.5, surface_relaxation=0.01, transfer_rate=0.01, dwell_time=0.1))
+    Simulation(timestep=(tortuosity=3e-2, gradient=1e-4, permeability=0.5, surface_relaxation=0.01, transfer_rate=0.01, dwell_time=0.1, layer=0.005))
 
 Creates an object controlling the timestep of the MCMR simulation.
 
@@ -18,7 +21,8 @@ At any time the timestep is guaranteed to be shorter than:
 3. timestep that would allow surface relaxation rate at single collision to be greater than `surface_relaxation`.
 4. timestep that would allow magnetisation transfer rate at single collision to be greater than `transfer_rate`.
 5. the minimum dwell time of the bound pool times `dwell_time`.
-6. (`gradient` /( D * \\gamma^2 * G^2))^(1//3), where \\gamma is the [`gyromagnetic_ratio`](@ref) and `G` is the current `gradient_strength`.
+6. `layer` / ΔR2(0)_max, where ΔR2(0)_max is the largest near-surface layer rate ρ/h in the geometry.
+7. (`gradient` /( D * \\gamma^2 * G^2))^(1//3), where \\gamma is the [`gyromagnetic_ratio`](@ref) and `G` is the current `gradient_strength`.
 """
 mutable struct TimeStep
     max_timestep :: Float64
@@ -30,7 +34,7 @@ function TimeStep(;
     diffusivity, geometry, size_scale=nothing, 
     tortuosity=3e-2, gradient=1e-4, verbose=true,
     permeability=0.5, surface_relaxation=0.01,
-    transfer=0.01, dwell_time=0.1
+    transfer=0.01, dwell_time=0.1, layer=DEFAULT_LAYER_SCALING,
     )
     if iszero(diffusivity)
         return TimeStep(Inf, Inf)
@@ -42,6 +46,7 @@ function TimeStep(;
             max_timestep_permeability(geometry, permeability),
             max_timestep_surface_relaxation(geometry, surface_relaxation),
             Internal.min_dwell_time(geometry) * dwell_time,
+            layer / Internal.max_layer_rate(geometry),
         )
     idx = argmin(options)
     if verbose
@@ -69,6 +74,9 @@ function TimeStep(;
         elseif idx == 5
             push!(lines, "Maximum timestep set by requirement to limit the transition from bound to free state of spins to $(options[5]) ms.")
             push!(lines, "You can alter the sensitivity to the bound state dwell time by changing the value of `timestep=(dwell_time=...)` from its current value of $(dwell_time).")
+        elseif idx == 6
+            push!(lines, "Maximum timestep set by the near-surface layer (τ ≤ c/ΔR2(0) with the strongest layer ΔR2(0) = $(Internal.max_layer_rate(geometry)) /ms) to $(options[6]) ms.")
+            push!(lines, "You can alter it by changing `timestep=(layer=...)` from its current value of $(layer).")
         end
         push!(lines, "The actual timestep will be reduced based on the MR sequence(s).")
         @info join(lines, '\n')

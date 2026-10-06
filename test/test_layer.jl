@@ -248,3 +248,27 @@ end
         @test_throws Exception mr.readout(100, sim, [10.])
     end
 end
+
+@testset "test_layer.jl: layer timestep constraint" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+    @test Layers.max_layer_rate(geom(mr.Walls(repeats=2.))) == 0.0
+    @test Layers.max_layer_rate(geom(mr.Walls(repeats=2., layer_h=0.5))) == 0.0             # ρ = 0 → no layer
+    @test Layers.max_layer_rate(geom(mr.Walls(repeats=2., layer_rho_positive=0.01, layer_h_positive=0.1,
+        layer_rho_negative=0.05, layer_h_negative=0.5))) ≈ 0.1                                # max(0.01/0.1, 0.05/0.5)
+    # constraint binds for a strong layer (τ ≤ c/ΔR2(0)), is absent without a layer
+    s = mr.Simulation([]; geometry=mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.1), diffusivity=3., verbose=false, timestep=(layer=0.005,))
+    @test s.timestep.max_timestep ≈ 0.005 / 1.0
+    s0 = mr.Simulation([]; geometry=mr.Walls(repeats=2.), diffusivity=3., verbose=false, timestep=(layer=0.005,))
+    @test s0.timestep.max_timestep ≈ 0.03 * 2.0^2 / 3                                       # tortuosity, unchanged
+    sd = mr.Simulation([]; geometry=mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.1), diffusivity=3., verbose=false)
+    @test sd.timestep.max_timestep ≈ 0.005                                                   # default c = 0.005
+    # runtests.jl calls Logging.disable_logging(Logging.Info) globally; lift it for this one check and restore it
+    Logging.disable_logging(Logging.Debug)
+    try
+        @test_logs (:info, r"near-surface layer") match_mode=:any mr.Simulation([]; geometry=mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.1),
+            diffusivity=3., verbose=true, timestep=(layer=0.005,))
+    finally
+        Logging.disable_logging(Logging.Info)
+    end
+end
