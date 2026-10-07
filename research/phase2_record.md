@@ -437,6 +437,27 @@ Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) →
 - Attenuation at fixed ΔR₂(0) and h (figure, left): the linear layer attenuates less than the step layer of the same h (it has half the ρ).
 - In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms, τ = 1e-2) both profiles reproduce every reference curve once h is fitted, and the fitted ρ* differs between them by less than 1e-3. Whether conditions exist where the shapes separate is P2.5.
 
+**Exponential added (2026-10-08; attenuation only, no V4 fit for the exponential by user decision).** S(50) at ΔR₂(0) = 0.1 ms⁻¹ for every h in all three sweeps (`attenuation.csv`; step grid ends at h = 1.0 = w/2):
+
+| h (µm) | S(50) step | S(50) linear | S(50) exponential | ρ step / linear / exponential (µm/ms) |
+|---|---|---|---|---|
+| 0.005 | 0.97531 ± 2e-06 | 0.98758 ± 1e-06 | 0.97531 ± 2e-06 | 0.0005 / 0.0003 / 0.0005 |
+| 0.01 | 0.95123 ± 4e-06 | 0.97531 ± 2e-06 | 0.95123 ± 3e-06 | 0.0010 / 0.0005 / 0.0010 |
+| 0.02 | 0.90486 ± 6e-06 | 0.95123 ± 4e-06 | 0.90486 ± 5e-06 | 0.0020 / 0.0010 / 0.0020 |
+| 0.03 | 0.86076 ± 8e-06 | 0.92776 ± 5e-06 | 0.86075 ± 7e-06 | 0.0030 / 0.0015 / 0.0030 |
+| 0.05 | 0.77893 ± 1e-05 | 0.88253 ± 6e-06 | 0.77890 ± 9e-06 | 0.0050 / 0.0025 / 0.0050 |
+| 0.07 | 0.70489 ± 1e-05 | 0.83952 ± 8e-06 | 0.70484 ± 1e-05 | 0.0070 / 0.0035 / 0.0070 |
+| 0.1 | 0.60686 ± 2e-05 | 0.77891 ± 1e-05 | 0.60676 ± 1e-05 | 0.0100 / 0.0050 / 0.0100 |
+| 0.15 | 0.47286 ± 2e-05 | 0.68749 ± 1e-05 | 0.47267 ± 1e-05 | 0.0150 / 0.0075 / 0.0150 |
+| 0.2 | 0.36847 ± 2e-05 | 0.60682 ± 1e-05 | 0.36820 ± 1e-05 | 0.0200 / 0.0100 / 0.0200 |
+| 0.3 | 0.22374 ± 1e-05 | 0.47278 ± 1e-05 | 0.22377 ± 7e-06 | 0.0300 / 0.0150 / 0.0300 |
+| 0.5 | 0.08240 ± 5e-06 | 0.28697 ± 1e-05 | 0.08600 ± 2e-06 | 0.0500 / 0.0250 / 0.0491 |
+| 0.7 | 0.03028 ± 2e-06 | 0.17411 ± 7e-06 | 0.03694 ± 8e-07 | 0.0700 / 0.0350 / 0.0660 |
+| 1 | 0.00674 ± 3e-19 | 0.08221 ± 3e-06 | 0.01326 ± 2e-07 | 0.1000 / 0.0500 / 0.0865 |
+
+- At fixed ΔR₂(0) the attenuation follows ρ to first order: step and exponential (equal ρ for h ≤ 0.3 µm, since 1 − e^(−w/h) ≥ 0.9987) attenuate almost equally, linear (half the ρ) much less. The residual step–exponential difference at nearly equal ρ (up to −7.4e-4 relative at h = 0.2, z = −14.8) is a profile-shape effect; see the exponential sweep section.
+- For h ≥ 0.5 the exponential's truncation at w lowers its ρ below the step's, and its attenuation falls below the step's accordingly.
+
 ![step vs linear](results/phase2/p2_4_8_compare_step_linear/p2_4_8_compare.png)
 
 ## P2.6.4: profile dependence of the timestep error (step vs linear)
