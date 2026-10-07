@@ -3,7 +3,8 @@ Near-surface transverse relaxation layer (proposal Eqs. 5–10):
 
     R2_total(d) = R2_bulk + ΔR2(d),    ΔR2(d) = (ρ/h)·g(d/h)
 
-Implemented: planar walls, step profile g(u) = 1 for 0 ≤ u ≤ 1, no finite RF pulses.
+Implemented: planar walls; profiles step g(u) = 1 (0 ≤ u ≤ 1), linear g(u) = 2(1 − u) (0 ≤ u ≤ 1) and
+exponential g(u) = e^(−u)/(1 − e^(−c)) (0 ≤ u ≤ c = cutoff/h, truncated and renormalised); no finite RF pulses.
 Each side of a wall has its own (ρ, h).
 """
 module Layers
@@ -11,26 +12,37 @@ module Layers
 import StaticArrays: SVector
 import ..FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, rotate_from_global
 
-"""
-    LayerSide(rho, h[, shape])
+"Profiles implemented in `profile_g`."
+const SHAPES = (:step, :linear, :exponential)
 
-Near-surface layer on one side of a surface: integrated relaxivity `rho` (um/ms), length scale `h` (um) and
-profile `shape` (`:step` or `:linear`; default `:step`). A side with `rho == 0` has no layer.
+"""
+    LayerSide(rho, h[, shape[, cutoff]])
+
+Near-surface layer on one side of a surface: integrated relaxivity `rho` (um/ms), length scale `h` (um), profile
+`shape` (one of `SHAPES`; default `:step`) and `cutoff` (um), the distance from the surface beyond which g = 0.
+For `:step` and `:linear` the cutoff is `h`. `:exponential` needs an explicit cutoff. A side with `rho == 0` has no layer.
 """
 struct LayerSide
     rho :: Float64
     h :: Float64
     shape :: Symbol
+    cutoff :: Float64
 end
 LayerSide(rho, h) = LayerSide(rho, h, :step)
+function LayerSide(rho, h, shape::Symbol)
+    shape == :exponential && error("The exponential profile needs a cutoff: LayerSide(rho, h, :exponential, cutoff).")
+    return LayerSide(rho, h, shape, h)
+end
 
 """
-    profile_g(shape, u)
+    profile_g(shape, u, c=Inf)
 
-Normalised profile g(u), ∫₀¹ g(u) du = 1 (proposal §3.2 III). Zero outside 0 ≤ u ≤ 1.
-`:step`: g = 1. `:linear`: g = 2(1 − u).
+Normalised profile g(u), ∫ g(u) du = 1 over its support (proposal §3.2 III). Zero outside the support.
+`:step`: g = 1 on [0, 1]. `:linear`: g = 2(1 − u) on [0, 1]. `:exponential`: g = e^(−u)/(1 − e^(−c)) on [0, c],
+with c = cutoff/h (c = Inf: untruncated). `c` is ignored by step and linear.
 """
-function profile_g(shape::Symbol, u::Real)
+function profile_g(shape::Symbol, u::Real, c::Real=Inf)
+    shape == :exponential && return (0 <= u <= c) ? exp(-u) / -expm1(-c) : 0.0
     (0 <= u <= 1) || return 0.0
     shape == :step && return 1.0
     shape == :linear && return 2 * (1 - u)
@@ -42,7 +54,7 @@ end
 
 Excess transverse relaxation rate at the surface, ΔR2(0) = (ρ/h)·g(0), in 1/ms.
 """
-surface_rate(side::LayerSide) = iszero(side.rho) ? 0.0 : side.rho / side.h * profile_g(side.shape, 0.0)
+surface_rate(side::LayerSide) = iszero(side.rho) ? 0.0 : side.rho / side.h * profile_g(side.shape, 0.0, side.cutoff / side.h)
 
 """
     WallLayer(position, positive, negative)
@@ -86,18 +98,25 @@ end
     side_exponent(side, d0, d1, dt)
 
 ∫ΔR2(d(t)) dt over a straight segment of duration `dt` (ms), where `d0` and `d1` are the distances from the
-surface at the start and end, positive into this side. d is linear along the segment, so for both profiles
-the integral is exact in closed form:
-- `:step`: ΔR2(0)·(time spent with 0 ≤ d ≤ h);
-- `:linear`: g(d/h) is linear along the segment, so its average over the part inside the layer is its value
-  at the midpoint of that part.
+surface at the start and end, positive into this side. d is linear along the segment, so the integral is exact
+in closed form over the part of the segment inside the support 0 ≤ d ≤ cutoff:
+- `:step`: ΔR2(0)·(time inside);
+- `:linear`: g is linear along the segment, so its average over the part inside is its value at the midpoint;
+- `:exponential`: the mean of e^(−d/h) for d uniform on [d_a, d_b] is e^(−d_a/h)·(1 − e^(−x))/x with
+  x = (d_b − d_a)/h, evaluated with `expm1` (series 1 − x/2 for |x| < 1e-8).
 """
 function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     iszero(side.rho) && return 0.0
-    (s_enter, s_exit) = segment_overlap(d0, d1, 0.0, side.h)
+    (s_enter, s_exit) = segment_overlap(d0, d1, 0.0, side.cutoff)
     fraction = max(0.0, s_exit - s_enter)
     iszero(fraction) && return 0.0
     side.shape == :step && return surface_rate(side) * dt * fraction
+    if side.shape == :exponential
+        d_a = d0 + (d1 - d0) * s_enter
+        x = (d1 - d0) * fraction / side.h
+        mean_e = exp(-d_a / side.h) * (abs(x) < 1e-8 ? 1 - x / 2 : -expm1(-x) / x)
+        return side.rho / side.h / -expm1(-side.cutoff / side.h) * mean_e * dt * fraction
+    end
     d_mid = d0 + (d1 - d0) * (s_enter + s_exit) / 2
     return side.rho / side.h * profile_g(side.shape, d_mid / side.h) * dt * fraction
 end
@@ -123,7 +142,7 @@ function layer_exponent(layers::Vector{WallLayer}, g::FixedObstructionGroup, sta
     for layer in layers
         if repeating(g)
             # wall images c = position + k·spacing whose layers can reach [lo, hi]
-            reach = max(layer.positive.h, layer.negative.h)
+            reach = max(layer.positive.cutoff, layer.negative.cutoff)
             kmin = ceil(Int, (lo - reach - layer.position) / spacing)
             kmax = floor(Int, (hi + reach - layer.position) / spacing)
         else

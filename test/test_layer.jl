@@ -375,3 +375,52 @@ end
         @test isnothing(back.layer_shape_positive.value)
     end
 end
+
+@testset "test_layer.jl: exponential profile maths" begin
+    Layers = mr.Geometries.Internal.Layers
+
+    @testset "values and normalisation" begin
+        c = 4.0
+        N = 1 / (1 - exp(-c))
+        @test Layers.profile_g(:exponential, 0.0, c) ≈ N
+        @test Layers.profile_g(:exponential, 1.0, c) ≈ N * exp(-1)
+        @test Layers.profile_g(:exponential, c + 1e-9, c) == 0.0
+        @test Layers.profile_g(:exponential, -0.1, c) == 0.0
+        @test Layers.profile_g(:exponential, 2.0) ≈ exp(-2.0)              # c = Inf: untruncated, ∫ = 1
+        n = 400_000
+        @test sum(Layers.profile_g(:exponential, (k - 0.5) / n * c, c) for k in 1:n) * c / n ≈ 1.0 atol=1e-9
+        @test Layers.profile_g(:step, 0.5, 3.0) == 1.0                     # c ignored for step and linear
+        @test Layers.profile_g(:linear, 0.5, 3.0) == 1.0
+        @test Layers.SHAPES == (:step, :linear, :exponential)
+    end
+
+    @testset "constructor, cutoff and surface rate" begin
+        @test_throws ErrorException Layers.LayerSide(0.1, 0.2, :exponential)   # needs a cutoff
+        s = Layers.LayerSide(0.1, 0.2, :exponential, 2.0)
+        @test s.cutoff == 2.0
+        @test Layers.surface_rate(s) ≈ 0.1 / 0.2 / (1 - exp(-10))
+        @test Layers.LayerSide(0.05, 0.5).cutoff == 0.5
+        @test Layers.LayerSide(0.05, 0.5, :linear).cutoff == 0.5
+        @test Layers.max_layer_rate([Layers.WallLayer(0.0, s, Layers.LayerSide(0.0, 0.0))]) ≈ 0.5 / (1 - exp(-10))
+    end
+
+    @testset "pieces vs brute force" begin
+        Random.seed!(9)
+        for _ in 1:200
+            h = 0.05 + 0.5 * rand()
+            cut = h + (2.0 - h) * rand()
+            d0, d1 = 2.4 * rand() - 0.2, 2.4 * rand() - 0.2
+            s = Layers.LayerSide(0.3 * h, h, :exponential, cut)
+            n = 200_000
+            brute = sum(Layers.profile_g(:exponential, (d0 + (d1 - d0) * (k - 0.5) / n) / h, cut / h) for k in 1:n) / n * (s.rho / h)
+            @test Layers.side_exponent(s, d0, d1, 1.0) ≈ brute rtol=1e-4 atol=5e-6
+        end
+        s = Layers.LayerSide(0.02, 0.2, :exponential, 2.0)                 # ρ/h = 0.1
+        r0 = Layers.surface_rate(s)
+        @test Layers.side_exponent(s, 0.3, 0.3, 0.5) ≈ 0.5 * r0 * exp(-1.5)             # stationary
+        @test Layers.side_exponent(s, 0.3, 0.3 + 1e-12, 0.5) ≈ 0.5 * r0 * exp(-1.5)     # tiny piece: series branch
+        @test Layers.side_exponent(s, 0.0, 2.0, 1.0) ≈ 0.02 / 2.0 rtol=1e-12             # whole support: ρ/cutoff
+        @test Layers.side_exponent(s, 2.5, 2.6, 1.0) == 0.0                              # beyond the cutoff
+        @test Layers.side_exponent(s, -0.5, -0.1, 1.0) == 0.0                            # other side of the wall
+    end
+end
