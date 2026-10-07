@@ -32,6 +32,8 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.3 (sweep) | Linear profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.3 SEM); S(50) from 1 to 0.00674 (h = 2.0) |
 | P2.4.7 (linear) | V4: h*(θ) of the linear profile fitted to B4 (τ = 1e-2, ΔR₂(0) = 0.1) | h* found for every θ, uncertainty and residuals (no pass/fail) | **12 of 12 θ fitted**; h* from 0.01954 to 0.97272 µm; whole curve matched within 5e-05 relative (≤ 0.5 combined SEM) |
 | P2.4.8 (step vs linear) | Profile comparison at fixed ΔR₂(0) (characterisation) | differences reported with σ | ρ* agrees within 9.2e-4 (h* ratio 1.998–2.000), with a small drift (linear below step) growing with θ, z up to −2.4 (conservative); both fit every θ within 0.5 SEM |
+| P2.4.5 (trace) | Single-spin trace, exponential profile (cutoff = w) | every step ≤ 1e-6; ≥ 1 reflection inside the layer | **PASS**: max error 7.1e-13; 4848 steps with a reflection inside the layer |
+| P2.4.5 (identity) | Mean-exponent identity E[−ln M] = 2ρt/w, step / linear (incl. overlapping h = 1.5) / exponential, τ = 1e-2 and 4e-2 | \|z\| ≤ 3 | **PASS** (10 of 10; \|z\| ≤ 1.1) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step) → same c for both; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -469,3 +471,33 @@ Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's li
 - Polynomial and exponential profiles are not implemented yet; P2.6.4 covers step and linear.
 
 ![profile](results/phase2/p2_6_4_profile/p2_6_4_profile.png)
+
+## P2.4.5: exponential profile — single-spin trace
+
+Script [p2_2_9_layer_trace.jl](phase2/p2_2_9_layer_trace.jl) with `SHAPE=exponential` → [results/phase2/p2_2_9_layer_trace_exponential/](results/phase2/p2_2_9_layer_trace_exponential/). Same configuration as P2.2.9 (h = 0.5 µm, ΔR₂(0) = 0.1 ms⁻¹, R₂_bulk = 1/80, τ = 0.01 ms, 100 spins × 500 steps). Exponential truncated at the cutoff = w = 2 µm and renormalised, so ρ = ΔR₂(0)·h·(1 − e^(−w/h)); each face's layer reaches the opposite wall, so the two faces overlap everywhere. The prediction samples g(d/h) along every piece, independently of the `Layers` code.
+
+| Max relative error per step | Steps with a reflection inside the layer | Outcome |
+|---|---|---|
+| 7.1e-13 | 4848 | **PASS** |
+
+## P2.4.5: mean-exponent identity (all profiles)
+
+Script [p2_4_5_mean_exponent.jl](phase2/p2_4_5_mean_exponent.jl) → [results/phase2/p2_4_5_mean_exponent/](results/phase2/p2_4_5_mean_exponent/). Seeds 1–10, 100000 spins per seed, ΔR₂(0) = 0.1 ms⁻¹, R₂_bulk = 0, t = 50 ms.
+
+**Identity.** Between reflecting walls the uniform density is stationary under MCMR's step-and-mirror walk, and every point along a straight piece (x₀ + s·Δx, folded) is uniform too. Each spin's layer exponent is ∫ΔR₂ dt along its pieces, so its expectation is t·⟨ΔR₂⟩_volume = t·2·(1/w)∫(ρ/h)g(d/h) dd = 2ρt/w whenever each layer's support lies inside the gap — for any profile, h and τ. So E[−ln M⊥(t)] = 2ρt/w exactly. It tests normalisation, truncation, the overlap sum and the image loop end to end. It does not constrain the signal S = ⟨M⊥⟩, which depends on the higher moments of the exponent — where profiles can differ.
+
+| profile | h (µm) | τ (ms) | ρ (µm/ms) | 2ρt/w | mean −ln M ± SEM | z | Outcome |
+|---|---|---|---|---|---|---|---|
+| step | 0.2 | 0.01 | 0.020000 | 1.000000 | 1.000040 ± 4.3e-05 | +0.93 | **PASS** |
+| step | 0.2 | 0.04 | 0.020000 | 1.000000 | 1.000056 ± 6.5e-05 | +0.86 | **PASS** |
+| linear | 0.2 | 0.01 | 0.010000 | 0.500000 | 0.500023 ± 2.2e-05 | +1.09 | **PASS** |
+| linear | 0.2 | 0.04 | 0.010000 | 0.500000 | 0.500018 ± 3.6e-05 | +0.51 | **PASS** |
+| linear | 1.5 | 0.01 | 0.075000 | 3.750000 | 3.750011 ± 1.3e-05 | +0.81 | **PASS** |
+| linear | 1.5 | 0.04 | 0.075000 | 3.750000 | 3.750009 ± 2.0e-05 | +0.45 | **PASS** |
+| exponential | 0.2 | 0.01 | 0.019999 | 0.999955 | 0.999980 ± 2.7e-05 | +0.92 | **PASS** |
+| exponential | 0.2 | 0.04 | 0.019999 | 0.999955 | 0.999973 ± 4.3e-05 | +0.42 | **PASS** |
+| exponential | 0.5 | 0.01 | 0.049084 | 2.454211 | 2.454232 ± 2.6e-05 | +0.80 | **PASS** |
+| exponential | 0.5 | 0.04 | 0.049084 | 2.454211 | 2.454222 ± 3.8e-05 | +0.29 | **PASS** |
+
+All ten |z| ≤ 1.1. All ten z are positive: the runs share seeds 1–10 (same initial positions and, per τ, the same random streams), so their deviations are correlated and do not count as ten independent draws.
+

@@ -14,3 +14,12 @@ end
     @test sampled_profile_average(0.0, 0.5, 0.5; shape=:linear) ≈ 1.0 atol=1e-3              # g averages to 1 across the layer
     @test sampled_profile_average(0.3, 1.7, 2.0; shape=:linear) ≈ 2.0 atol=1e-12             # h = w: g(lower) + g(upper) = 2 everywhere
 end
+
+@testset "trace: exponential profile average" begin
+    h = 0.4
+    N = 1 / (1 - exp(-W_REF / h))
+    @test sampled_profile_average(0.5, 0.5, h; shape=:exponential) ≈ N * (exp(-0.5 / h) + exp(-1.5 / h))
+    # straight piece 0.2 → 0.7: closed-form mean of the two faces' terms
+    mean_face(a, b) = h * (exp(-a / h) - exp(-b / h)) / (b - a)
+    @test sampled_profile_average(0.2, 0.7, h; shape=:exponential) ≈ N * (mean_face(0.2, 0.7) + mean_face(1.3, 1.8)) rtol=1e-6
+end

@@ -9,14 +9,15 @@ const _Layers = mr.Geometries.Internal.Layers
 
 Per-spin final M⊥ after time T; `rate` is ΔR2(0). `method = :exact`: on every reflected straight piece, add
 ∫ΔR2 dt over the piece for each face: for the step profile rate·dt_piece·(time fraction within h) using
-`segment_fraction` (unchanged from P2.3.7); for the linear profile MCMR's `side_exponent` with ρ = rate·h/2.
+`segment_fraction` (unchanged from P2.3.7); linear or exponential (cutoff = w) use MCMR's `side_exponent` with
+ρ = rho_for(rate, h; shape). `rho_for` assumes cutoff = W_REF, so the toy's w must equal W_REF for the exponential.
 `:endpoint`: add τ·ΔR2(end point of the step), summed over both faces. Spin i uses its own RNG Xoshiro(seed·10⁷ + i),
 so results do not depend on the thread count.
 """
 function toy_layer_signal(; h, rate, tau, T=50.0, nspins, seed, method, w=W_REF, D=D_REF, shape="step")
     method in (:exact, :endpoint) || error("method must be :exact or :endpoint, got $method")
-    shape in ("step", "linear") || error("shape must be \"step\" or \"linear\", got $shape")
-    side = _Layers.LayerSide(rho_for(rate, h; shape=shape), h, Symbol(shape))
+    shape in ("step", "linear", "exponential") || error("shape must be step, linear or exponential, got $shape")
+    side = _Layers.LayerSide(rho_for(rate, h; shape=shape), h, Symbol(shape), shape == "exponential" ? w : h)
     nsteps = round(Int, T / tau)
     σ = sqrt(2 * D * tau)
     out = ones(nspins)
@@ -54,7 +55,8 @@ function toy_layer_signal(; h, rate, tau, T=50.0, nspins, seed, method, w=W_REF,
             elseif shape == "step"
                 expo += rate * tau * ((x <= h) + (w - x <= h))
             else
-                expo += tau * side.rho / h * (_Layers.profile_g(:linear, x / h) + _Layers.profile_g(:linear, (w - x) / h))
+                expo += tau * side.rho / h * (_Layers.profile_g(side.shape, x / h, side.cutoff / h) +
+                                              _Layers.profile_g(side.shape, (w - x) / h, side.cutoff / h))
             end
         end
         out[i] = exp(-expo)

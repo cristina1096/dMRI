@@ -19,10 +19,12 @@ end
 
 Time-average over a straight piece x = a → b of g(d/h) summed over both faces of the gap (walls at multiples
 of W_REF), by brute-force sampling of `n` midpoints. Independent of MCMR's `Layers` code. Valid for h ≤ W_REF
-(only the two faces of the gap can reach it).
+(only the two faces of the gap can reach it). The exponential is truncated at W_REF (support of each face = the gap).
 """
 function sampled_profile_average(a::Float64, b::Float64, h::Float64; shape=:step, n=10_000)
-    g(u) = 0 <= u <= 1 ? (shape == :step ? 1.0 : 2 * (1 - u)) : 0.0
+    cut = W_REF / h
+    g(u) = shape == :exponential ? ((0 <= u <= cut) ? exp(-u) / -expm1(-cut) : 0.0) :
+           (0 <= u <= 1 ? (shape == :step ? 1.0 : 2 * (1 - u)) : 0.0)
     total = 0.0
     for k in 1:n
         u = mod(a + (b - a) * (k - 0.5) / n, W_REF)

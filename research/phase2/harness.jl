@@ -27,11 +27,11 @@ end
 "Layer thicknesses (µm) for the linear-profile sweep: as H_GRID, extended to h = w (the linear exact case)."
 const H_GRID_LINEAR = [0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0]
 
-"g(0) of a profile: 1 for step, 2 for linear."
-profile_g0(shape) = shape == "step" ? 1.0 : shape == "linear" ? 2.0 : error("Unknown shape $shape")
+"g(0) of a profile for thickness `h` (µm); the exponential is truncated at W_REF (the default `layer_cutoff`)."
+profile_g0(shape, h) = mr.Geometries.Internal.Layers.profile_g(Symbol(shape), 0.0, W_REF / h)
 
 "ρ (µm/ms) giving surface excess rate ΔR2(0) = `rate` (1/ms) for thickness `h` (µm): ρ = rate·h / g(0)."
-rho_for(rate, h; shape="step") = Float64(rate * h / profile_g0(shape))
+rho_for(rate, h; shape="step") = iszero(h) ? 0.0 : Float64(rate * h / profile_g0(shape, h))
 
 """
     layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step")

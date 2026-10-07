@@ -56,3 +56,13 @@ end
     r = run_walls(layer_walls(h=2.0, rate=0.1, shape="linear"); times=[0.0, 50.0], seeds=1:2, nspins=1000)
     @test all(isapprox.(r.S, exp.(-0.1 .* [0.0 50.0]); rtol=1e-10))            # exact h = w case
 end
+
+@testset "harness: exponential" begin
+    @test profile_g0("step", 0.3) == 1.0 && profile_g0("linear", 0.3) == 2.0
+    @test profile_g0("exponential", 0.5) ≈ 1 / (1 - exp(-4))
+    @test rho_for(0.1, 0.5; shape="exponential") ≈ 0.05 * (1 - exp(-4))
+    @test rho_for(0.1, 0.0; shape="exponential") == 0.0
+    l = Simulation([]; geometry=layer_walls(h=0.5, rate=0.1, shape="exponential"), verbose=false).geometry[1].layer[1]
+    @test (l.positive.shape, l.positive.cutoff) == (:exponential, 2.0)
+    @test mr.Geometries.Internal.Layers.surface_rate(l.positive) ≈ 0.1
+end
