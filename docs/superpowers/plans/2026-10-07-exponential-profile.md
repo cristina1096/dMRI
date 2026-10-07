@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a truncated, renormalised exponential profile g(u) ∝ e^(−u) to the wall layer and verify it like the step and linear profiles. Add an exact statistical check that holds for every profile: the mean of −ln M equals 2ρt/w. Also fit h\*(θ) to B4, check the timestep constraint, and compare all three profiles at fixed ΔR₂(0). This prepares the fixed-ρ sensitivity study.
+**Goal:** Add a truncated, renormalised exponential profile g(u) ∝ e^(−u) to the wall layer and verify it like the step and linear profiles. Add an exact statistical check that holds for every profile: the mean of −ln M equals 2ρt/w. Also check the timestep constraint and compare all three profiles at fixed ΔR₂(0). (No V4 fit for the exponential: user decision, 2026-10-07.) This prepares the fixed-ρ sensitivity study.
 
 **Architecture:**
 - `LayerSide` gains `cutoff`, the support of the profile in µm measured from the wall. For step and linear it equals h, so their code paths and results are unchanged.
@@ -15,7 +15,7 @@
 
 **Spec:**
 - Proposal §3.2 III: ΔR₂(d) = (ρ/h)·g(d/h), ∫g = 1; exponential profile.
-- `research/project-progress-tracker.md`: P2.4.1, P2.4.2, P2.4.5 (exponential end-to-end, truncation recorded), P2.4.7, P2.4.8, P2.6.4.
+- `research/project-progress-tracker.md`: P2.4.1, P2.4.2, P2.4.5 (exponential end-to-end, truncation recorded), P2.4.8, P2.6.4. P2.4.7 (V4) is skipped for the exponential by user decision (2026-10-07).
 - User decisions (2026-10-07):
   - exponential before the sensitivity study;
   - the fixed-ρ comparison is primary;
@@ -37,7 +37,7 @@
   - seeds 1–10, 10⁵ spins;
   - ΔR₂(0) = 0.1 ms⁻¹, layers on both faces;
   - exponential cutoff = 2 µm (the default).
-- The uncertainty of a mean is its SEM. V4 residuals are reported, never pass/fail.
+- The uncertainty of a mean is its SEM. Characterisation results are reported, never pass/fail.
 - **Package tests:** `julia --project -e 'using Pkg; Pkg.test("MCMRSimulator", test_args=["layer", "cli"])'`. **Research tests:** `julia --project=research/baseline -t 8 research/phase2/test/runtests.jl`.
 - **Long runs:** start them detached (`nohup … & disown`) and wait on them with a background `until` loop. A background command is killed after 2 h.
 - At the end, the final review goes to a fresh subagent reviewer (user's standing rule).
@@ -605,7 +605,7 @@ nohup env SHAPE=exponential julia --project=research/baseline -t 8 research/phas
 ```
 
 Wait with a background `until grep -q "saved to" /tmp/exp_sweep.log || ! pgrep -f p2_3_4_h_sweep; do sleep 60; done`.
-Expected: 16 `h = …` lines and `15 of 15 … → PASS` for monotonicity. Check that 1 − S(50) spans the B4 range 0.048–0.912. If it doesn't, record a ruling and add grid points before Task 5. About 30 min.
+Expected: 16 `h = …` lines and `15 of 15 … → PASS` for monotonicity. Record the range of 1 − S(50) (characterisation only; no V4 fit follows). About 30 min.
 
 - [ ] **Step 2: Record and commit**
 
@@ -620,37 +620,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 5: V4 for the exponential profile (P2.4.7)
-
-**Files:**
-- Modify: `research/phase2_record.md`
-
-**Interfaces:**
-- Consumes: `p2_3_9_fit_h.jl` and `p2_3_9b_gauss_newton.jl` with `SHAPE` (already shape-aware), and the exponential sweep (Task 4).
-- Produces: `results/phase2/p2_3_9_fit_h_exponential/`.
-
-- [ ] **Step 1: Run both stages detached**
-
-```bash
-nohup zsh -c 'SHAPE=exponential julia --project=research/baseline -t 8 research/phase2/p2_3_9_fit_h.jl > /tmp/exp_fit.log 2>&1 && SHAPE=exponential julia --project=research/baseline -t 8 research/phase2/p2_3_9b_gauss_newton.jl > /tmp/exp_gn.log 2>&1; echo DONE >> /tmp/exp_gn.log' & disown
-```
-
-Wait with a background `until` loop on `DONE` in `/tmp/exp_gn.log`, re-armed if it reaches the 2 h limit. Expected: 12 `θ = …` lines from each stage. After the Gauss–Newton step, residuals should be small and of mixed sign at every θ. About 3 h. If any θ's residuals all share one sign, run `p2_3_9b_gauss_newton.jl` once more and record a ruling.
-
-- [ ] **Step 2: Record and commit**
-
-Add a summary row and a section "P2.4.7 (exponential): V4" to `research/phase2_record.md`, in the same layout as the linear V4 section (table, timestep line, bulk-on line, caveat). The interpretation must be numbers only.
-
-```bash
-git add research/results/phase2/p2_3_9_fit_h_exponential research/phase2_record.md
-git commit -m "Fit h*(theta) of the exponential profile to the B4 reference
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
-```
-
----
-
-### Task 6: Timestep constraint for the exponential profile (P2.6.4)
+### Task 5: Timestep constraint for the exponential profile (P2.6.4)
 
 **Files:**
 - Modify: `research/phase2/p2_6_4_profile.jl`, `research/phase2_record.md`, `research/project-progress-tracker.md`
@@ -715,39 +685,39 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 7: Three-profile comparison at fixed ΔR₂(0), tracker (P2.4.8)
+### Task 6: Three-profile comparison at fixed ΔR₂(0), tracker (P2.4.8)
 
 **Files:**
 - Modify: `research/phase2/p2_4_8_compare_step_linear.jl`, `research/phase2_record.md`, `research/project-progress-tracker.md`
 
 **Interfaces:**
-- Consumes: the sweeps and V4 fits of all three profiles.
-- Produces: `results/phase2/p2_4_8_compare_step_linear/` with exponential columns (the folder name is kept for continuity).
+- Consumes: the sweeps of all three profiles, and the V4 fits of step and linear (no exponential V4).
+- Produces: `results/phase2/p2_4_8_compare_step_linear/` with the exponential added to the attenuation comparison (the folder name is kept for continuity).
 
 - [ ] **Step 1: Extend the script**
 
-- Load `fe = fits("_exponential")` and `se = sweep("_exponential")`.
-- For each θ, add `h_star_exponential`, `rho_star_exponential = rho_for(RATE_REF, he; shape="exponential")`, `rho_ratio_exp = ρe/ρs`, its σ (jackknife in quadrature, as for linear), z, and `max_abs_residual_exponential`.
-- Replace the step ρ with `rho_for(RATE_REF, hs)` and the linear ρ with `rho_for(RATE_REF, hl; shape="linear")`. These are numerically the same as before.
-- Add the exponential to both panels of the figure.
+- Load `sx = sweep("_exponential")`.
+- The V4 table (step vs linear, per θ) is unchanged.
+- Add a second table, written to `attenuation.csv`: for every h present in all three sweeps, h, S(50) ± SEM for step, linear and exponential, and ρ for each, `rho_for(RATE_REF, h; shape)`. Step rows with h > w/2 are not present (the step grid ends at 1.0 = w/2). Print one line per h.
+- Add the exponential to the attenuation panel (left) of the figure. The V4 ratio panel (right) stays step vs linear.
 
 Run: `julia --project=research/baseline research/phase2/p2_4_8_compare_step_linear.jl`
-Expected: 12 lines and a figure.
+Expected: the 12 unchanged θ lines, one line per common h, and a figure.
 
 - [ ] **Step 2: Record, tick the tracker, commit**
 
-- **Record:** extend the P2.4.8 section with the exponential columns and a numbers-only interpretation, including σ and z for each ratio.
+- **Record:** extend the P2.4.8 section with the attenuation table (three profiles at fixed ΔR₂(0)) and a numbers-only interpretation with SEM.
 - **Tracker:**
   - **P2.4.1:** ◐, "step, linear, exponential; polynomial to come"
   - **P2.4.2:** ◐, "step, linear, exponential (truncated, renormalised): ∫g = 1 to 1e-9"
   - **P2.4.5:** ☑, with the folders of Tasks 3–4, and the truncation stated as "cutoff = w, renormalised; no loss"
-  - **P2.4.7:** ◐, "linear, exponential"
+  - **P2.4.7:** ◐ unchanged, add "exponential skipped (user decision 2026-10-07)"
   - **P2.4.8:** ◐, "step, linear, exponential"
   - Increase the Phase 2 "Done" count by 1 (P2.4.5).
 
 ```bash
 git add research/phase2/p2_4_8_compare_step_linear.jl research/results/phase2/p2_4_8_compare_step_linear research/phase2_record.md research/project-progress-tracker.md
-git commit -m "Compare step, linear and exponential profiles at fixed surface rate; update tracker
+git commit -m "Add the exponential profile to the fixed-rate comparison; update tracker
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```

@@ -177,7 +177,7 @@ Implement and test each component separately, in this order. Each has its own un
 
 **Implementation plan for the linear profile (P2.4.1–P2.4.3, P2.4.7–P2.4.8, linear part):** [docs/superpowers/plans/2026-10-06-linear-profile.md](../docs/superpowers/plans/2026-10-06-linear-profile.md).
 
-**Implementation plan for the exponential profile (P2.4.1, P2.4.2, P2.4.5, P2.4.7, P2.4.8, P2.6.4, exponential part):** [docs/superpowers/plans/2026-10-07-exponential-profile.md](../docs/superpowers/plans/2026-10-07-exponential-profile.md). Truncated at a cutoff (default: the wall spacing) and renormalised so ∫g = 1; adds the mean-exponent identity E[−ln M] = 2ρt/w as an exact check for every profile.
+**Implementation plan for the exponential profile (P2.4.1, P2.4.2, P2.4.5, P2.4.8, P2.6.4, exponential part; no V4 fit, user decision 2026-10-07):** [docs/superpowers/plans/2026-10-07-exponential-profile.md](../docs/superpowers/plans/2026-10-07-exponential-profile.md). Truncated at a cutoff (default: the wall spacing) and renormalised so ∫g = 1; adds the mean-exponent identity E[−ln M] = 2ρt/w as an exact check for every profile.
 
 All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 
