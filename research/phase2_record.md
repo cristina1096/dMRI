@@ -455,8 +455,8 @@ Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) →
 | 0.7 | 0.03028 ± 2e-06 | 0.17411 ± 7e-06 | 0.03694 ± 8e-07 | 0.0700 / 0.0350 / 0.0660 |
 | 1 | 0.00674 ± 3e-19 | 0.08221 ± 3e-06 | 0.01326 ± 2e-07 | 0.1000 / 0.0500 / 0.0865 |
 
-- At fixed ΔR₂(0) the attenuation follows ρ to first order: step and exponential (equal ρ for h ≤ 0.3 µm, since 1 − e^(−w/h) ≥ 0.9987) attenuate almost equally, linear (half the ρ) much less. The residual step–exponential difference at nearly equal ρ (up to −7.4e-4 relative at h = 0.2, z = −14.8) is a profile-shape effect; see the exponential sweep section.
-- For h ≥ 0.5 the exponential's truncation at w lowers its ρ below the step's, and its attenuation falls below the step's accordingly.
+- At fixed ΔR₂(0) the attenuation follows ρ to first order: step and exponential (equal ρ to ≤ 4.5e-5 for h ≤ 0.2 µm; −1.3e-3 at h = 0.3) attenuate almost equally, linear (half the ρ) much less. The residual step–exponential difference at nearly equal ρ (up to −7.4e-4 relative at h = 0.2, z = −14.8) is a profile-shape effect; see the exponential sweep section.
+- From h = 0.3 on, the exponential's truncation at w lowers its ρ below the step's, and its attenuation falls below the step's accordingly.
 
 ![step vs linear](results/phase2/p2_4_8_compare_step_linear/p2_4_8_compare.png)
 
@@ -579,5 +579,5 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=exponential` �
 | 0.7 | 0.03694 | 0.03028 | +2.2e-01 | +3756.7 |
 | 1 | 0.01326 | 0.00674 | +9.7e-01 | +33582.4 |
 
-  For h ≤ 0.3 µm the two profiles have essentially the same ρ (1 − e^(−w/h) ≥ 0.9987), so by the mean-exponent identity the same mean of −ln M. S(50) still differs, beyond noise for h = 0.05–0.2: the exponential attenuates more, by up to 7.4e-4 relative at h = 0.2 (z = −14.8, conservative). That is a profile-shape effect at (almost) fixed ρ, of order 10⁻³ here. For h ≥ 0.5 the truncation lowers the exponential's ρ (0.0491 vs 0.05 at h = 0.5; 0.0865 vs 0.1 at h = 1.0), and the differences above mainly reflect that.
+  For h ≤ 0.2 µm the two profiles have essentially the same ρ (relative difference e^(−w/h) ≤ 4.5e-5), so by the mean-exponent identity the same mean of −ln M. S(50) still differs, beyond noise for h = 0.05–0.2: the exponential attenuates more, by up to 7.4e-4 relative at h = 0.2 (z = −14.8, conservative). That is a profile-shape effect at (almost) fixed ρ, of order 10⁻³ here. At h = 0.3 the ρ difference (−1.3e-3 relative: 0.02996 vs 0.03) already outweighs it (it alone raises S(50) by ≈ +1.9e-3), hence the sign change there (+1.5e-4, z = +2.4). For h ≥ 0.5 the truncation lowers the exponential's ρ (0.0491 vs 0.05 at h = 0.5; 0.0865 vs 0.1 at h = 1.0), and the differences above mainly reflect that.
 

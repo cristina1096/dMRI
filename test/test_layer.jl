@@ -460,3 +460,13 @@ end
         @test back.layer_cutoff.value == 1.5
     end
 end
+
+@testset "test_layer.jl: exponential thin layer, long piece toward the wall (no NaN)" begin
+    Layers = mr.Geometries.Internal.Layers
+    s = Layers.LayerSide(1e-4, 0.001, :exponential, 2.0)              # h = 1 nm
+    a = Layers.side_exponent(s, 0.8, 0.0, 1.0)                         # moving toward the wall
+    b = Layers.side_exponent(s, 0.0, 0.8, 1.0)                         # moving away
+    @test isfinite(a)
+    @test a ≈ b rtol=1e-12                                             # the integral does not depend on direction
+    @test a ≈ s.rho / 0.8 rtol=1e-9                                    # whole layer crossed: ρ/(piece length), tail e^(-800) negligible
+end

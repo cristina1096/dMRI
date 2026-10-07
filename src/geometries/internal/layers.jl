@@ -102,8 +102,8 @@ surface at the start and end, positive into this side. d is linear along the seg
 in closed form over the part of the segment inside the support 0 ≤ d ≤ cutoff:
 - `:step`: ΔR2(0)·(time inside);
 - `:linear`: g is linear along the segment, so its average over the part inside is its value at the midpoint;
-- `:exponential`: the mean of e^(−d/h) for d uniform on [d_a, d_b] is e^(−d_a/h)·(1 − e^(−x))/x with
-  x = (d_b − d_a)/h, evaluated with `expm1` (series 1 − x/2 for |x| < 1e-8).
+- `:exponential`: the mean of e^(−d/h) for d uniform on [d_a, d_b] is e^(−d_near/h)·(1 − e^(−x))/x with
+  d_near = min(d_a, d_b) and x = |d_b − d_a|/h, evaluated with `expm1` (series 1 − x/2 for x < 1e-8).
 """
 function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     iszero(side.rho) && return 0.0
@@ -112,9 +112,10 @@ function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     iszero(fraction) && return 0.0
     side.shape == :step && return surface_rate(side) * dt * fraction
     if side.shape == :exponential
-        d_a = d0 + (d1 - d0) * s_enter
-        x = (d1 - d0) * fraction / side.h
-        mean_e = exp(-d_a / side.h) * (abs(x) < 1e-8 ? 1 - x / 2 : -expm1(-x) / x)
+        # evaluate from the end nearer the wall, so the factor is direction-independent and never 0·Inf
+        d_near = min(d0 + (d1 - d0) * s_enter, d0 + (d1 - d0) * s_exit)
+        x = abs(d1 - d0) * fraction / side.h
+        mean_e = exp(-d_near / side.h) * (x < 1e-8 ? 1 - x / 2 : -expm1(-x) / x)
         return side.rho / side.h / -expm1(-side.cutoff / side.h) * mean_e * dt * fraction
     end
     d_mid = d0 + (d1 - d0) * (s_enter + s_exit) / 2
