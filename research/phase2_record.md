@@ -31,7 +31,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.3 (exact) | Linear profile: V0b, uniform case h = w (bulk off / on), additivity | bit-identical; per spin ≤ 1e-10; ensemble ≤ roundoff bound | **PASS** (all four): uniform per spin ≤ 1.4e-13, ensemble ≤ 2.6e-12; additivity 6.5e-14 / 8.7e-14 |
 | P2.4.3 (sweep) | Linear profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.3 SEM); S(50) from 1 to 0.00674 (h = 2.0) |
 | P2.4.7 (linear) | V4: h*(θ) of the linear profile fitted to B4 (τ = 1e-2, ΔR₂(0) = 0.1) | h* found for every θ, uncertainty and residuals (no pass/fail) | **12 of 12 θ fitted**; h* from 0.01954 to 0.97272 µm; whole curve matched within 5e-05 relative (≤ 0.5 combined SEM) |
-| P2.4.8 (step vs linear) | Profile comparison at fixed ΔR₂(0) (characterisation) | differences reported with σ | ρ* equal for both profiles within 9.2e-4 (h* ratio 1.998–2.000); both fit every θ within 0.5 SEM |
+| P2.4.8 (step vs linear) | Profile comparison at fixed ΔR₂(0) (characterisation) | differences reported with σ | ρ* agrees within 9.2e-4 (h* ratio 1.998–2.000), with a small drift (linear below step) growing with θ, z up to −2.4 (conservative); both fit every θ within 0.5 SEM |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
@@ -410,27 +410,27 @@ Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) and [p2_3_9b_gauss_newton.jl](
 
 ## P2.4.8 (step vs linear): profile comparison at fixed ΔR₂(0)
 
-Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) → [results/phase2/p2_4_8_compare_step_linear/](results/phase2/p2_4_8_compare_step_linear/). Reads the two sweeps and the two V4 fits; ΔR₂(0) = 0.1 ms⁻¹ for both profiles, so ρ = ΔR₂(0)·h (step) and ΔR₂(0)·h/2 (linear).
+Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) → [results/phase2/p2_4_8_compare_step_linear/](results/phase2/p2_4_8_compare_step_linear/). Reads the two sweeps and the two V4 fits; ΔR₂(0) = 0.1 ms⁻¹ for both profiles, so ρ = ΔR₂(0)·h (step) and ΔR₂(0)·h/2 (linear). σ of the ρ* ratio = jackknife σ of each fit added in quadrature (written by the script). Two caveats on σ: the jackknife is from the parabola stage while the ratio uses the Gauss–Newton h*; and both fits share seeds 1–10 and the B4 reference, so their errors are correlated and this σ is an overestimate (z conservative).
 
-| θ_relax | h* step (µm) | h* linear (µm) | h* ratio | ρ* ratio | max \|res\| step (SEM) | max \|res\| linear (SEM) |
-|---|---|---|---|---|---|---|
-| 0.001 | 0.00977 | 0.01954 | 2.0000 | 1.0000 | 0.4 | 0.4 |
-| 0.0015 | 0.01466 | 0.02932 | 2.0000 | 1.0000 | 0.4 | 0.3 |
-| 0.002 | 0.01954 | 0.03909 | 2.0000 | 1.0000 | 0.3 | 0.2 |
-| 0.003 | 0.02932 | 0.05864 | 1.9999 | 1.0000 | 0.3 | 0.2 |
-| 0.005 | 0.04887 | 0.09772 | 1.9999 | 0.9999 | 0.2 | 0.3 |
-| 0.007 | 0.06841 | 0.13681 | 1.9998 | 0.9999 | 0.4 | 0.3 |
-| 0.01 | 0.09772 | 0.19542 | 1.9997 | 0.9999 | 0.3 | 0.1 |
-| 0.015 | 0.14655 | 0.29304 | 1.9996 | 0.9998 | 0.1 | 0.1 |
-| 0.02 | 0.19534 | 0.39056 | 1.9993 | 0.9997 | 0.2 | 0.2 |
-| 0.03 | 0.29277 | 0.58521 | 1.9989 | 0.9994 | 0.2 | 0.2 |
-| 0.04 | 0.38994 | 0.77927 | 1.9984 | 0.9992 | 0.3 | 0.4 |
-| 0.05 | 0.48681 | 0.97272 | 1.9982 | 0.9991 | 0.3 | 0.5 |
+| θ_relax | h* step (µm) | h* linear (µm) | h* ratio | ρ* ratio − 1 ± σ | z | max \|res\| step (SEM) | max \|res\| linear (SEM) |
+|---|---|---|---|---|---|---|---|
+| 0.001 | 0.00977 | 0.01954 | 2.0000 | +3.5e-06 ± 4e-04 | +0.0 | 0.4 | 0.4 |
+| 0.0015 | 0.01466 | 0.02932 | 2.0000 | -7.4e-06 ± 3e-04 | -0.0 | 0.4 | 0.3 |
+| 0.002 | 0.01954 | 0.03909 | 2.0000 | -1.2e-06 ± 5e-04 | -0.0 | 0.3 | 0.2 |
+| 0.003 | 0.02932 | 0.05864 | 1.9999 | -2.7e-05 ± 3e-04 | -0.1 | 0.3 | 0.2 |
+| 0.005 | 0.04887 | 0.09772 | 1.9999 | -7.3e-05 ± 5e-04 | -0.1 | 0.2 | 0.3 |
+| 0.007 | 0.06841 | 0.13681 | 1.9998 | -8.2e-05 ± 6e-04 | -0.1 | 0.4 | 0.3 |
+| 0.01 | 0.09772 | 0.19542 | 1.9997 | -1.3e-04 ± 5e-04 | -0.2 | 0.3 | 0.1 |
+| 0.015 | 0.14655 | 0.29304 | 1.9996 | -2.2e-04 ± 3e-04 | -0.7 | 0.1 | 0.1 |
+| 0.02 | 0.19534 | 0.39056 | 1.9993 | -3.3e-04 ± 2e-04 | -2.1 | 0.2 | 0.2 |
+| 0.03 | 0.29277 | 0.58521 | 1.9989 | -5.7e-04 ± 2e-04 | -2.4 | 0.2 | 0.2 |
+| 0.04 | 0.38994 | 0.77927 | 1.9984 | -7.8e-04 ± 9e-04 | -0.9 | 0.3 | 0.4 |
+| 0.05 | 0.48681 | 0.97272 | 1.9982 | -9.2e-04 ± 4e-04 | -2.2 | 0.3 | 0.5 |
 
 **Interpretation.**
-- h*(linear)/h*(step) = 1.9982–2.0000 across θ, so the fitted ρ* = ΔR₂(0)·h*/g(0) is the same for both profiles: ρ* ratio 0.9991–1.0000. The ratio departs from 1 increasingly with θ: |ρ* ratio − 1| ≤ 1.3e-4 (≤ 0.2 jackknife σ) for θ ≤ 0.01, and 3.3e-4 to 9.2e-4 (0.9–2.4 σ) for θ = 0.02–0.05.
+- ρ* = ΔR₂(0)·h*/g(0) of the two profiles agrees within 9.2e-4 at every θ (h* ratio 1.9982–2.0000). There is a small systematic drift: the linear ρ* is below the step ρ* by an amount growing steadily with θ, from |ρ* ratio − 1| ≤ 1.3e-4 (|z| ≤ 0.2) for θ ≤ 0.01, through −2.2e-4 (z = −0.7) at θ = 0.015, to −3.3e-4 … −9.2e-4 for θ = 0.02–0.05 (z = −2.1, −2.4, −0.9, −2.2; conservative). This matches the sweep (P2.4.3): at fixed ΔR₂(0) the linear layer at h attenuates slightly more than the step layer at h/2, by −2.3e-3 in S(50) at h = 1.0.
 - Neither profile fits the reference better: max |residual| is 0.1–0.4 SEM for the step and 0.1–0.5 SEM for the linear fit, and both match every curve within 5e-5 relative.
-- Attenuation at fixed ΔR₂(0) and h (figure, left): the linear layer attenuates less than the step layer of the same h (it has half the ρ), and close to the step layer of h/2 (P2.4.3 sweep: within 2e-5 for h ≤ 0.1, −2.3e-3 at h = 1.0).
-- In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms, τ = 1e-2) the signal determines ρ* but not the profile shape; the shape comparison across conditions is P2.5.
+- Attenuation at fixed ΔR₂(0) and h (figure, left): the linear layer attenuates less than the step layer of the same h (it has half the ρ).
+- In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms, τ = 1e-2) both profiles reproduce every reference curve once h is fitted, and the fitted ρ* differs between them by less than 1e-3. Whether conditions exist where the shapes separate is P2.5.
 
 ![step vs linear](results/phase2/p2_4_8_compare_step_linear/p2_4_8_compare.png)

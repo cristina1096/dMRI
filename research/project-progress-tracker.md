@@ -201,7 +201,7 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 | P2.4.5 | ☐ | Exponential end-to-end, with truncation recorded | As above | fig |
 | P2.4.6 | ☐ | Numerical-quadrature path (midpoint vs trapezoid, adaptive, tolerance ε_R₂) for profiles without a closed form | Agrees with closed form at small ε_R₂ | code |
 | P2.4.7 | ◐ | **V4 per profile** — fit *h*\*(θ) to the B4 reference for each profile, fixed ΔR₂(0) | *h*\*(θ) with uncertainty and per-readout residuals for every profile; residuals reported, not pass/fail | linear: h*(θ) for all 12 θ, residuals ≤ 0.5 SEM (`p2_3_9_fit_h_linear/`) |
-| P2.4.8 | ◐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | step vs linear: ρ* equal within 9.2e-4; both fit within 0.5 SEM (`p2_4_8_compare_step_linear/`) |
+| P2.4.8 | ◐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | step vs linear: ρ* agrees within 9.2e-4, small drift growing with θ (z up to −2.4); both fit within 0.5 SEM; S(t; h) overlay still to do (`p2_4_8_compare_step_linear/`) |
 | P2.4.9 | ☐ | *(optional)* Power law and half-Gaussian | As P2.4.3 | fig |
 | P2.4.10 | ☐ | Tag `rd-profiles-v1` | Tag exists | git tag |
 

@@ -1,6 +1,9 @@
 # P2.4.8 (step vs linear) — profile comparison at fixed surface excess rate ΔR2(0) = 0.1 /ms. Characterisation only.
 # (1) Attenuation 1 − S(50) vs h for both profiles (from the two sweeps).
 # (2) V4: h*(θ) and ρ*(θ) = ΔR2(0)·h*/g(0) for both profiles, their ratios, and the max |residual| of each fit.
+#     σ of the ρ* ratio: jackknife σ of each fit (parabola stage, `h_star_jackknife_sigma`) added in quadrature.
+#     Both fits share seeds 1–10 and the B4 reference, so their errors are correlated and this σ is an
+#     overestimate; z = (ratio − 1)/σ is therefore conservative.
 #
 # Run: julia --project=research/baseline research/phase2/p2_4_8_compare_step_linear.jl
 
@@ -18,11 +21,12 @@ for (a, b) in zip(fs, fl)
     @assert a["theta"] == b["theta"]
     hs, hl = a["h_final"], b["h_final"]
     ρs, ρl = RATE_REF * hs / 1, RATE_REF * hl / 2
+    σ_ratio = (ρl / ρs) * hypot(a["h_star_jackknife_sigma"] / hs, b["h_star_jackknife_sigma"] / hl)
     push!(rows, (theta=a["theta"], h_star_step=hs, h_star_linear=hl, h_ratio=hl / hs,
-        rho_star_step=ρs, rho_star_linear=ρl, rho_ratio=ρl / ρs,
+        rho_star_step=ρs, rho_star_linear=ρl, rho_ratio=ρl / ρs, rho_ratio_sigma=σ_ratio, rho_ratio_z=(ρl / ρs - 1) / σ_ratio,
         max_abs_residual_step=maximum(abs.(a["residuals_final"])), max_abs_residual_linear=maximum(abs.(b["residuals_final"]))))
-    @printf("θ = %.4f: h* step %.5f, linear %.5f (ratio %.4f); ρ* ratio %.4f; max |res| %.1f / %.1f\n",
-        a["theta"], hs, hl, hl / hs, ρl / ρs, rows[end].max_abs_residual_step, rows[end].max_abs_residual_linear)
+    @printf("θ = %.4f: h* step %.5f, linear %.5f (ratio %.4f); ρ* ratio − 1 = %+.1e ± %.0e (z = %+.1f); max |res| %.1f / %.1f\n",
+        a["theta"], hs, hl, hl / hs, ρl / ρs - 1, σ_ratio, rows[end].rho_ratio_z, rows[end].max_abs_residual_step, rows[end].max_abs_residual_linear)
 end
 write_csv(joinpath(OUT, "comparison.csv"), rows)
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "rate" => RATE_REF, "rows" => rows))

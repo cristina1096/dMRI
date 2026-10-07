@@ -3,9 +3,9 @@
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-10-07T11:08:59.114",
+    "date": "2026-10-07T11:17:46.902",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "9cf98b4f487465b2bcf687981d1d2ac4a1900e2e",
+    "git_commit": "012d63be09d218878e9cc0f4d31f304481fa7b5e",
     "julia": "1.12.7",
     "julia_threads": 1,
     "memory_GB": 16.0,
@@ -24,6 +24,8 @@
       "rho_star_step": 0.0009771654421592958,
       "rho_star_linear": 0.0009771689053728082,
       "rho_ratio": 1.000003544142438,
+      "rho_ratio_sigma": 0.00044744745170646223,
+      "rho_ratio_z": 0.007920801480611295,
       "max_abs_residual_step": 0.4234364273008706,
       "max_abs_residual_linear": 0.3623433276033815
     },
@@ -35,6 +37,8 @@
       "rho_star_step": 0.0014658098421360616,
       "rho_star_linear": 0.0014657989292906476,
       "rho_ratio": 0.9999925550742665,
+      "rho_ratio_sigma": 0.00031803598882736443,
+      "rho_ratio_z": -0.02340906688236057,
       "max_abs_residual_step": 0.3502069057805565,
       "max_abs_residual_linear": 0.28549830530996373
     },
@@ -46,6 +50,8 @@
       "rho_star_step": 0.001954456154585374,
       "rho_star_linear": 0.001954453761110825,
       "rho_ratio": 0.9999987753756752,
+      "rho_ratio_sigma": 0.00046925950172851537,
+      "rho_ratio_z": -0.0026096953185285434,
       "max_abs_residual_step": 0.2939258574315285,
       "max_abs_residual_linear": 0.23430280095584757
     },
@@ -57,6 +63,8 @@
       "rho_star_step": 0.0029318491703182892,
       "rho_star_linear": 0.0029317708326826535,
       "rho_ratio": 0.9999732804687128,
+      "rho_ratio_sigma": 0.00029103994974310436,
+      "rho_ratio_z": -0.0918070914689689,
       "max_abs_residual_step": 0.25411341181548996,
       "max_abs_residual_linear": 0.2347535346575872
     },
@@ -68,6 +76,8 @@
       "rho_star_step": 0.00488659290818916,
       "rho_star_linear": 0.004886234424489539,
       "rho_ratio": 0.9999266393361681,
+      "rho_ratio_sigma": 0.0005149877797611191,
+      "rho_ratio_z": -0.14245127110769412,
       "max_abs_residual_step": 0.23078914266367853,
       "max_abs_residual_linear": 0.29500780710904256
     },
@@ -79,6 +89,8 @@
       "rho_star_step": 0.006840977952052256,
       "rho_star_linear": 0.006840415157401002,
       "rho_ratio": 0.9999177318425525,
+      "rho_ratio_sigma": 0.0005637627063962127,
+      "rho_ratio_z": -0.1459269237111932,
       "max_abs_residual_step": 0.3690666589042739,
       "max_abs_residual_linear": 0.2551353043664253
     },
@@ -90,6 +102,8 @@
       "rho_star_step": 0.009772184140228308,
       "rho_star_linear": 0.009770907374239864,
       "rho_ratio": 0.9998693469167053,
+      "rho_ratio_sigma": 0.0005458658980177677,
+      "rho_ratio_z": -0.23935014766298493,
       "max_abs_residual_step": 0.2887210921771047,
       "max_abs_residual_linear": 0.13247029982892264
     },
@@ -101,6 +115,8 @@
       "rho_star_step": 0.014655179154787742,
       "rho_star_linear": 0.014651963836905223,
       "rho_ratio": 0.9997806019395219,
+      "rho_ratio_sigma": 0.00031562072013876114,
+      "rho_ratio_z": -0.695131993810948,
       "max_abs_residual_step": 0.1296801123166474,
       "max_abs_residual_linear": 0.14018076246329952
     },
@@ -112,6 +128,8 @@
       "rho_star_step": 0.019534438999248734,
       "rho_star_linear": 0.019527944013511104,
       "rho_ratio": 0.9996675110179576,
+      "rho_ratio_sigma": 0.00015469456836056768,
+      "rho_ratio_z": -2.149325510042694,
       "max_abs_residual_step": 0.2311976150571978,
       "max_abs_residual_linear": 0.17475636767608638
     },
@@ -123,6 +141,8 @@
       "rho_star_step": 0.02927712406463634,
       "rho_star_linear": 0.02926048166293793,
       "rho_ratio": 0.9994315561302516,
+      "rho_ratio_sigma": 0.0002380468905426999,
+      "rho_ratio_z": -2.3879491492305327,
       "max_abs_residual_step": 0.2445717885789712,
       "max_abs_residual_linear": 0.24177680931067883
     },
@@ -134,6 +154,8 @@
       "rho_star_step": 0.03899377000531274,
       "rho_star_linear": 0.03896338979140328,
       "rho_ratio": 0.999220895699356,
+      "rho_ratio_sigma": 0.000895451738655858,
+      "rho_ratio_z": -0.8700684436812643,
       "max_abs_residual_step": 0.2750917484572731,
       "max_abs_residual_linear": 0.35144386974726666
     },
@@ -145,6 +167,8 @@
       "rho_star_step": 0.04868077312429841,
       "rho_star_linear": 0.048636110722834254,
       "rho_ratio": 0.9990825453541973,
+      "rho_ratio_sigma": 0.00041273332228045274,
+      "rho_ratio_z": -2.2228751503115065,
       "max_abs_residual_step": 0.323516931426859,
       "max_abs_residual_linear": 0.460399268064271
     }
