@@ -12,8 +12,10 @@ include(joinpath(@__DIR__, "harness.jl"))
 include(joinpath(@__DIR__, "expected.jl"))
 include(joinpath(@__DIR__, "fit.jl"))
 
-const OUT = phase2_outdir("p2_3_9_fit_h")
-const SWEEP = joinpath(REPO_ROOT, "research", "results", "phase2", "p2_3_4_h_sweep", "sweep.csv")
+const SHAPE = get(ENV, "SHAPE", "step")
+const SUFFIX = SHAPE == "step" ? "" : "_" * SHAPE
+const OUT = phase2_outdir("p2_3_9_fit_h" * SUFFIX)
+const SWEEP = joinpath(REPO_ROOT, "research", "results", "phase2", "p2_3_4_h_sweep" * SUFFIX, "sweep.csv")
 const NSPINS = parse(Int, get(ENV, "NSPINS", string(sweep_nspins())))
 
 summary = JSON.parsefile(joinpath(OUT, "summary.json"))
@@ -29,7 +31,7 @@ for f in summary["fits"]
     Sr, Srs = Float64.(f["S_ref"]), Float64.(f["S_ref_sem"])
     J = sweep_slope(hgrid, model_mean, hp)
     h1 = hp + gauss_newton_step(Sm, Sms, Sr, Srs, J)
-    final = run_walls(layer_walls(h=h1, rate=RATE_REF); nspins=NSPINS)
+    final = run_walls(layer_walls(h=h1, rate=RATE_REF, shape=SHAPE); nspins=NSPINS)
     res = residual(final.mean, final.sem, Sr, Srs)
     χ2 = chi2_of(final.mean, final.sem, Sr, Srs)
     dof = count(sqrt.(final.sem .^ 2 .+ Srs .^ 2) .> 0) - 1
@@ -54,7 +56,7 @@ write_json(joinpath(OUT, "summary.json"), summary)
 
 using CairoMakie
 fig = Figure(size=(1000, 360))
-ax1 = Axis(fig[1, 1], xlabel="θ_relax", ylabel="h* (µm)", xscale=log10, title="V4: h*(θ), ΔR₂(0) = 0.1 /ms, τ = 1e-2")
+ax1 = Axis(fig[1, 1], xlabel="θ_relax", ylabel="h* (µm)", xscale=log10, title="V4 ($(SHAPE)): h*(θ), ΔR₂(0) = 0.1 /ms, τ = 1e-2")
 scatterlines!(ax1, [r.theta for r in rows], [r.h_final for r in rows])
 ax2 = Axis(fig[1, 2], xlabel="t (ms)", ylabel="(model − reference) / σ", title="residuals at h* (final)")
 for f in summary["fits"]

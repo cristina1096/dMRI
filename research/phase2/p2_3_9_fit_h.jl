@@ -16,8 +16,10 @@ include(joinpath(@__DIR__, "harness.jl"))
 include(joinpath(@__DIR__, "expected.jl"))
 include(joinpath(@__DIR__, "fit.jl"))
 
-const OUT = phase2_outdir("p2_3_9_fit_h")
-const SWEEP = joinpath(REPO_ROOT, "research", "results", "phase2", "p2_3_4_h_sweep", "sweep.csv")
+const SHAPE = get(ENV, "SHAPE", "step")
+const SUFFIX = SHAPE == "step" ? "" : "_" * SHAPE
+const OUT = phase2_outdir("p2_3_9_fit_h" * SUFFIX)
+const SWEEP = joinpath(REPO_ROOT, "research", "results", "phase2", "p2_3_4_h_sweep" * SUFFIX, "sweep.csv")
 const NSPINS = parse(Int, get(ENV, "NSPINS", string(sweep_nspins())))
 const TAU_CHECK = [0.002, 0.01, 0.05]
 const DELTA = 0.05
@@ -35,7 +37,7 @@ for θ in sort([x for x in keys(ref) if x > 0])
     R = ref[θ]
     h0 = fit_h(hgrid, model_mean, model_sem, R.mean, R.sem).h
     hs = [h0 * (1 - DELTA), h0, h0 * (1 + DELTA)]
-    trio = [run_walls(layer_walls(h=h, rate=RATE_REF); nspins=NSPINS) for h in hs]
+    trio = [run_walls(layer_walls(h=h, rate=RATE_REF, shape=SHAPE); nspins=NSPINS) for h in hs]
     χs = [chi2_of(r.mean, r.sem, R.mean, R.sem) for r in trio]
     hstar = parabola_vertex(hs, χs)
     inside = hs[1] <= hstar <= hs[3]
@@ -45,7 +47,7 @@ for θ in sort([x for x in keys(ref) if x > 0])
         parabola_vertex(hs, [chi2_of(seed_stats_rows(r.S, keep)..., R.mean, R.sem) for r in trio])
     end
     σjack = sqrt((n - 1) / n * sum((loo .- mean(loo)) .^ 2))
-    final = run_walls(layer_walls(h=hstar, rate=RATE_REF); nspins=NSPINS)
+    final = run_walls(layer_walls(h=hstar, rate=RATE_REF, shape=SHAPE); nspins=NSPINS)
     res = residual(final.mean, final.sem, R.mean, R.sem)
     χ2 = chi2_of(final.mean, final.sem, R.mean, R.sem)
     dof = count(sqrt.(final.sem .^ 2 .+ R.sem .^ 2) .> 0) - 1
@@ -54,14 +56,14 @@ for θ in sort([x for x in keys(ref) if x > 0])
         "residuals_direct" => res, "S_direct" => final.mean, "S_direct_sem" => final.sem, "S_ref" => R.mean, "S_ref_sem" => R.sem,
         "rel_diff_direct" => final.mean ./ R.mean .- 1)
     if θ in TAU_CHECK
-        fine = run_walls(layer_walls(h=hstar, rate=RATE_REF); timestep=1e-3, nspins=NSPINS)
+        fine = run_walls(layer_walls(h=hstar, rate=RATE_REF, shape=SHAPE); timestep=1e-3, nspins=NSPINS)
         entry["S50_tau_1e-3"] = fine.mean[end]
         entry["S50_tau_1e-3_sem"] = fine.sem[end]
         entry["tau_shift_in_sem"] = (fine.mean[end] - final.mean[end]) / sqrt(fine.sem[end]^2 + final.sem[end]^2)
         entry["tau_shift_rel"] = fine.mean[end] / final.mean[end] - 1
     end
     if θ == 0.01
-        bulk = run_walls(layer_walls(h=hstar, rate=RATE_REF); R2_bulk=1 / 80, nspins=NSPINS)
+        bulk = run_walls(layer_walls(h=hstar, rate=RATE_REF, shape=SHAPE); R2_bulk=1 / 80, nspins=NSPINS)
         f = exp.(-TIMES_REF ./ 80)
         entry["residuals_bulk_on"] = residual(bulk.mean, bulk.sem, R.mean .* f, R.sem .* f)
     end
@@ -73,13 +75,13 @@ for θ in sort([x for x in keys(ref) if x > 0])
         θ, h0, hstar, σjack, inside ? "" : " (vertex outside trio)", χ2 / max(dof, 1), maximum(abs.(res)), maximum(abs.(final.mean ./ R.mean .- 1)))
 end
 write_csv(joinpath(OUT, "h_star.csv"), rows)
-write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "rate" => RATE_REF, "tau_ms" => TAU_REF,
+write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "shape" => SHAPE, "rate" => RATE_REF, "tau_ms" => TAU_REF,
     "nspins" => NSPINS, "delta" => DELTA, "h_grid" => hgrid, "fits" => fits,
     "note" => "model and reference share seeds 1–10 (same initial positions): combined SEM overestimates the noise of the difference"))
 
 using CairoMakie
 fig = Figure(size=(1000, 360))
-ax1 = Axis(fig[1, 1], xlabel="θ_relax", ylabel="h* (µm)", xscale=log10, title="V4: h*(θ), ΔR₂(0) = 0.1 /ms, τ = 1e-2")
+ax1 = Axis(fig[1, 1], xlabel="θ_relax", ylabel="h* (µm)", xscale=log10, title="V4 ($(SHAPE)): h*(θ), ΔR₂(0) = 0.1 /ms, τ = 1e-2")
 θs = [r.theta for r in rows]
 errorbars!(ax1, θs, [r.h_star for r in rows], 2 .* [r.h_star_sigma for r in rows]); scatterlines!(ax1, θs, [r.h_star for r in rows])
 ax2 = Axis(fig[1, 2], xlabel="t (ms)", ylabel="(model − reference) / σ", title="residuals of direct runs at h*")

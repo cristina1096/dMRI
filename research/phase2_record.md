@@ -30,6 +30,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.3 (trace) | Single-spin trace, linear profile | every step: \|M⊥_sim/M⊥_pred − 1\| ≤ 1e-6; ≥ 1 reflection inside the layer | **PASS**: max error 2.4e-12; 4848 steps with a reflection inside the layer |
 | P2.4.3 (exact) | Linear profile: V0b, uniform case h = w (bulk off / on), additivity | bit-identical; per spin ≤ 1e-10; ensemble ≤ roundoff bound | **PASS** (all four): uniform per spin ≤ 1.4e-13, ensemble ≤ 2.6e-12; additivity 6.5e-14 / 8.7e-14 |
 | P2.4.3 (sweep) | Linear profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.3 SEM); S(50) from 1 to 0.00674 (h = 2.0) |
+| P2.4.7 (linear) | V4: h*(θ) of the linear profile fitted to B4 (τ = 1e-2, ΔR₂(0) = 0.1) | h* found for every θ, uncertainty and residuals (no pass/fail) | **12 of 12 θ fitted**; h* from 0.01954 to 0.97272 µm; whole curve matched within 5e-05 relative (≤ 0.5 combined SEM) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
@@ -376,3 +377,32 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=linear` → [re
 | 0.3 | 0.47278 | 0.47286 | -1.7e-04 |
 | 1 | 0.08221 | 0.08240 | -2.3e-03 |
 | 2 | 0.00674 | 0.00674 | +0.0e+00 |
+
+## P2.4.7 (linear): V4, h*(θ) fitted to the baseline reference
+
+Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) and [p2_3_9b_gauss_newton.jl](phase2/p2_3_9b_gauss_newton.jl) with `SHAPE=linear` → [results/phase2/p2_3_9_fit_h_linear/](results/phase2/p2_3_9_fit_h_linear/). Same three stages as the step V4 (start from the linear sweep, parabola refinement over h₀·(1 ± 5 %), one Gauss–Newton step), linear profile on both faces, ΔR₂(0) = 0.1 ms⁻¹, τ = 1e-2 ms, 100000 spins × 10 seeds, reference = B4 (τ = 1e-2). After the parabola stage the residuals were 5.6–26 SEM, all of one sign (negative) at every θ, as in the step fit; after the Gauss–Newton step every θ has residuals of both signs, so no further step was run.
+
+| θ_relax | h* (µm) | σ_jack (µm) | h*/θ | χ²/dof | max \|residual\| (SEM) | max \|S_model/S_ref − 1\| | S(50) reference | S(50) model |
+|---|---|---|---|---|---|---|---|---|
+| 0.001 | 0.01954 | 3e-06 | 19.543 | 0.04 | 0.4 | 1.6e-06 | 0.95232 | 0.95232 |
+| 0.0015 | 0.02932 | 5e-06 | 19.544 | 0.03 | 0.3 | 1.9e-06 | 0.92934 | 0.92934 |
+| 0.002 | 0.03909 | 7e-06 | 19.545 | 0.02 | 0.2 | 2.0e-06 | 0.90692 | 0.90692 |
+| 0.003 | 0.05864 | 1e-05 | 19.545 | 0.02 | 0.2 | 2.2e-06 | 0.86369 | 0.86370 |
+| 0.005 | 0.09772 | 3e-05 | 19.545 | 0.02 | 0.3 | 3.5e-06 | 0.78335 | 0.78335 |
+| 0.007 | 0.13681 | 4e-05 | 19.544 | 0.02 | 0.3 | 4.1e-06 | 0.71051 | 0.71051 |
+| 0.01 | 0.19542 | 5e-05 | 19.542 | 0.01 | 0.1 | 4.5e-06 | 0.61379 | 0.61380 |
+| 0.015 | 0.29304 | 4e-05 | 19.536 | 0.01 | 0.1 | 6.9e-06 | 0.48106 | 0.48106 |
+| 0.02 | 0.39056 | 2e-05 | 19.528 | 0.02 | 0.2 | 1.0e-05 | 0.37713 | 0.37713 |
+| 0.03 | 0.58521 | 7e-05 | 19.507 | 0.03 | 0.2 | 2.0e-05 | 0.23196 | 0.23196 |
+| 0.04 | 0.77927 | 8e-05 | 19.482 | 0.05 | 0.4 | 3.3e-05 | 0.14281 | 0.14281 |
+| 0.05 | 0.97272 | 2e-04 | 19.454 | 0.07 | 0.5 | 5.2e-05 | 0.08802 | 0.08802 |
+
+**Timestep check** (h* fixed at the parabola value, τ = 1e-2 → 1e-3 ms, S(50) shift): θ = 0.002: +0.36 SEM (+3.3e-06); θ = 0.01: -0.31 SEM (-1.1e-05); θ = 0.05: +0.02 SEM (+1.4e-06).
+
+**Bulk on** (θ = 0.01, R₂_bulk = 1/80, at the parabola h*): residuals equal the bulk-off residuals at the same h (max 11.45 in both), as for the step profile.
+
+**Caveat.** Model and reference share seeds 1–10, so √(SEM₁² + SEM₂²) overestimates the noise of their difference; χ²/dof far below 1 follows from that.
+
+**Interpretation.**
+- For every θ in the B4 grid a single linear-layer thickness h* reproduces the whole baseline curve S_θ(t), 0–50 ms, within 5e-05 relative (max residual 0.46 combined SEM). As for the step profile, the fitted linear layer and the baseline cannot be told apart from the signal in this configuration.
+- h*/θ = 19.45–19.55 µm per unit θ, drifting by 0.5 % from the smallest to the largest θ.
