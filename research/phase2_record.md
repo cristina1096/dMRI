@@ -35,6 +35,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.5 (trace) | Single-spin trace, exponential profile (cutoff = w) | every step ≤ 1e-6; ≥ 1 reflection inside the layer | **PASS**: max error 7.1e-13; 4848 steps with a reflection inside the layer |
 | P2.4.5 (identity) | Mean-exponent identity E[−ln M] = 2ρt/w, step / linear (incl. overlapping h = 1.5) / exponential, τ = 1e-2 and 4e-2 | \|z\| ≤ 3 | **PASS** (10 of 10; \|z\| ≤ 1.1) |
 | P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
+| P2.5.0 | Conventional model at the same ρ: θ = ρ√(π/D), mean-exponent identity at D = 1, 3, 6, τ = 1e-2, 4e-2 | \|z\| ≤ 3 | **PASS** (6 of 6, \|z\| ≤ 0.9); layer and baseline follow identical trajectories |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -580,4 +581,21 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=exponential` �
 | 1 | 0.01326 | 0.00674 | +9.7e-01 | +33582.4 |
 
   For h ≤ 0.2 µm the two profiles have essentially the same ρ (relative difference e^(−w/h) ≤ 4.5e-5), so by the mean-exponent identity the same mean of −ln M. S(50) still differs, beyond noise for h = 0.05–0.2: the exponential attenuates more, by up to 7.4e-4 relative at h = 0.2 (z = −14.8, conservative). That is a profile-shape effect at (almost) fixed ρ, of order 10⁻³ here. At h = 0.3 the ρ difference (−1.3e-3 relative: 0.02996 vs 0.03) already outweighs it (it alone raises S(50) by ≈ +1.9e-3), hence the sign change there (+1.5e-4, z = +2.4). For h ≥ 0.5 the truncation lowers the exponential's ρ (0.0491 vs 0.05 at h = 0.5; 0.0865 vs 0.1 at h = 1.0), and the differences above mainly reflect that.
+
+## P2.5.0: conventional model at the same ρ — θ = ρ√(π/D)
+
+Script [p2_5_1_theta_mapping.jl](phase2/p2_5_1_theta_mapping.jl) → [results/phase2/p2_5_1_theta_mapping/](results/phase2/p2_5_1_theta_mapping/). w = 2 µm, ρ = 0.01 µm/ms, t = 50 ms, seeds 1–10, 100000 spins per seed.
+
+**Mapping.** MCMR's conventional surface relaxation multiplies M⊥ by e^(−θ√τ) at every wall collision. With Gaussian steps of variance 2Dτ per axis, walkers at density n hit a wall n·√(D/(πτ)) times per unit area and time, so the loss per unit area and time is n·θ·√(D/π): the conventional model's surface relaxivity is **ρ = θ·√(D/π)**. For a uniform start this gives the baseline its own mean-exponent identity, E[−ln M_base(t)] = 2θ√(D/π)·t/w, which equals the layer's 2ρt/w (P2.4.5) when θ = ρ√(π/D). It also explains the V4 result ρ*/θ ≈ 0.977 = √(3/π).
+
+| D (µm²/ms) | τ (ms) | θ | 2ρt/w | baseline mean −ln M ± SEM | z | paired base − exponential layer (h = 0.2) ± SEM (z) | identical paths | Outcome |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 0.01 | 0.01772 | 0.500000 | 0.500047 ± 6.4e-05 | +0.74 | +2.4e-05 ± 4e-05 (+0.6) | true | **PASS** |
+| 1 | 0.04 | 0.01772 | 0.500000 | 0.499972 ± 6.7e-05 | -0.42 | -3.6e-05 ± 4e-05 (-0.9) | true | **PASS** |
+| 3 | 0.01 | 0.01023 | 0.500000 | 0.500006 ± 3.1e-05 | +0.20 | -6.4e-06 ± 2e-05 (-0.3) | true | **PASS** |
+| 3 | 0.04 | 0.01023 | 0.500000 | 0.499970 ± 3.3e-05 | -0.90 | -3.9e-05 ± 2e-05 (-1.9) | true | **PASS** |
+| 6 | 0.01 | 0.00724 | 0.500000 | 0.499994 ± 2.5e-05 | -0.24 | -1.4e-05 ± 1e-05 (-1.0) | true | **PASS** |
+| 6 | 0.04 | 0.00724 | 0.500000 | 0.499995 ± 3.1e-05 | -0.16 | -1.3e-05 ± 2e-05 (-0.8) | true | **PASS** |
+
+From here on, **fixed ρ** means the baseline uses θ = ρ√(π/D). Both models then have the same mean log-attenuation by construction, so any difference in the signal S = ⟨M⊥⟩ comes from how the relaxation is distributed (the higher moments of the exponent). The layer and the baseline follow **identical trajectories** for the same seed (neither draws random numbers), so their per-seed difference is a paired measurement.
 
