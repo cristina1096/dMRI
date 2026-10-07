@@ -211,6 +211,8 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 
 Characterisation mode: **ρ fixed**, same reference configuration for every profile.
 
+**Implementation plan:** [docs/superpowers/plans/2026-10-08-sensitivity-walls.md](../docs/superpowers/plans/2026-10-08-sensitivity-walls.md).
+
 **Scope decision (user, 2026-10-07).** The key investigation is when the signal becomes sensitive to the *spatial distribution* of near-surface relaxation rather than only its total strength, against the conventional surface-relaxation model at constant integrated relaxivity. This section becomes a dedicated plan (written after the exponential plan), with:
 - **fixed ρ primary**: the baseline θ is set from ρ via a verified mapping (V4 fits give ρ*/θ ≈ √(D/π), to be confirmed), and a best-fit residual is reported as a secondary column;
 - **noise levels**: Monte Carlo SEM and MRI noise at SNR 100 (1 %) and 200 (0.5 %);
