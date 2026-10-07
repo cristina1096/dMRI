@@ -37,7 +37,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
-| P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step) → same c for both; MCMR = toy for linear (\|z\| ≤ 1.3) |
+| P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
 | P2.6.8, P2.6.10–P2.6.12 | Cost with the layer; consequences for τ = 1e-2 results | cost tabulated; earlier results judged | layer overhead ×1.2–1.4 vs B5 (×2.1 at h = 0.01); full run ≤ 0.11 h up to ΔR₂(0) = 2, 0.63 h at 10; all earlier τ = 1e-2 results (ΔR₂(0) = 0.1) biased ≤ 6.4e-4 in R → **no reruns needed** |
 
@@ -449,18 +449,25 @@ Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's li
 |---|---|---|---|---|---|---|---|---|
 | V1_h0.1 | step | 0.1 | 0.1 | 3 | -1.13e-03 | ≥0.01 | 0.00862 | -5.4e-04 ± 2e-04 |
 | L_h0.1 | linear | 0.1 | 0.1 | 3 | -6.01e-04 | ≥0.01 | ≥0.01 | -2.5e-04 ± 2e-04 |
+| E_h0.1 | exponential | 0.1 | 0.1 | 3 | -7.91e-04 | ≥0.01 | ≥0.01 | -4.3e-04 ± 2e-04 |
 | V2_rate0.5 | step | 0.1 | 0.5 | 3 | -6.80e-03 | ≥0.05 | 0.00316 | -1.4e-03 ± 2e-04 |
 | L_rate0.5 | linear | 0.1 | 0.5 | 3 | -4.26e-03 | ≥0.05 | 0.00478 | -1.0e-03 ± 2e-04 |
+| E_rate0.5 | exponential | 0.1 | 0.5 | 3 | -4.00e-03 | ≥0.05 | 0.00704 | -7.7e-04 ± 2e-04 |
 | V2_rate1 | step | 0.1 | 1 | 3 | -1.34e-02 | 0.0633 | 0.00295 | -1.4e-03 ± 2e-04 |
 | L_rate1 | linear | 0.1 | 1 | 3 | -8.38e-03 | ≥0.1 | 0.00486 | -1.0e-03 ± 2e-04 |
+| E_rate1 | exponential | 0.1 | 1 | 3 | -7.93e-03 | ≥0.1 | 0.00665 | -7.6e-04 ± 2e-04 |
 | V2_rate2 | step | 0.1 | 2 | 3 | -2.60e-02 | 0.0506 | 0.00308 | -1.5e-03 ± 2e-04 |
 | L_rate2 | linear | 0.1 | 2 | 3 | -1.63e-02 | 0.0961 | 0.00422 | -1.2e-03 ± 2e-04 |
+| E_rate2 | exponential | 0.1 | 2 | 3 | -1.56e-02 | 0.109 | 0.00645 | -8.3e-04 ± 2e-04 |
 | V2_h0.4_rate1 | step | 0.4 | 1 | 3 | -1.44e-02 | 0.0616 | 0.00491 | -1.0e-03 ± 1e-04 |
 | L_h0.4_rate1 | linear | 0.4 | 1 | 3 | -1.13e-02 | 0.0833 | 0.0057 | -8.7e-04 ± 2e-04 |
+| E_h0.4_rate1 | exponential | 0.4 | 1 | 3 | -3.65e-03 | ≥0.1 | 0.0224 | -2.8e-04 ± 7e-05 |
 | V3_D1_rate1 | step | 0.1 | 1 | 1 | -1.72e-02 | 0.0482 | 0.00283 | -1.5e-03 ± 4e-04 |
 | L_D1_rate1 | linear | 0.1 | 1 | 1 | -1.08e-02 | 0.0866 | 0.00421 | -1.2e-03 ± 3e-04 |
+| E_D1_rate1 | exponential | 0.1 | 1 | 1 | -9.50e-03 | ≥0.1 | 0.0065 | -7.6e-04 ± 3e-04 |
 | V2_h0.01_rate10 | step | 0.01 | 10 | 3 | -3.09e-02 | 0.131 | 0.00651 | -7.5e-04 ± 2e-04 |
 | L_h0.01_rate10 | linear | 0.01 | 10 | 3 | -1.77e-02 | 0.347 | 0.0127 | -3.6e-04 ± 2e-04 |
+| E_h0.01_rate10 | exponential | 0.01 | 10 | 3 | -2.60e-02 | 0.196 | 0.00893 | -6.1e-04 ± 2e-04 |
 | L_h0.2_rate1 | linear | 0.2 | 1 | 3 | -1.06e-02 | 0.0901 | 0.00481 | -1.0e-03 ± 2e-04 |
 
 (≥: τ_conv is a lower bound, no τ ≤ 0.1 ms exceeded the tolerance. Error at the default is interpolated in log τ between scan points; σ combines the interpolated SEM and the reference SEM, both relative to R_ref, treated as independent. The bias at τ = 0.1 ms has σ ≈ 2–4e-4, tens of times smaller than the step-linear differences there.)
@@ -469,7 +476,11 @@ Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's li
 - In every matched pair the linear profile has a smaller timestep error than the step profile at the same ΔR₂(0), resolved where the error is large: the bias at τ = 0.1 ms is 0.53–0.78× the step value (each difference ≫ 10σ), and ΔR₂(0)·τ_conv is 1.35–2.65× larger at 1 % and 1.16–1.96× larger at 0.1 % (pairs where both values are resolved; where the linear value is only a lower bound the ratio is larger still).
 - The rate dependence is the same as for the step profile: the bias grows with ΔR₂(0) (−6.0e-4, −4.3e-3, −8.4e-3, −1.6e-2 for ΔR₂(0) = 0.1, 0.5, 1, 2 at h = 0.1). At ΔR₂(0) = 1 the linear threshold varies little with h (ΔR₂(0)·τ_conv at 0.1 % = 0.0049, 0.0048, 0.0057 for h = 0.1, 0.2, 0.4) or D (0.0042 at D = 1).
 - **Constraint.** With ΔR₂(0) = (ρ/h)·g(0) (= 2ρ/h for linear, as `max_layer_rate` computes), the default c = 0.005 gives an error of at most 1.2e-3 ± 3e-4 for the linear profile (D = 1 and ΔR₂(0) = 2) and at most 1.5e-3 ± 4e-4 for the step profile (D = 1; ΔR₂(0) = 2: 1.5e-3 ± 2e-4). At the default point itself the step–linear differences per pair (1–4e-4) are within about 1–2σ, so the ordering there is not resolved; it is resolved at larger τ (bias at 0.1 ms above). Either way both are ≈ 0.1 %, far below the 1 % level c was set against, so the same c serves both (tracker risk "shape-dependent c_h": no change needed for linear).
-- Polynomial and exponential profiles are not implemented yet; P2.6.4 covers step and linear.
+- **Exponential** (added 2026-10-08, plan `2026-10-07-exponential-profile.md`; truncated at w = 2 µm, renormalised; `E_*` scans, reference τ = 1e-4 for all, see the caveat below). MCMR vs toy (h = 0.1, ΔR₂(0) = 1, `p2_6_1_mcmr_check_E_rate1/`): z = −0.51, +0.78, +0.06 at τ = 0.1, 1e-2, 1e-3 → **PASS**.
+  - At the same ΔR₂(0) the exponential's bias at τ = 0.1 ms is below the step's in every group (0.25–0.84×; smallest at h = 0.4, where truncation at w makes the profile flatter) and close to the linear's (0.32–1.47×; larger than linear only at h = 0.01/ΔR₂(0) = 10 and h = 0.1/ΔR₂(0) = 0.1).
+  - At the default c = 0.005 the exponential error is at most 8.3e-4 ± 2e-4 (ΔR₂(0) = 2), below step (1.54e-3 ± 2e-4) and linear (1.15e-3 ± 2e-4). The step profile remains the most demanding of the three; the same c serves all three.
+  - Caveat: the exponential toy is ≈ 8× slower per point than the step toy (exp/expm1 per piece), so E_h0.1 and E_h0.01_rate10 use a τ = 1e-4 reference instead of 1e-5 (ledger ruling). For the step profile at ΔR₂(0) = 10 the same choice moved the 0.1 % threshold by ≈ 15 % (0.0056 → 0.0065), so the E_h0.01_rate10 0.1 % value (0.0089) carries an uncertainty of that order.
+- Polynomial profiles are not implemented yet.
 
 ![profile](results/phase2/p2_6_4_profile/p2_6_4_profile.png)
 
