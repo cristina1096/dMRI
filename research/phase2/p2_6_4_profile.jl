@@ -2,8 +2,11 @@
 #
 # For every scan: bias of R at τ = 0.1 ms, τ_conv at 1 % and 0.1 % (lower-bound / noise flags), ΔR2(0)·τ_conv, and the
 # error of R at the default constraint τ = 0.005/ΔR2(0) (P2.6.5), interpolated linearly in log τ between grid points
-# (capped at 0.1 ms, the largest τ scanned). Question answered: does the constraint ΔR2(0)·τ ≤ c, with the profile's own
-# ΔR2(0) = (ρ/h)·g(0), hold for the linear profile with the same c?
+# (capped at 0.1 ms, the largest τ scanned; a τ below the reference would be clamped to it and give ≈ 0, which no scan
+# reaches here). Its σ combines the interpolated SEM of R and the reference's SEM (relative to R_ref), treating them as
+# independent. Linear interpolation in log τ of a bias that grows ~linearly in τ slightly overstates |error| (conservative).
+# Question answered: does the constraint ΔR2(0)·τ ≤ c, with the profile's own ΔR2(0) = (ρ/h)·g(0), hold for the
+# linear profile with the same c?
 #
 # Run: julia --project=research/baseline research/phase2/p2_6_4_profile.jl
 
@@ -17,17 +20,17 @@ R = joinpath(REPO_ROOT, "research", "results", "phase2")
 summ(l) = JSON.parsefile(joinpath(R, "p2_6_scan_" * l, "summary.json"))
 function scan(l)
     s = [split(x, ",") for x in readlines(joinpath(R, "p2_6_scan_" * l, "scan.csv"))[2:end]]
-    τ = [parse(Float64, c[1]) for c in s]; Rv = [parse(Float64, c[2]) for c in s]
+    τ = [parse(Float64, c[1]) for c in s]; Rv = [parse(Float64, c[2]) for c in s]; Rs = [parse(Float64, c[3]) for c in s]
     o = sortperm(τ)
-    return τ[o], Rv[o] ./ Rv[o[1]] .- 1
+    return τ[o], Rv[o] ./ Rv[o[1]] .- 1, Rs[o] ./ Rv[o[1]]
 end
-"Relative error of R at τ, linear in log τ between grid points (τ capped to the scanned range)."
+"Relative error of R at τ and its σ, linear in log τ between grid points (τ capped to the scanned range)."
 function err_at(l, τ)
-    (τs, e) = scan(l)
+    (τs, e, rs) = scan(l)
     τ = clamp(τ, τs[1], τs[end])
     k = clamp(searchsortedlast(τs, τ), 1, length(τs) - 1)
     f = (log(τ) - log(τs[k])) / (log(τs[k + 1]) - log(τs[k]))
-    return e[k] + f * (e[k + 1] - e[k])
+    return (e[k] + f * (e[k + 1] - e[k]), hypot(rs[k] + f * (rs[k + 1] - rs[k]), rs[1]))
 end
 function describe(l)
     isempty(l) && return nothing
@@ -38,7 +41,7 @@ function describe(l)
     return (label=l, shape=get(s, "shape", "step"), h_um=s["h_um"], rate=s["rate"], D=s["D"], bias_0p1ms=s["bias_at_largest_tau"],
         rate_tau_conv_1pct=s["rate"] * c(0.01)["tau_conv"], flag_1pct=flag(0.01),
         rate_tau_conv_0p1pct=s["rate"] * c(0.001)["tau_conv"], flag_0p1pct=flag(0.001),
-        tau_default=min(τc, 0.1), err_at_default=err_at(l, τc))
+        tau_default=min(τc, 0.1), err_at_default=err_at(l, τc)[1], err_at_default_sigma=err_at(l, τc)[2])
 end
 
 rows = NamedTuple[]
@@ -46,16 +49,17 @@ for (a, b) in PAIRS
     for d in (describe(a), describe(b))
         isnothing(d) && continue
         push!(rows, d)
-        @printf("%-16s %-6s h=%.2f ΔR2(0)=%5.1f D=%.0f: bias(0.1 ms) %+.2e; ΔR2(0)·τ_conv 1%% %s%.3g, 0.1%% %s%.3g; error at τ = 0.005/ΔR2(0) %+.1e\n",
-            d.label, d.shape, d.h_um, d.rate, d.D, d.bias_0p1ms, d.flag_1pct, d.rate_tau_conv_1pct, d.flag_0p1pct, d.rate_tau_conv_0p1pct, d.err_at_default)
+        @printf("%-16s %-6s h=%.2f ΔR2(0)=%5.1f D=%.0f: bias(0.1 ms) %+.2e; ΔR2(0)·τ_conv 1%% %s%.3g, 0.1%% %s%.3g; error at τ = 0.005/ΔR2(0) %+.1e ± %.0e\n",
+            d.label, d.shape, d.h_um, d.rate, d.D, d.bias_0p1ms, d.flag_1pct, d.rate_tau_conv_1pct, d.flag_0p1pct, d.rate_tau_conv_0p1pct, d.err_at_default, d.err_at_default_sigma)
     end
 end
 lin = [r for r in rows if r.shape == "linear"]
 worst = maximum(abs(r.err_at_default) for r in lin)
-@printf("linear: max |error| at the default constraint (c = %.3f) = %.1e\n", C_LAYER, worst)
+worst_step = maximum(abs(r.err_at_default) for r in rows if r.shape == "step")
+@printf("max |error| at the default constraint (c = %.3f): linear %.2e, step %.2e\n", C_LAYER, worst, worst_step)
 write_csv(joinpath(OUT, "profile.csv"), rows)
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "c_layer" => C_LAYER, "rows" => rows,
-    "linear_max_abs_error_at_default" => worst,
+    "linear_max_abs_error_at_default" => worst, "step_max_abs_error_at_default" => worst_step,
     "note" => "error at the default is interpolated in log τ between scan points; τ_conv flags: ≥ lower bound, noisy = noise-limited"))
 
 using CairoMakie
@@ -63,7 +67,7 @@ fig = Figure(size=(1000, 380))
 ax1 = Axis(fig[1, 1], xscale=log10, xlabel="ΔR₂(0)·τ", ylabel="R/R_ref − 1", title="timestep error vs ΔR₂(0)·τ (step: dashed, linear: solid)")
 for (a, b) in PAIRS, (l, ls) in ((a, :dash), (b, :solid))
     isempty(l) && continue
-    (τs, e) = scan(l)
+    (τs, e, _) = scan(l)
     lines!(ax1, summ(l)["rate"] .* τs, e, linestyle=ls, label=l)
 end
 vlines!(ax1, [C_LAYER], color=:black, linestyle=:dot)

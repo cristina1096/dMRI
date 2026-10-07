@@ -7,7 +7,7 @@ import ..Geometries: Internal
 
 """
 Default `layer` scaling c in τ ≤ c/ΔR2(0) (P2.6.5): roughly the measured ΔR2(0)·τ for a 1 % error in the layer decay rate
-(0.048–0.13) divided by 10. Measured error at c = 0.005: ≤ 0.15 % for walls 2 um apart, step and linear profiles, h = 0.01–0.4 um,
+(0.048–0.13) divided by 10. Measured error at c = 0.005: ≈ 0.15 % or less (≤ 0.2 % within 2σ) for walls 2 um apart, step and linear profiles, h = 0.01–0.4 um,
 D = 1–3 um^2/ms, ΔR2(0) = 0.5–10 /ms; other geometries, profiles and parameter ranges are not yet validated.
 """
 const DEFAULT_LAYER_SCALING = 0.005
