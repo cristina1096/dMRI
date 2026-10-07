@@ -16,3 +16,19 @@
     @test centroid("exponential", 0.5; cutoff=2.0) ≈ 0.5 * (1 - 5 * exp(-4)) / (1 - exp(-4))
     @test centroid("exponential", 0.01; cutoff=2.0) ≈ 0.01 rtol=1e-10                # untruncated limit: h
 end
+
+@testset "sweep configurations" begin
+    for s in ("h", "w", "D", "rho")
+        c = sweep_configs(s)
+        @test !isempty(c)
+        @test all(x -> !(x.shape == "step" && x.h > x.w / 2), c)               # step excluded for h > w/2
+        @test all(x -> x.shape in ("step", "linear", "exponential"), c)
+    end
+    h = sweep_configs("h")
+    @test sort(unique([x.h for x in h])) == [0.05, 0.1, 0.2, 0.5, 1.0, 2.0]
+    @test count(x -> x.shape == "step", h) == 5                                 # h = 2.0 excluded for step
+    @test sort(unique([x.w for x in sweep_configs("w")])) == [1.0, 2.0, 5.0, 10.0]
+    @test sort(unique([x.D for x in sweep_configs("D")])) == [1.0, 3.0, 6.0]
+    @test sort(unique([x.rho for x in sweep_configs("rho")])) == [0.003, 0.01, 0.03, 0.1]
+    @test_throws ErrorException sweep_configs("T")
+end

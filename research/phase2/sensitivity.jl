@@ -38,3 +38,28 @@ function centroid(shape, h; cutoff=Inf)
     c = cutoff / h
     return isinf(c) ? h : h * (1 - (c + 1) * exp(-c)) / -expm1(-c)
 end
+
+"Reference point of the sensitivity study (Global Constraints of the plan)."
+const SENS_REF = (h=0.2, w=2.0, D=3.0, rho=0.01)
+const SENS_SHAPES = ("step", "linear", "exponential")
+
+"""
+    sweep_configs(sweep)
+
+One-at-a-time configurations around SENS_REF for sweep "h", "w", "D" or "rho": every shape at every value,
+except the step profile where h > w/2 (overlapping step layers relax the middle of the gap most; excluded).
+"""
+function sweep_configs(sweep::AbstractString)
+    values = sweep == "h" ? [0.05, 0.1, 0.2, 0.5, 1.0, 2.0] :
+             sweep == "w" ? [1.0, 2.0, 5.0, 10.0] :
+             sweep == "D" ? [1.0, 3.0, 6.0] :
+             sweep == "rho" ? [0.003, 0.01, 0.03, 0.1] : error("Unknown sweep $sweep; use h, w, D or rho.")
+    key = Symbol(sweep)
+    out = NamedTuple[]
+    for v in values, shape in SENS_SHAPES
+        c = merge(SENS_REF, NamedTuple{(key,)}((v,)))
+        (shape == "step" && c.h > c.w / 2) && continue
+        push!(out, (shape=shape, h=c.h, w=c.w, D=c.D, rho=c.rho))
+    end
+    return out
+end
