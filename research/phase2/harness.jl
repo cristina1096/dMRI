@@ -27,28 +27,40 @@ end
 "Layer thicknesses (µm) for the linear-profile sweep: as H_GRID, extended to h = w (the linear exact case)."
 const H_GRID_LINEAR = [0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0]
 
-"g(0) of a profile for thickness `h` (µm); the exponential is truncated at W_REF (the default `layer_cutoff`)."
-profile_g0(shape, h) = mr.Geometries.Internal.Layers.profile_g(Symbol(shape), 0.0, W_REF / h)
+"g(0) of a profile for thickness `h` (µm); the exponential is truncated at `w` (the default `layer_cutoff` = spacing)."
+profile_g0(shape, h; w=W_REF) = mr.Geometries.Internal.Layers.profile_g(Symbol(shape), 0.0, w / h)
 
 "ρ (µm/ms) giving surface excess rate ΔR2(0) = `rate` (1/ms) for thickness `h` (µm): ρ = rate·h / g(0)."
-rho_for(rate, h; shape="step") = iszero(h) ? 0.0 : Float64(rate * h / profile_g0(shape, h))
+rho_for(rate, h; shape="step", w=W_REF) = iszero(h) ? 0.0 : Float64(rate * h / profile_g0(shape, h; w=w))
 
 """
-    layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step")
+    layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step", w=W_REF)
 
-Reference walls with a layer of profile `shape` ("step" or "linear") and surface excess rate `rate`.
+Walls every `w` µm with a layer of profile `shape` and surface excess rate `rate`.
 `side` is `:both`, `:positive`, `:negative`, or `:asymmetric` (positive side `h`, `rate`; negative side `h_neg`, `rate_neg`).
 """
-function layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step")
-    ρ(r, hh) = rho_for(r, hh; shape=shape)
-    side == :both && return Walls(repeats=W_REF, layer_rho=ρ(rate, h), layer_h=h, layer_shape=shape)
-    side == :positive && return Walls(repeats=W_REF, layer_rho_positive=ρ(rate, h), layer_h_positive=h, layer_shape=shape)
-    side == :negative && return Walls(repeats=W_REF, layer_rho_negative=ρ(rate, h), layer_h_negative=h, layer_shape=shape)
-    side == :asymmetric && return Walls(repeats=W_REF,
+function layer_walls(; h=0.0, rate=0.0, side=:both, h_neg=h, rate_neg=rate, shape="step", w=W_REF)
+    ρ(r, hh) = rho_for(r, hh; shape=shape, w=w)
+    side == :both && return Walls(repeats=w, layer_rho=ρ(rate, h), layer_h=h, layer_shape=shape)
+    side == :positive && return Walls(repeats=w, layer_rho_positive=ρ(rate, h), layer_h_positive=h, layer_shape=shape)
+    side == :negative && return Walls(repeats=w, layer_rho_negative=ρ(rate, h), layer_h_negative=h, layer_shape=shape)
+    side == :asymmetric && return Walls(repeats=w,
         layer_rho_positive=ρ(rate, h), layer_h_positive=h,
         layer_rho_negative=ρ(rate_neg, h_neg), layer_h_negative=h_neg, layer_shape=shape)
     error("Unknown side $side; use :both, :positive, :negative or :asymmetric.")
 end
+
+"Conventional surface relaxation with the same relaxivity ρ (µm/ms): θ = ρ·√(π/D) (MCMR loses θ·√τ per collision)."
+theta_for(ρ; D=D_REF) = ρ * sqrt(pi / D)
+
+"Walls every `w` µm with conventional surface relaxation θ on both faces."
+baseline_walls(; theta, w=W_REF) = Walls(repeats=w, surface_relaxation=theta)
+
+"Walls every `w` µm with a layer of integrated relaxivity `rho` (µm/ms), thickness `h` and profile `shape`, both faces."
+rho_walls(; rho, h, shape, w=W_REF) = Walls(repeats=w, layer_rho=rho, layer_h=h, layer_shape=shape)
+
+"Timestep for a configuration: the adopted layer constraint τ ≤ 0.005/ΔR2(0), capped at TAU_REF."
+tau_for(rho, h, shape; w=W_REF) = min(TAU_REF, mr.TimeSteps.DEFAULT_LAYER_SCALING / (rho / h * profile_g0(shape, h; w=w)))
 
 "Mean |Mxy| over the spins of a snapshot (equals per_spin of the summed signal while all phases are 0)."
 mean_transverse(snap) = mean(s.orientations[1].transverse for s in snap.spins)
@@ -67,9 +79,9 @@ so seed k gives the same initial positions in every run). `timestep=nothing` use
 Returns `(S, mean, sigma, sem, times, tau, runtime, snapshots, sim)`; `S[i, j]` is the per-spin signal of
 seed i at times[j]; with `snapshots=true`, `snapshots[i]` is seed i's final Snapshot.
 """
-function run_walls(geometry; R2_bulk=0.0, timestep=TAU_REF, times=TIMES_REF, seeds=SEEDS_REF, nspins=NSPINS_REF, snapshots=false)
+function run_walls(geometry; R2_bulk=0.0, timestep=TAU_REF, times=TIMES_REF, seeds=SEEDS_REF, nspins=NSPINS_REF, snapshots=false, D=D_REF)
     kw = isnothing(timestep) ? (;) : (; timestep=timestep)
-    sim = Simulation([mr.SequenceParts.empty_sequence()]; geometry=geometry, diffusivity=D_REF, R2=R2_bulk, verbose=false, kw...)
+    sim = Simulation([mr.SequenceParts.empty_sequence()]; geometry=geometry, diffusivity=D, R2=R2_bulk, verbose=false, kw...)
     times = collect(Float64, times)
     S = zeros(length(seeds), length(times))
     snaps = Snapshot[]

@@ -66,3 +66,23 @@ end
     @test (l.positive.shape, l.positive.cutoff) == (:exponential, 2.0)
     @test mr.Geometries.Internal.Layers.surface_rate(l.positive) ≈ 0.1
 end
+
+@testset "harness: sensitivity extensions" begin
+    @test theta_for(0.01; D=3.0) ≈ 0.01 * sqrt(pi / 3)
+    @test theta_for(0.01; D=1.0) ≈ 0.01 * sqrt(pi)
+    @test profile_g0("exponential", 0.5; w=5.0) ≈ 1 / (1 - exp(-10))
+    @test profile_g0("exponential", 0.5) ≈ 1 / (1 - exp(-4))                  # default w = W_REF
+    @test rho_for(0.1, 0.5; shape="exponential", w=5.0) ≈ 0.05 * (1 - exp(-10))
+    l = Simulation([]; geometry=layer_walls(h=0.5, rate=0.1, shape="exponential", w=5.0), verbose=false).geometry[1].layer[1]
+    @test l.positive.cutoff == 5.0
+    @test mr.Geometries.Internal.Layers.surface_rate(l.positive) ≈ 0.1
+    b = Simulation([]; geometry=baseline_walls(theta=0.02, w=5.0), verbose=false)
+    @test b.geometry[1].layer === nothing
+    r = Simulation([]; geometry=rho_walls(rho=0.01, h=0.2, shape="linear", w=5.0), verbose=false).geometry[1].layer[1]
+    @test (r.positive.rho, r.positive.h, r.positive.shape) == (0.01, 0.2, :linear)
+    @test tau_for(0.01, 0.2, "step") == 1e-2                                    # ΔR2(0) = 0.05: constraint 0.1 > cap
+    @test tau_for(0.1, 0.2, "linear") ≈ 0.005 / 1.0                             # ΔR2(0) = 2ρ/h = 1.0
+    @test tau_for(0.1, 0.05, "step") ≈ 0.005 / 2.0
+    # D keyword reaches the simulation
+    @test run_walls(Walls(repeats=2.0); D=1.0, times=[0.0, 1.0], seeds=1:1, nspins=10).sim.diffusivity == 1.0
+end
