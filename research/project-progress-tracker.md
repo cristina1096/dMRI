@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 33 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 34 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -194,14 +194,14 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P2.4.1 | ☐ | Shape-function module: *g*, its closed-form integral along a linear *d*(*t*), and *g*(0) for each profile | Unit tests vs symbolic or high-order numerical integration | `profiles.jl` |
-| P2.4.2 | ☐ | Normalisation check: numerically integrate each *g* | ∫*g* = 1 to 10⁻⁸ | table |
-| P2.4.3 | ☐ | Linear profile end-to-end | Single-spin trace exact (P2.2.9); P2.3.4(b)–P2.3.6 and P2.3.11 equivalents (the exact *h* = *w*/2 end point applies to the step profile only) | fig |
+| P2.4.1 | ◐ | Shape-function module: *g*, its closed-form integral along a linear *d*(*t*), and *g*(0) for each profile | Unit tests vs symbolic or high-order numerical integration | step and linear in `layers.jl` (closed form: linear via the midpoint value of g on the piece); polynomial and exponential to come |
+| P2.4.2 | ◐ | Normalisation check: numerically integrate each *g* | ∫*g* = 1 to 10⁻⁸ | step, linear: ∫g = 1 to 1e-10 (`test_layer.jl`) |
+| P2.4.3 | ☑ | Linear profile end-to-end | Single-spin trace exact (P2.2.9); P2.3.4(b)–P2.3.6 and P2.3.11 equivalents (the exact *h* = *w*/2 end point applies to the step profile only) | trace PASS (2.4e-12), exact checks PASS (uniform case h = w), sweep monotone 15/15, curvature 0 within noise: `p2_2_9_layer_trace_linear/`, `p2_4_3_linear_exact/`, `p2_3_4_h_sweep_linear/` |
 | P2.4.4 | ☐ | Polynomial *n* = 2, 3 end-to-end | As above | fig |
 | P2.4.5 | ☐ | Exponential end-to-end, with truncation recorded | As above | fig |
 | P2.4.6 | ☐ | Numerical-quadrature path (midpoint vs trapezoid, adaptive, tolerance ε_R₂) for profiles without a closed form | Agrees with closed form at small ε_R₂ | code |
-| P2.4.7 | ☐ | **V4 per profile** — fit *h*\*(θ) to the B4 reference for each profile, fixed ΔR₂(0) | *h*\*(θ) with uncertainty and per-readout residuals for every profile; residuals reported, not pass/fail | fig + table |
-| P2.4.8 | ☐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | fig |
+| P2.4.7 | ◐ | **V4 per profile** — fit *h*\*(θ) to the B4 reference for each profile, fixed ΔR₂(0) | *h*\*(θ) with uncertainty and per-readout residuals for every profile; residuals reported, not pass/fail | linear: h*(θ) for all 12 θ, residuals ≤ 0.5 SEM (`p2_3_9_fit_h_linear/`) |
+| P2.4.8 | ◐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | step vs linear: ρ* equal within 9.2e-4; both fit within 0.5 SEM (`p2_4_8_compare_step_linear/`) |
 | P2.4.9 | ☐ | *(optional)* Power law and half-Gaussian | As P2.4.3 | fig |
 | P2.4.10 | ☐ | Tag `rd-profiles-v1` | Tag exists | git tag |
 
