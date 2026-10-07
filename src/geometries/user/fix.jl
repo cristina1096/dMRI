@@ -72,7 +72,7 @@ function wall_layers(walls::Walls; density=0.)
         specific = getproperty(walls, Symbol("layer_shape_" * side))[i]
         shape = isnothing(specific) ? walls.layer_shape[i] : specific
         shape = isnothing(shape) ? "step" : shape
-        shape in ("step", "linear") || error("Wall $i, $side side: layer_shape must be \"step\" or \"linear\", got \"$shape\".")
+        Symbol(shape) in Internal.Layers.SHAPES || error("Wall $i, $side side: layer_shape must be one of $(join(string.(Internal.Layers.SHAPES), ", ")), got \"$shape\".")
         return Symbol(shape)
     end
     spacing = size_scale(walls; ignore_user_value=true)
@@ -86,7 +86,15 @@ function wall_layers(walls::Walls; density=0.)
             h < 0 && error("Wall $i, $side side: layer_h must be >= 0, got $h.")
             rho > 0 && iszero(h) && error("Wall $i, $side side: layer_h must be > 0 when layer_rho > 0.")
             rho > 0 && h > spacing && error("Wall $i, $side side: layer_h = $h um exceeds the spacing between walls ($spacing um), so the layer would pass through a neighbouring wall.")
-            Internal.LayerSide(rho, h, resolve_shape(side, i))
+            shape = resolve_shape(side, i)
+            shape == :exponential || return Internal.LayerSide(rho, h, shape)
+            iszero(rho) && return Internal.LayerSide(rho, h, shape, h)          # inert side: no cutoff needed
+            given = walls.layer_cutoff[i]
+            cutoff = isnothing(given) ? spacing : Float64(given)
+            isfinite(cutoff) || error("Wall $i, $side side: an exponential layer on a non-repeating wall needs `layer_cutoff`.")
+            cutoff > 0 || error("Wall $i, $side side: layer_cutoff must be > 0, got $cutoff.")
+            cutoff <= spacing || error("Wall $i, $side side: layer_cutoff = $cutoff um exceeds the spacing between walls ($spacing um).")
+            Internal.LayerSide(rho, h, shape, cutoff)
         end
         push!(layers, Internal.WallLayer(Float64(positions[i]), sides...))
     end

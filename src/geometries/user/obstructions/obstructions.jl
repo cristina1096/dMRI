@@ -33,9 +33,10 @@ for obstruction_type in (
         Field{Float64}(:layer_rho_negative, "Near-surface layer: ρ (um/ms) on the negative side. Overrides `layer_rho`."),
         Field{Float64}(:layer_h_positive, "Near-surface layer: h (um) on the positive side. Overrides `layer_h`."),
         Field{Float64}(:layer_h_negative, "Near-surface layer: h (um) on the negative side. Overrides `layer_h`."),
-        Field{String}(:layer_shape, "Near-surface layer: profile g on both sides of the wall, unless a side-specific value is set. \"step\" or \"linear\".", "step"),
+        Field{String}(:layer_shape, "Near-surface layer: profile g on both sides of the wall, unless a side-specific value is set. One of step, linear, exponential.", "step"),
         Field{String}(:layer_shape_positive, "Near-surface layer: profile on the positive side. Overrides `layer_shape`."),
         Field{String}(:layer_shape_negative, "Near-surface layer: profile on the negative side. Overrides `layer_shape`."),
+        Field{Float64}(:layer_cutoff, "Near-surface layer: support (um) of the exponential profile, measured from the wall; g is truncated there and renormalised so that its integral is 1. Default: the spacing between walls. Ignored by step and linear."),
     ]),
     ObstructionType(
         :Cylinder; ndim=2, fields=[

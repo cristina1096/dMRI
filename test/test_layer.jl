@@ -424,3 +424,39 @@ end
         @test Layers.side_exponent(s, -0.5, -0.1, 1.0) == 0.0                            # other side of the wall
     end
 end
+
+@testset "test_layer.jl: exponential on Walls" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+    v(x) = SVector{3, Float64}(x, 0.3, -1.2)
+
+    @testset "resolution and validation" begin
+        l = geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential"))[1].layer[1]
+        @test (l.positive.shape, l.positive.cutoff, l.negative.cutoff) == (:exponential, 2.0, 2.0)
+        l = geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=1.0))[1].layer[1]
+        @test l.positive.cutoff == 1.0
+        l = geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape_negative="exponential", layer_cutoff=1.0))[1].layer[1]
+        @test (l.positive.shape, l.positive.cutoff, l.negative.shape, l.negative.cutoff) == (:step, 0.2, :exponential, 1.0)
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=2.5))
+        @test_throws ErrorException geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=0.0))
+        @test_throws ErrorException geom(mr.Walls(layer_rho=0.02, layer_h=0.2, layer_shape="exponential"))   # single wall: no spacing
+        @test geom(mr.Walls(layer_shape="exponential"))[1].layer === nothing                                  # ρ = 0: inert, no error
+        l = geom(mr.Walls(layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=3.0))[1].layer[1]
+        @test l.positive.cutoff == 3.0
+    end
+
+    @testset "reach includes the opposite wall" begin
+        g = geom(mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential"))   # ρ/h = 0.1, cutoff 2
+        N = 1 / (1 - exp(-10))
+        # stationary at x = 0.5: d = 0.5 from wall 0 (positive side), 1.5 from wall 2 (negative side)
+        @test Layers.layer_exponent(g, v(0.5), v(0.5), 1.0) ≈ 0.1 * N * (exp(-2.5) + exp(-7.5)) rtol=1e-12
+    end
+
+    @testset "JSON round trip keeps layer_cutoff" begin
+        io = IOBuffer()
+        mr.write_geometry(io, mr.Walls(repeats=2., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=1.5))
+        back = mr.read_geometry_json(String(take!(io)))
+        @test back.layer_shape.value == "exponential"
+        @test back.layer_cutoff.value == 1.5
+    end
+end

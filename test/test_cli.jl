@@ -65,6 +65,15 @@ end
                 @test result["layer_rho"] == 0.05
             end
         end
+        @testset "create walls with an exponential layer" begin
+            in_tmpdir() do
+                _, err = run_main_test("geometry create walls 1 test.json --repeats 2 --layer_rho 0.02 --layer_h 0.2 --layer_shape exponential --layer_cutoff 1.5")
+                @test length(err) == 0
+                result = JSON.parse(open("test.json", "r"))
+                @test result["layer_shape"] == "exponential"
+                @test result["layer_cutoff"] == 1.5
+            end
+        end
         @testset "create annuli" begin
             in_tmpdir() do 
                 _, err = run_main_test("geometry create annuli 2 test.json --inner 1,2 --outer 3 --myelin")
