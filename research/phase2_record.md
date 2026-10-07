@@ -34,6 +34,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.8 (step vs linear) | Profile comparison at fixed ΔR₂(0) (characterisation) | differences reported with σ | ρ* agrees within 9.2e-4 (h* ratio 1.998–2.000), with a small drift (linear below step) growing with θ, z up to −2.4 (conservative); both fit every θ within 0.5 SEM |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
+| P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias 0.53–0.78× step); error at c = 0.005 ≤ 1.2e-3 (step ≤ 1.5e-3) → same c for both; MCMR = toy for linear (\|z\| ≤ 1.3) |
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
 | P2.6.8, P2.6.10–P2.6.12 | Cost with the layer; consequences for τ = 1e-2 results | cost tabulated; earlier results judged | layer overhead ×1.2–1.4 vs B5 (×2.1 at h = 0.01); full run ≤ 0.11 h up to ΔR₂(0) = 2, 0.63 h at 10; all earlier τ = 1e-2 results (ΔR₂(0) = 0.1) biased ≤ 6.4e-4 in R → **no reruns needed** |
 
@@ -272,7 +273,7 @@ Every bias is negative: large τ gives less attenuation. The last two rows and t
 - **V3 (τ_conv ∝ 1/D): FAIL.** At 0.1 %, τ_conv = 0.043, 0.086, 0.089 ms for D = 1, 3, 6 at ΔR₂(0) = 0.1: 1/D would require a 6× fall from D = 1 to 6; there is none (differences within the noise above). At ΔR₂(0) = 1, where the bias is resolved, D = 1 is moderately stricter than D = 3: ΔR₂(0)·τ_conv = 0.048 vs 0.063 (1 %), 0.0028 vs 0.0030 (0.1 %).
 - **Decision point (τ_conv vs 1/ΔR₂(0)).** The bias at τ = 0.1 ms is proportional to ΔR₂(0) (−1.1e-3, −6.8e-3, −1.34e-2, −2.6e-2 for ΔR₂(0) = 0.1, 0.5, 1, 2; figure, right panel). ΔR₂(0)·τ_conv is 0.063 and 0.051 at 1 % (ΔR₂(0) = 1, 2; within 11 %) and 0.0032, 0.0030, 0.0031 at 0.1 % (ΔR₂(0) = 0.5, 1, 2; within 4 %). At ΔR₂(0) = 0.1 the 0.1 % value (0.0086) is set by the small h- and D-dependent part of the bias (≈ 1e-3 at 0.1 ms), not by the rate.
 - **ΔR₂(0), not ρ.** At the same ρ = 0.1 µm/ms, h = 0.01/ΔR₂(0) = 10 has a larger bias at τ = 0.1 ms (−3.1e-2) than h = 0.1/ΔR₂(0) = 1 (−1.3e-2), so ρ alone does not set the error. Per unit of ΔR₂(0)·τ, though, the thin layer is about 2× *more* tolerant: ΔR₂(0)·τ_conv = 0.13 (1 %) and 0.0065 (0.1 %) vs 0.063 and 0.0030 at h = 0.1. (Final review I2: the first run of this scan used a τ = 1e-4 reference; rerun with τ = 1e-5, the 0.1 % value moved from 0.0056 to 0.0065; R is flat from 1e-5 to 2e-4 within ±2e-4.) h = 0.4 at ΔR₂(0) = 1 is also slightly more tolerant than h = 0.1 (0.062 at 1 %, 0.0049 at 0.1 %).
-- Empirical summary: the per-step layer exponent ΔR₂(0)·τ is the leading control of the timestep error. Over h = 0.01–0.4 µm, D = 1–3, ΔR₂(0) = 0.5–10, the 1 % threshold is ΔR₂(0)·τ = 0.048–0.13 and the 0.1 % threshold 0.0028–0.0065; the strictest case is D = 1 (h = 0.1). At the adopted default ΔR₂(0)·τ = 0.005 the measured error is ≤ 1.4e-3 in every one of these scans (D = 1: 1.4e-3; h = 0.4: 9.4e-4; h = 0.01, ΔR₂(0) = 10: 6.8e-4). Not covered: D > 3 at high rate, h between 0.4 and w/2 at high rate. The spec's form τ ≤ c_h·h²/D (Eq. 11) is not supported in this geometry.
+- Empirical summary: the per-step layer exponent ΔR₂(0)·τ is the leading control of the timestep error. Over h = 0.01–0.4 µm, D = 1–3, ΔR₂(0) = 0.5–10, the 1 % threshold is ΔR₂(0)·τ = 0.048–0.13 and the 0.1 % threshold 0.0028–0.0065; the strictest case is D = 1 (h = 0.1). At the adopted default ΔR₂(0)·τ = 0.005 the measured error is ≤ 1.5e-3 in every one of these scans (interpolated in log τ, P2.6.4 script: D = 1 and ΔR₂(0) = 2: 1.5e-3; h = 0.4: 1.0e-3; h = 0.01, ΔR₂(0) = 10: 7.5e-4; an earlier version of this line quoted the nearest grid point, 1.4e-3). Not covered: D > 3 at high rate, h between 0.4 and w/2 at high rate. The spec's form τ ≤ c_h·h²/D (Eq. 11) is not supported in this geometry.
 
 ![scaling](results/phase2/p2_6_2_scaling/scaling.png)
 
@@ -434,3 +435,37 @@ Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) →
 - In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms, τ = 1e-2) both profiles reproduce every reference curve once h is fitted, and the fitted ρ* differs between them by less than 1e-3. Whether conditions exist where the shapes separate is P2.5.
 
 ![step vs linear](results/phase2/p2_4_8_compare_step_linear/p2_4_8_compare.png)
+
+## P2.6.4: profile dependence of the timestep error (step vs linear)
+
+Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's linear `:exact` rule calls MCMR's `side_exponent`, the step path is unchanged), same settings as P2.6.1–P2.6.3 (100000 spins × 10 seeds, T = 10 ms, reference τ = 1e-5 for h = 0.1/ΔR₂(0) = 0.1 and h = 0.01/ΔR₂(0) = 10, 1e-4 otherwise). ΔR₂(0) is the profile's own surface rate, (ρ/h)·g(0), so ρ = ΔR₂(0)·h/2 for linear. Comparison: [p2_6_4_profile.jl](phase2/p2_6_4_profile.jl) → [results/phase2/p2_6_4_profile/](results/phase2/p2_6_4_profile/).
+
+**MCMR vs toy, linear** (h = 0.1, ΔR₂(0) = 1, [p2_6_1_mcmr_check.jl](phase2/p2_6_1_mcmr_check.jl) with `SCAN=L_rate1` → `p2_6_1_mcmr_check_L_rate1/`): z = −0.31, +1.31, +0.04 at τ = 0.1, 1e-2, 1e-3 → **PASS**.
+
+| scan | shape | h (µm) | ΔR₂(0) | D | bias at τ = 0.1 ms | ΔR₂(0)·τ_conv 1 % | ΔR₂(0)·τ_conv 0.1 % | error at τ = 0.005/ΔR₂(0) |
+|---|---|---|---|---|---|---|---|---|
+| V1_h0.1 | step | 0.1 | 0.1 | 3 | -1.13e-03 | ≥0.01 | 0.00862 | -5.4e-04 |
+| L_h0.1 | linear | 0.1 | 0.1 | 3 | -6.01e-04 | ≥0.01 | ≥0.01 | -2.5e-04 |
+| V2_rate0.5 | step | 0.1 | 0.5 | 3 | -6.80e-03 | ≥0.05 | 0.00316 | -1.4e-03 |
+| L_rate0.5 | linear | 0.1 | 0.5 | 3 | -4.26e-03 | ≥0.05 | 0.00478 | -1.0e-03 |
+| V2_rate1 | step | 0.1 | 1 | 3 | -1.34e-02 | 0.0633 | 0.00295 | -1.4e-03 |
+| L_rate1 | linear | 0.1 | 1 | 3 | -8.38e-03 | ≥0.1 | 0.00486 | -1.0e-03 |
+| V2_rate2 | step | 0.1 | 2 | 3 | -2.60e-02 | 0.0506 | 0.00308 | -1.5e-03 |
+| L_rate2 | linear | 0.1 | 2 | 3 | -1.63e-02 | 0.0961 | 0.00422 | -1.2e-03 |
+| V2_h0.4_rate1 | step | 0.4 | 1 | 3 | -1.44e-02 | 0.0616 | 0.00491 | -1.0e-03 |
+| L_h0.4_rate1 | linear | 0.4 | 1 | 3 | -1.13e-02 | 0.0833 | 0.0057 | -8.7e-04 |
+| V3_D1_rate1 | step | 0.1 | 1 | 1 | -1.72e-02 | 0.0482 | 0.00283 | -1.5e-03 |
+| L_D1_rate1 | linear | 0.1 | 1 | 1 | -1.08e-02 | 0.0866 | 0.00421 | -1.2e-03 |
+| V2_h0.01_rate10 | step | 0.01 | 10 | 3 | -3.09e-02 | 0.131 | 0.00651 | -7.5e-04 |
+| L_h0.01_rate10 | linear | 0.01 | 10 | 3 | -1.77e-02 | 0.347 | 0.0127 | -3.6e-04 |
+| L_h0.2_rate1 | linear | 0.2 | 1 | 3 | -1.06e-02 | 0.0901 | 0.00481 | -1.0e-03 |
+
+(≥: τ_conv is a lower bound, no τ ≤ 0.1 ms exceeded the tolerance. Error at the default is interpolated in log τ between scan points.)
+
+**Interpretation.**
+- In every matched pair the linear profile has a smaller timestep error than the step profile at the same ΔR₂(0): the bias at τ = 0.1 ms is 0.53–0.78× the step value, and ΔR₂(0)·τ_conv is 1.35–2.65× larger at 1 % and 1.16–1.96× larger at 0.1 % (pairs where both values are resolved; where the linear value is only a lower bound the ratio is larger still).
+- The rate dependence is the same as for the step profile: the bias grows with ΔR₂(0) (−6.0e-4, −4.3e-3, −8.4e-3, −1.6e-2 for ΔR₂(0) = 0.1, 0.5, 1, 2 at h = 0.1). At ΔR₂(0) = 1 the linear threshold varies little with h (ΔR₂(0)·τ_conv at 0.1 % = 0.0049, 0.0048, 0.0057 for h = 0.1, 0.2, 0.4) or D (0.0042 at D = 1).
+- **Constraint.** With ΔR₂(0) = (ρ/h)·g(0) (= 2ρ/h for linear, as `max_layer_rate` computes), the default c = 0.005 gives an error ≤ 1.2e-3 for the linear profile in every scan, below the step profile's ≤ 1.5e-3. The step profile is the more demanding shape of the two, so the same c serves both (tracker risk "shape-dependent c_h": no change needed for linear).
+- Polynomial and exponential profiles are not implemented yet; P2.6.4 covers step and linear.
+
+![profile](results/phase2/p2_6_4_profile/p2_6_4_profile.png)

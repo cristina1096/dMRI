@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 34 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 35 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -232,7 +232,7 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | P2.6.1 | ☑ | **V1** timestep plateau | Step profile, *h* = 0.1 µm; τ from 10⁻⁵ to 10⁻¹ ms, 3 per decade (B5: 10⁻⁵ ms costs ≈ 2 h per seed at 10⁵ spins × 50 ms, so use 10⁴ spins or a shorter sequence below 10⁻⁴ ms). If no plateau by 10⁻⁵ ms, record that and restrict *h* (see risks) | Plateau found; halving τ changes signal < 1σ; large-τ bias has the sign expected in proposal §3.2 V (too little attenuation) | toy scan + MCMR check: plateau to 0.1 ms at 1 % (τ_conv ≥ 0.1), 0.086 ms at 0.1 %; bias −1.1e-3 at 0.1 ms (less attenuation, as expected); MCMR = toy (\|z\| ≤ 1.3). `phase2_record.md` P2.6.1 |
 | P2.6.2 | ☑ | **V2** *h*² scaling | Repeat at *h* = 0.05, 0.1, 0.2 µm; plot τ_conv vs *h*²/D (proposal Eq. 11) | Line through origin; slope = *c*_h | **FAIL**: no *h*² scaling (h trend at ΔR₂(0) = 0.1 within noise). Decision point measured: ΔR₂(0)·τ_conv = 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over *h* = 0.01–0.4, D = 1–3; bias ∝ ΔR₂(0). `phase2_record.md` P2.6.2 |
 | P2.6.3 | ☑ | **V3** 1/D scaling | λ = 0.1 µm, D = 1, 3, 6 | τ_conv ∝ 1/D | **FAIL**: no 1/D scaling (D = 1/3/6 equal within noise at ΔR₂(0) = 0.1); at ΔR₂(0) = 1, D = 1 is ≈ 25 % stricter than D = 3. `phase2_record.md` P2.6.3 |
-| P2.6.4 | ☐ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_h depends on shape; if so, report per shape or use the most demanding | after the linear plan: rerun `p2_6_scan.jl` with a shape option; check ΔR₂(0)·τ_conv per shape |
+| P2.6.4 | ☑ | Profile dependence of τ_conv | Repeat V1 for linear, polynomial, exponential | Record whether *c*_h depends on shape; if so, report per shape or use the most demanding | step and linear: linear less demanding at the same ΔR₂(0) = (ρ/h)·g(0) (bias 0.53–0.78×); c = 0.005 gives ≤ 1.2e-3 (linear), ≤ 1.5e-3 (step), so one c for both. Polynomial/exponential when implemented. `phase2_record.md` P2.6.4 |
 | P2.6.5 | ☑ | Adopt constraint τ ≤ *c*_h·*h*²/D with one-decade margin; add to τ_max selection | Constraint active; report which term binds | **Done, changed form** (user decision 2026-10-06, since V2/V3 failed): τ ≤ c/ΔR₂(0)_max, option `layer`, default c = 0.005 (10× margin on 1 %); binds for ΔR₂(0) > 0.125 at w = 2 µm, D = 3; verbose message names it. `phase2_record.md` P2.6.5 |
 
 **Decision point:** if V2 does not give λ² scaling, test τ_conv against λ/ρ (the timescale 1/ΔR₂). Re-derive the constraint before adopting it.

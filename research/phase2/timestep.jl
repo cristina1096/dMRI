@@ -8,14 +8,14 @@
 log_taus(lo, hi; per_decade=3) = 10 .^ range(log10(lo), log10(hi), length=round(Int, per_decade * log10(hi / lo)) + 1)
 
 """
-    toy_rate(; h, rate, D, tau, T, nspins, seeds, method=:exact)
+    toy_rate(; h, rate, D, tau, T, nspins, seeds, method=:exact, shape="step")
 
 Effective rate R = −ln S/T_eff per seed from the 1D toy (walls every W_REF, step layer on both faces),
 with T_eff = round(T/τ)·τ the time actually simulated. Returns (mean, sem, per_seed, T_eff).
 """
-function toy_rate(; h, rate, D, tau, T, nspins, seeds, method=:exact)
+function toy_rate(; h, rate, D, tau, T, nspins, seeds, method=:exact, shape="step")
     T_eff = round(Int, T / tau) * tau
-    Rs = [-log(mean(toy_layer_signal(; h=h, rate=rate, tau=tau, T=T, nspins=nspins, seed=s, method=method, D=D))) / T_eff
+    Rs = [-log(mean(toy_layer_signal(; h=h, rate=rate, tau=tau, T=T, nspins=nspins, seed=s, method=method, D=D, shape=shape))) / T_eff
           for s in seeds]
     return (mean=mean(Rs), sem=length(Rs) > 1 ? std(Rs) / sqrt(length(Rs)) : NaN, per_seed=Rs, T_eff=T_eff)
 end
