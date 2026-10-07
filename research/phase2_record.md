@@ -34,6 +34,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.8 (step vs linear) | Profile comparison at fixed ΔR₂(0) (characterisation) | differences reported with σ | ρ* agrees within 9.2e-4 (h* ratio 1.998–2.000), with a small drift (linear below step) growing with θ, z up to −2.4 (conservative); both fit every θ within 0.5 SEM |
 | P2.4.5 (trace) | Single-spin trace, exponential profile (cutoff = w) | every step ≤ 1e-6; ≥ 1 reflection inside the layer | **PASS**: max error 7.1e-13; 4848 steps with a reflection inside the layer |
 | P2.4.5 (identity) | Mean-exponent identity E[−ln M] = 2ρt/w, step / linear (incl. overlapping h = 1.5) / exponential, τ = 1e-2 and 4e-2 | \|z\| ≤ 3 | **PASS** (10 of 10; \|z\| ≤ 1.1) |
+| P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step) → same c for both; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -500,4 +501,51 @@ Script [p2_4_5_mean_exponent.jl](phase2/p2_4_5_mean_exponent.jl) → [results/ph
 | exponential | 0.5 | 0.04 | 0.049084 | 2.454211 | 2.454222 ± 3.8e-05 | +0.29 | **PASS** |
 
 All ten |z| ≤ 1.1. All ten z are positive: the runs share seeds 1–10 (same initial positions and, per τ, the same random streams), so their deviations are correlated and do not count as ten independent draws.
+
+## P2.4.5: exponential profile — h sweep, monotonicity, decay shape
+
+Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=exponential` → [results/phase2/p2_3_4_h_sweep_exponential/](results/phase2/p2_3_4_h_sweep_exponential/). Exponential profile truncated at the cutoff = w = 2 µm and renormalised, both faces, ΔR₂(0) = 0.1 ms⁻¹, so ρ = ΔR₂(0)·h·(1 − e^(−w/h)); h ∈ H_GRID_LINEAR, τ = 1e-2 ms, 100000 spins × 10 seeds. No V4 fit follows (user decision).
+
+| h (µm) | ρ (µm/ms) | S(25) | S(50) ± SEM | 1 − S(50) | curvature c ± SEM (ms⁻²) |
+|---|---|---|---|---|---|
+| 0 | 0.00000 | 1.00000 | 1.00000 ± 0.0e+00 | 0.00000 | -0.0e+00 ± 0.0e+00 |
+| 0.005 | 0.00050 | 0.98758 | 0.97531 ± 1.9e-06 | 0.02469 | 1.7e-09 ± 1.5e-09 |
+| 0.01 | 0.00100 | 0.97531 | 0.95123 ± 3.3e-06 | 0.04877 | 3.1e-09 ± 2.9e-09 |
+| 0.02 | 0.00200 | 0.95124 | 0.90486 ± 5.3e-06 | 0.09514 | 5.4e-09 ± 5.5e-09 |
+| 0.03 | 0.00300 | 0.92776 | 0.86075 ± 6.7e-06 | 0.13925 | 7.5e-09 ± 8.0e-09 |
+| 0.05 | 0.00500 | 0.88255 | 0.77890 ± 8.8e-06 | 0.22110 | 1.1e-08 ± 1.3e-08 |
+| 0.07 | 0.00700 | 0.83954 | 0.70484 ± 1.0e-05 | 0.29516 | 1.4e-08 ± 1.7e-08 |
+| 0.1 | 0.01000 | 0.77894 | 0.60676 ± 1.1e-05 | 0.39324 | 1.8e-08 ± 2.3e-08 |
+| 0.15 | 0.01500 | 0.68750 | 0.47267 ± 1.1e-05 | 0.52733 | 2.3e-08 ± 3.0e-08 |
+| 0.2 | 0.02000 | 0.60679 | 0.36820 ± 9.9e-06 | 0.63180 | 2.5e-08 ± 3.4e-08 |
+| 0.3 | 0.02996 | 0.47304 | 0.22377 ± 6.5e-06 | 0.77623 | 2.6e-08 ± 3.7e-08 |
+| 0.5 | 0.04908 | 0.29325 | 0.08600 ± 2.2e-06 | 0.91400 | 2.2e-08 ± 3.2e-08 |
+| 0.7 | 0.06598 | 0.19219 | 0.03694 ± 7.7e-07 | 0.96306 | 1.8e-08 ± 2.6e-08 |
+| 1 | 0.08647 | 0.11515 | 0.01326 ± 1.9e-07 | 0.98674 | 1.2e-08 ± 1.8e-08 |
+| 1.5 | 0.11046 | 0.06320 | 0.00399 ± 3.5e-08 | 0.99601 | 7.2e-09 ± 1.1e-08 |
+| 2 | 0.12642 | 0.04240 | 0.00180 ± 1.0e-08 | 0.99820 | 4.7e-09 ± 7.0e-09 |
+
+**Interpretation.**
+- Attenuation rises with h at every step: 15 of 15 by more than 2 SEM → **monotonicity PASS**.
+- Curvature of ln S is zero within noise at every h (max |c|/SEM = 1.1).
+- 1 − S(50) spans 0.0247 (h = 0.005) to 0.9982 (h = 2.0).
+- Comparison with the step profile at the same h and ΔR₂(0) (both from their sweeps; seeds shared, so z is conservative):
+
+| h (µm) | S(50) exponential | S(50) step | ratio − 1 | z |
+|---|---|---|---|---|
+| 0.005 | 0.97531 | 0.97531 | -6.3e-07 | -0.2 |
+| 0.01 | 0.95123 | 0.95123 | -2.7e-07 | -0.1 |
+| 0.02 | 0.90486 | 0.90486 | -2.9e-06 | -0.3 |
+| 0.03 | 0.86075 | 0.86076 | -1.1e-05 | -1.0 |
+| 0.05 | 0.77890 | 0.77893 | -3.7e-05 | -2.2 |
+| 0.07 | 0.70484 | 0.70489 | -7.1e-05 | -3.2 |
+| 0.1 | 0.60676 | 0.60686 | -1.7e-04 | -5.3 |
+| 0.15 | 0.47267 | 0.47286 | -4.1e-04 | -10.3 |
+| 0.2 | 0.36820 | 0.36847 | -7.4e-04 | -14.8 |
+| 0.3 | 0.22377 | 0.22374 | +1.5e-04 | +2.4 |
+| 0.5 | 0.08600 | 0.08240 | +4.4e-02 | +665.2 |
+| 0.7 | 0.03694 | 0.03028 | +2.2e-01 | +3756.7 |
+| 1 | 0.01326 | 0.00674 | +9.7e-01 | +33582.4 |
+
+  For h ≤ 0.3 µm the two profiles have essentially the same ρ (1 − e^(−w/h) ≥ 0.9987), so by the mean-exponent identity the same mean of −ln M. S(50) still differs, beyond noise for h = 0.05–0.2: the exponential attenuates more, by up to 7.4e-4 relative at h = 0.2 (z = −14.8, conservative). That is a profile-shape effect at (almost) fixed ρ, of order 10⁻³ here. For h ≥ 0.5 the truncation lowers the exponential's ρ (0.0491 vs 0.05 at h = 0.5; 0.0865 vs 0.1 at h = 1.0), and the differences above mainly reflect that.
 
