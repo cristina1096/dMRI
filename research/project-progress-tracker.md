@@ -177,6 +177,8 @@ Implement and test each component separately, in this order. Each has its own un
 
 **Implementation plan for the linear profile (P2.4.1–P2.4.3, P2.4.7–P2.4.8, linear part):** [docs/superpowers/plans/2026-10-06-linear-profile.md](../docs/superpowers/plans/2026-10-06-linear-profile.md).
 
+**Implementation plan for the exponential profile (P2.4.1, P2.4.2, P2.4.5, P2.4.7, P2.4.8, P2.6.4, exponential part):** [docs/superpowers/plans/2026-10-07-exponential-profile.md](../docs/superpowers/plans/2026-10-07-exponential-profile.md). Truncated at a cutoff (default: the wall spacing) and renormalised so ∫g = 1; adds the mean-exponent identity E[−ln M] = 2ρt/w as an exact check for every profile.
+
 All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 
 | Profile | *g*(*u*) | ∫*g* | Wall value *g*(0) | Note |
@@ -208,6 +210,13 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 ## 2.5 Shape comparison under consistent conditions (week 8)
 
 Characterisation mode: **ρ fixed**, same reference configuration for every profile.
+
+**Scope decision (user, 2026-10-07).** The key investigation is when the signal becomes sensitive to the *spatial distribution* of near-surface relaxation rather than only its total strength, against the conventional surface-relaxation model at constant integrated relaxivity. This section becomes a dedicated plan (written after the exponential plan), with:
+- **fixed ρ primary**: the baseline θ is set from ρ via a verified mapping (V4 fits give ρ*/θ ≈ √(D/π), to be confirmed), and a best-fit residual is reported as a secondary column;
+- **noise levels**: Monte Carlo SEM and MRI noise at SNR 100 (1 %) and 200 (0.5 %);
+- **profiles**: step, linear and exponential. The step profile is excluded for h > w/2, where overlapping step layers would put more relaxation mid-gap than at the surface (unphysical). Overlapping linear and exponential layers are included: their summed rate is never higher mid-gap than at the walls;
+- **parameters**: h/w, compartment size w, observation time, D, and the shape and magnitude ΔR₂(0);
+- **geometry and signal**: walls with free decay. Cylinders, spheres and diffusion weighting follow in Phase 3.
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
