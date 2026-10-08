@@ -222,11 +222,11 @@ Characterisation mode: **ρ fixed**, same reference configuration for every prof
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P2.5.1 | ☑ | Fixed ρ, λ/*w* ≪ 1 (e.g. 0.01–0.05), all profiles | Fixed ρ **and** fixed *h* (proposal §3.2 aim). Record the level of agreement between profiles with σ; no expected outcome assumed | h sweep rows h ≤ 0.1 (h/w ≤ 0.05): |ΔS| ≤ 1.6e-4, step/linear/exponential differ by ≤ 1.5e-4 (MC-resolved, far below MRI noise). `p2_5_sensitivity_h/` |
-| P2.5.2 | ☑ | Fixed ρ, sweep λ/*w* from 0.01 to 0.5, all profiles | Curves of *S*(*t*) (and a descriptive rate) vs *h*/*w* per profile | h/w 0.025–1 (h = 0.05–2, w = 2) at fixed ρ: ΔS(t) curves and peak per shape; also w, D, ρ sweeps. `p2_5_summary/p2_5_sweeps.png`, `p2_5_curves.png` |
+| P2.5.1 | ☑ | Fixed ρ, λ/*w* ≪ 1 (e.g. 0.01–0.05), all profiles | Fixed ρ **and** fixed *h* (proposal §3.2 aim). Record the level of agreement between profiles with σ; no expected outcome assumed | h ≤ 0.1 (h/w ≤ 0.05), fixed ρ and h: step, linear and exponential separate from each other beyond 3σ (paired; e.g. linear − exponential 1.8e-4 ± 8e-6 at h = 0.1), all ≤ 1.8e-4, far below MRI noise; vs conventional model ≤ 1.6e-4. `p2_5_summary/profile_pairs.csv` |
+| P2.5.2 | ☑ | Fixed ρ, sweep λ/*w* from 0.01 to 0.5, all profiles | Curves of *S*(*t*) (and a descriptive rate) vs *h*/*w* per profile | h/w 0.025–1 (h = 0.05–2, w = 2; criterion asked 0.01–0.5) at fixed ρ: ΔS(t) curves and peaks per shape; also w, D, ρ sweeps. `p2_5_summary/p2_5_sweeps.png`, `p2_5_curves.png` |
 | P2.5.3 | ☑ | Report centroid λ*ū* alongside λ for each profile (step 0.5λ, linear 0.33λ, poly *n* λ/(*n*+2), exponential 1.0λ) | Centroid column in every shape table | centroid column in every P2.5 table (exponential truncated at w: h(1 − (c+1)e^(−c))/(1 − e^(−c))) |
-| P2.5.4 | ☑ | Replot P2.5.2 against centroid instead of λ | Note whether shape differences shrink | shapes collapse vs centroid (within ≈ 2e-5 for centroid ≥ 0.1 µm); sign change near centroid 0.05–0.07 µm. `p2_5_centroid.png` |
-| P2.5.5 | ☑ | Summary: where (if anywhere) profiles separate beyond 3σ on walls | Written paragraph with numbers | 0 of 50 configurations reach SNR 100/200; max |ΔS| = 2.4e-3 (exponential, ρ = 0.1); layer curves mono-exponential (fitted conventional model absorbs the difference). `phase2_record.md` P2.5 |
+| P2.5.4 | ☑ | Replot P2.5.2 against centroid instead of λ | Note whether shape differences shrink | shapes fall on one curve vs centroid within noise (≤ 1.3 combined SEM); resolved sign change between centroids 0.033 and 0.1 µm. `p2_5_centroid.png` |
+| P2.5.5 | ☑ | Summary: where (if anywhere) profiles separate beyond 3σ on walls | Written paragraph with numbers | profiles separate beyond 3σ (MC) in 39 of 40 pairs, by ≤ 1.7e-3; none of 41 configurations reaches SNR 100/200 (vs conventional model max 2.4e-3); layer curves mono-exponential. `phase2_record.md` P2.5 |
 
 This is preliminary — the full sensitivity study in Phase 3 uses curved geometry and narrowing gaps, where differences are expected to be larger.
 

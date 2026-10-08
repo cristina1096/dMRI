@@ -28,8 +28,43 @@ for s in SWEEPS, r in load_rows(s)
         s, o.shape, o.h_um, o.w_um, o.D, o.rho, o.dS_peak, se, o.dS_peak_t_ms, o.level)
 end
 write_csv(joinpath(OUT, "observability.csv"), obs)
-counts = Dict(l => count(o -> o.level == l, obs) for l in ("SNR 100", "SNR 200", "MC only", "not resolved"))
+# the reference point appears in every sweep: count distinct configurations (shape, h, w, D, ρ) once
+uniq = Dict((o.shape, o.h_um, o.w_um, o.D, o.rho) => o for o in obs)
+counts = Dict(l => count(o -> o.level == l, values(uniq)) for l in ("SNR 100", "SNR 200", "MC only", "not resolved"))
+@printf("%d rows, %d distinct configurations\n", length(obs), length(uniq))
+
+# (5) profile vs profile at the same (h, w, D, ρ): paired over seeds (identical trajectories when τ is equal)
+pairs_out = NamedTuple[]
+for s in SWEEPS
+    cur = JSON.parsefile(joinpath(R, "p2_5_sensitivity_" * s, "curves.json"))
+    key(c) = (c["config"]["h"], c["config"]["w"], c["config"]["D"], c["config"]["rho"])
+    groups = Dict{Any, Vector{Any}}()
+    for c in cur
+        push!(get!(groups, key(c), Any[]), c)
+    end
+    for (k, cs) in groups, i in 1:length(cs), j in i + 1:length(cs)
+        a, b = cs[i], cs[j]
+        A = reduce(vcat, permutedims.(Vector{Float64}.(a["S_layer_per_seed"])))
+        B = reduce(vcat, permutedims.(Vector{Float64}.(b["S_layer_per_seed"])))
+        same_tau = a["tau_ms"] == b["tau_ms"]
+        d = same_tau ? A .- B : nothing
+        m = same_tau ? vec(mean(d, dims=1)) : Float64.(a["S_layer"]) .- Float64.(b["S_layer"])
+        se = same_tau ? vec(std(d, dims=1)) ./ sqrt(size(d, 1)) : hypot.(Float64.(a["S_layer_sem"]), Float64.(b["S_layer_sem"]))
+        q = argmax(abs.(m))
+        push!(pairs_out, (sweep=s, pair=a["config"]["shape"] * "−" * b["config"]["shape"], h_um=k[1], w_um=k[2], D=k[3], rho=k[4],
+            paired=same_tau, diff_peak=m[q], diff_sem=se[q], z=m[q] / max(se[q], eps()), t_ms=Float64(a["times"][q])))
+        o = pairs_out[end]
+        @printf("%-3s %-19s h=%.3f w=%4.1f D=%.0f ρ=%.3f: peak difference %+.2e ± %.0e (z = %+.1f, %s)\n",
+            s, o.pair, o.h_um, o.w_um, o.D, o.rho, o.diff_peak, o.diff_sem, o.z, same_tau ? "paired" : "combined SEM")
+    end
+end
+pairs_uniq = Dict((p.pair, p.h_um, p.w_um, p.D, p.rho) => p for p in pairs_out)
+write_csv(joinpath(OUT, "profile_pairs.csv"), pairs_out)
+n_sep = count(p -> abs(p.z) >= 3, values(pairs_uniq))
+@printf("profile pairs: %d distinct, %d separate beyond 3σ (MC), max |difference| %.2e\n", length(pairs_uniq), n_sep, maximum(abs(p.diff_peak) for p in values(pairs_uniq)))
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "rows" => obs, "counts" => counts,
+    "n_rows" => length(obs), "n_distinct" => length(uniq), "profile_pairs" => pairs_out,
+    "profile_pairs_distinct" => length(pairs_uniq), "profile_pairs_beyond_3sigma" => n_sep,
     "thresholds" => Dict("SNR 100" => 0.02, "SNR 200" => 0.01, "MC" => "3·paired SEM")))
 println("counts: ", counts)
 
