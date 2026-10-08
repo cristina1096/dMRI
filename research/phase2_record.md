@@ -36,6 +36,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.5 (identity) | Mean-exponent identity E[−ln M] = 2ρt/w, step / linear (incl. overlapping h = 1.5) / exponential, τ = 1e-2 and 4e-2 | \|z\| ≤ 3 | **PASS** (10 of 10; \|z\| ≤ 1.1) |
 | P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
 | P2.5.0 | Conventional model at the same ρ: θ = ρ√(π/D), mean-exponent identity at D = 1, 3, 6, τ = 1e-2, 4e-2 | \|z\| ≤ 3 | **PASS** (6 of 6, \|z\| ≤ 0.9); layer and baseline follow identical trajectories |
+| P2.5.1–P2.5.5 | Sensitivity to the spatial distribution at fixed ρ (layer vs conventional model, paired), sweeps h, w, D, ρ | characterisation vs MC SEM and SNR 100/200 | 0 of 50 configurations reach SNR 100 or 200; 38 MC-resolved; max \|ΔS\| = 2.4e-3 (exponential, ρ = 0.1); shapes collapse vs centroid; curves mono-exponential (residual ≤ 1.4e-04) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -599,3 +600,105 @@ Script [p2_5_1_theta_mapping.jl](phase2/p2_5_1_theta_mapping.jl) → [results/ph
 
 From here on, **fixed ρ** means the baseline uses θ = ρ√(π/D). Both models then have the same mean log-attenuation by construction, so any difference in the signal S = ⟨M⊥⟩ comes from how the relaxation is distributed (the higher moments of the exponent). The layer and the baseline follow **identical trajectories** for the same seed (neither draws random numbers), so their per-seed difference is a paired measurement.
 
+## P2.5: sensitivity to the spatial distribution at fixed ρ (walls, free decay)
+
+Plan [2026-10-08-sensitivity-walls.md](../docs/superpowers/plans/2026-10-08-sensitivity-walls.md). Runner [p2_5_sensitivity.jl](phase2/p2_5_sensitivity.jl) (`SWEEP` = h, w, D, rho) → `results/phase2/p2_5_sensitivity_*/`; summary [p2_5_summary.jl](phase2/p2_5_summary.jl) → [results/phase2/p2_5_summary/](results/phase2/p2_5_summary/).
+
+**Method.**
+- **Fixed ρ.** The layer (step, linear or exponential; ρ, h; both faces) is compared with the conventional surface-relaxation model at the same integrated relaxivity, θ = ρ√(π/D) (P2.5.0). Both therefore have the same mean log-attenuation.
+- **Pairing.** Same walls, D, τ, seeds 1–10, 50000 spins per seed, readouts 0:10:200 ms, R₂_bulk = 0. Both models follow identical trajectories (verified in the pilot and in P2.5.0), so ΔS(t) = S_layer − S_base is a paired per-seed difference. The pilot's paired SEM at the peak was 2.6e-5.
+- **Timestep.** τ = min(1e-2, 0.005/ΔR₂(0)), the adopted layer constraint, used for both models.
+- **Exclusions.** The step profile is excluded for h > w/2.
+- **Grid.** Reference point: w = 2 µm, D = 3 µm²/ms, ρ = 0.01 µm/ms, h = 0.2 µm. Sweeps: h ∈ {0.05, 0.1, 0.2, 0.5, 1, 2}, w ∈ {1, 2, 5, 10}, D ∈ {1, 3, 6}, ρ ∈ {0.003, 0.01, 0.03, 0.1}. 50 configurations.
+- **Levels.**
+  - "SNR 100": |ΔS| ≥ 0.02.
+  - "SNR 200": |ΔS| ≥ 0.01 (2σ of a single measurement with relative noise 1/SNR).
+  - "MC only": resolved by the simulation (≥ 3 paired SEM) but below both MRI thresholds.
+  - "not resolved": < 3 SEM.
+- **Secondary.** The best mono-exponential residual of the layer curve: what a fitted conventional model could not absorb, given that the baseline is itself mono-exponential (|curvature| ≤ 3.6e-08 ms⁻² in every configuration).
+
+**Sweep h** (others at the reference point):
+
+| shape | h (µm) | τ (ms) | centroid (µm) | ΔS at peak ± SEM | t peak (ms) | level | mono-exp residual | baseline curvature (ms⁻²) |
+|---|---|---|---|---|---|---|---|---|
+| step | 0.05 | 0.01 | 0.0250 | +1.26e-04 ± 1e-05 | 80 | MC only | 3.8e-05 | 1.3e-09 |
+| linear | 0.05 | 0.01 | 0.0167 | +1.64e-04 ± 1e-05 | 80 | MC only | 4.7e-05 | 1.3e-09 |
+| exponential | 0.05 | 0.01 | 0.0500 | +1.87e-05 ± 7e-06 | 160 | not resolved | 4.0e-05 | 1.3e-09 |
+| step | 0.1 | 0.01 | 0.0500 | +2.81e-05 ± 1e-05 | 70 | not resolved | 4.1e-05 | 1.3e-09 |
+| linear | 0.1 | 0.01 | 0.0333 | +7.71e-05 ± 1e-05 | 80 | MC only | 4.3e-05 | 1.3e-09 |
+| exponential | 0.1 | 0.01 | 0.1000 | -1.06e-04 ± 1e-05 | 90 | MC only | 3.2e-05 | 1.3e-09 |
+| step | 0.2 | 0.01 | 0.1000 | -9.89e-05 ± 2e-05 | 90 | MC only | 3.3e-05 | 1.3e-09 |
+| linear | 0.2 | 0.01 | 0.0667 | -3.78e-05 ± 1e-05 | 90 | not resolved | 3.8e-05 | 1.3e-09 |
+| exponential | 0.2 | 0.01 | 0.1999 | -2.43e-04 ± 2e-05 | 90 | MC only | 2.0e-05 | 1.3e-09 |
+| step | 0.5 | 0.01 | 0.2500 | -2.83e-04 ± 2e-05 | 90 | MC only | 9.8e-06 | 1.3e-09 |
+| linear | 0.5 | 0.01 | 0.1667 | -2.04e-04 ± 2e-05 | 90 | MC only | 2.1e-05 | 1.3e-09 |
+| exponential | 0.5 | 0.01 | 0.4627 | -3.78e-04 ± 2e-05 | 90 | MC only | 6.5e-06 | 1.3e-09 |
+| step | 1 | 0.01 | 0.5000 | -4.05e-04 ± 2e-05 | 100 | MC only | 7.0e-13 | 1.3e-09 |
+| linear | 1 | 0.01 | 0.3333 | -3.56e-04 ± 2e-05 | 90 | MC only | 7.8e-06 | 1.3e-09 |
+| exponential | 1 | 0.01 | 0.6870 | -4.01e-04 ± 2e-05 | 90 | MC only | 2.0e-06 | 1.3e-09 |
+| linear | 2 | 0.01 | 0.6667 | -4.05e-04 ± 2e-05 | 100 | MC only | 7.0e-13 | 1.3e-09 |
+| exponential | 2 | 0.01 | 0.8360 | -4.04e-04 ± 2e-05 | 100 | MC only | 5.3e-07 | 1.3e-09 |
+
+**Sweep w** (others at the reference point):
+
+| shape | w (µm) | τ (ms) | centroid (µm) | ΔS at peak ± SEM | t peak (ms) | level | mono-exp residual | baseline curvature (ms⁻²) |
+|---|---|---|---|---|---|---|---|---|
+| step | 1 | 0.01 | 0.1000 | -1.08e-04 ± 1e-05 | 30 | MC only | 2.0e-05 | 1.5e-10 |
+| linear | 1 | 0.01 | 0.0667 | -6.03e-05 ± 1e-05 | 30 | MC only | 2.1e-05 | 1.5e-10 |
+| exponential | 1 | 0.01 | 0.1932 | -1.79e-04 ± 2e-05 | 30 | MC only | 9.1e-06 | 1.5e-10 |
+| step | 2 | 0.01 | 0.1000 | -9.89e-05 ± 2e-05 | 90 | MC only | 3.3e-05 | 1.3e-09 |
+| linear | 2 | 0.01 | 0.0667 | -3.78e-05 ± 1e-05 | 90 | not resolved | 3.8e-05 | 1.3e-09 |
+| exponential | 2 | 0.01 | 0.1999 | -2.43e-04 ± 2e-05 | 90 | MC only | 2.0e-05 | 1.3e-09 |
+| step | 5 | 0.01 | 0.1000 | -6.34e-05 ± 2e-05 | 200 | MC only | 5.9e-05 | -1.5e-09 |
+| linear | 5 | 0.01 | 0.0667 | -1.48e-05 ± 1e-05 | 30 | not resolved | 6.3e-05 | -1.5e-09 |
+| exponential | 5 | 0.01 | 0.2000 | -2.60e-04 ± 2e-05 | 200 | MC only | 5.3e-05 | -1.5e-09 |
+| step | 10 | 0.01 | 0.1000 | -4.68e-05 ± 2e-05 | 190 | not resolved | 3.6e-05 | -2.0e-09 |
+| linear | 10 | 0.01 | 0.0667 | -1.02e-05 ± 7e-06 | 40 | not resolved | 3.7e-05 | -2.0e-09 |
+| exponential | 10 | 0.01 | 0.2000 | -2.10e-04 ± 2e-05 | 200 | MC only | 3.5e-05 | -2.0e-09 |
+
+**Sweep D** (others at the reference point):
+
+| shape | D (µm²/ms) | τ (ms) | centroid (µm) | ΔS at peak ± SEM | t peak (ms) | level | mono-exp residual | baseline curvature (ms⁻²) |
+|---|---|---|---|---|---|---|---|---|
+| step | 1 | 0.01 | 0.1000 | -3.47e-04 ± 3e-05 | 100 | MC only | 5.2e-05 | 2.0e-09 |
+| linear | 1 | 0.01 | 0.0667 | -2.19e-04 ± 2e-05 | 100 | MC only | 6.1e-05 | 2.0e-09 |
+| exponential | 1 | 0.01 | 0.1999 | -7.57e-04 ± 3e-05 | 100 | MC only | 3.6e-05 | 2.0e-09 |
+| step | 3 | 0.01 | 0.1000 | -9.89e-05 ± 2e-05 | 90 | MC only | 3.3e-05 | 1.3e-09 |
+| linear | 3 | 0.01 | 0.0667 | -3.78e-05 ± 1e-05 | 90 | not resolved | 3.8e-05 | 1.3e-09 |
+| exponential | 3 | 0.01 | 0.1999 | -2.43e-04 ± 2e-05 | 90 | MC only | 2.0e-05 | 1.3e-09 |
+| step | 6 | 0.01 | 0.1000 | -4.56e-05 ± 1e-05 | 30 | MC only | 3.1e-05 | 6.2e-10 |
+| linear | 6 | 0.01 | 0.0667 | +2.00e-05 ± 9e-06 | 160 | not resolved | 2.4e-05 | 6.2e-10 |
+| exponential | 6 | 0.01 | 0.1999 | -1.20e-04 ± 1e-05 | 90 | MC only | 2.1e-05 | 6.2e-10 |
+
+**Sweep rho** (others at the reference point):
+
+| shape | ρ (µm/ms) | τ (ms) | centroid (µm) | ΔS at peak ± SEM | t peak (ms) | level | mono-exp residual | baseline curvature (ms⁻²) |
+|---|---|---|---|---|---|---|---|---|
+| step | 0.003 | 0.01 | 0.1000 | -1.97e-05 ± 1e-05 | 90 | not resolved | 1.2e-05 | 4.2e-10 |
+| linear | 0.003 | 0.01 | 0.0667 | -8.71e-06 ± 7e-06 | 90 | not resolved | 1.3e-05 | 4.2e-10 |
+| exponential | 0.003 | 0.01 | 0.1999 | -6.05e-05 ± 1e-05 | 200 | MC only | 7.8e-06 | 4.2e-10 |
+| step | 0.01 | 0.01 | 0.1000 | -9.89e-05 ± 2e-05 | 90 | MC only | 3.3e-05 | 1.3e-09 |
+| linear | 0.01 | 0.01 | 0.0667 | -3.78e-05 ± 1e-05 | 90 | not resolved | 3.8e-05 | 1.3e-09 |
+| exponential | 0.01 | 0.01 | 0.1999 | -2.43e-04 ± 2e-05 | 90 | MC only | 2.0e-05 | 1.3e-09 |
+| step | 0.03 | 0.01 | 0.1000 | -2.93e-04 ± 4e-05 | 30 | MC only | 6.8e-05 | 3.5e-09 |
+| linear | 0.03 | 0.01 | 0.0667 | -1.17e-04 ± 3e-05 | 30 | MC only | 7.8e-05 | 3.5e-09 |
+| exponential | 0.03 | 0.01 | 0.1999 | -7.22e-04 ± 4e-05 | 30 | MC only | 4.1e-05 | 3.5e-09 |
+| step | 0.1 | 0.01 | 0.1000 | -9.06e-04 ± 4e-05 | 10 | MC only | 6.4e-05 | 4.5e-09 |
+| linear | 0.1 | 0.005 | 0.0667 | -6.05e-04 ± 4e-05 | 10 | MC only | 1.4e-04 | -3.6e-08 |
+| exponential | 0.1 | 0.00999955 | 0.1999 | -2.37e-03 ± 4e-05 | 10 | MC only | 3.6e-05 | -1.2e-09 |
+
+![sweeps](results/phase2/p2_5_summary/p2_5_sweeps.png)
+
+![centroid](results/phase2/p2_5_summary/p2_5_centroid.png)
+
+![curves](results/phase2/p2_5_summary/p2_5_curves.png)
+
+**Summary (P2.5.5), numbers only.**
+- **Observability.** No configuration reaches either MRI threshold: 0 at SNR 100, 0 at SNR 200, 38 MC-resolved only, 12 not resolved. The largest difference is -2.37e-03 ± 4e-05 (exponential, ρ = 0.1, at 10 ms). That is 0.47σ of single-measurement noise at SNR 200, against the 2σ threshold.
+- **h.** At ρ = 0.01 the difference grows with h, from ~1e-5–1.6e-4 (h = 0.05–0.1) to −4.0e-4 in the uniform limit (step h = w/2, linear h = w, and the exponential at h = w are all uniform or near-uniform). For thin layers ΔS is **positive**: the layer attenuates slightly less than the conventional model at the same ρ. For thick layers it is **negative**.
+- **Centroid (P2.5.4).** Plotted against the profile centroid (step h/2, linear h/3, exponential truncated), the three shapes collapse onto one curve within ≈ 2e-5 for centroids ≥ 0.1 µm. ΔS changes sign between centroids ≈ 0.05 µm (still positive or unresolved: step h = 0.1, exponential h = 0.05) and ≈ 0.067 µm (negative: linear h = 0.2). Below that, the thin layers are only a few SEM from zero. At fixed ρ the signal depends on the shape almost only through the centroid.
+- **w.** At h = 0.2, the step and linear differences fall with w (step 1.1e-4 → 4.7e-5, linear 6.0e-5 → 1.0e-5 for w = 1 → 10). The exponential stays at 1.8–2.6e-4: its cutoff = w makes its tail and centroid grow with w.
+- **D.** The difference falls with D, by roughly 1/D: exponential −7.6e-4, −2.4e-4, −1.2e-4 and step −3.5e-4, −9.9e-5, −4.6e-5 for D = 1, 3, 6.
+- **ρ.** The difference grows slightly faster than linearly with ρ: exponential −6.1e-5 → −2.4e-3 and step −2.0e-5 → −9.1e-4 for ρ = 0.003 → 0.1. The peak moves earlier (10 ms at ρ = 0.1, the first readout), so the true peak may lie between 0 and 10 ms; the 10 ms readout grid can underestimate it there.
+- **Shape of the decay.** Every layer curve stays mono-exponential within ≤ 1.4e-04 (largest residual of the best mono-exponential fit). A conventional model with a fitted θ would therefore absorb these differences: in this geometry the distribution of the relaxation is not separable from its strength by curve shape.
+- **Extrapolation (not simulated).** If the ρ and 1/D trends continue, |ΔS| would reach the SNR-200 threshold (0.01) near ρ ≈ 0.4 µm/ms at D = 3 or ρ ≈ 0.15 µm/ms at D = 1 (exponential, h = 0.2, w = 2). That is a candidate region for the Phase 3 study (curved geometry, smaller compartments, stronger relaxation), not a result.
