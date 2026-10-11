@@ -37,6 +37,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
 | P2.5.0 | Conventional model at the same ρ: θ = ρ√(π/D), mean-exponent identity at D = 1, 3, 6, τ = 1e-2, 4e-2 | \|z\| ≤ 3 | **PASS** (6 of 6, \|z\| ≤ 0.9); layer and baseline follow identical trajectories |
 | P2.5.1–P2.5.5 | Sensitivity to the spatial distribution at fixed ρ (layer vs conventional model, and profile vs profile; paired), sweeps h, w, D, ρ | characterisation vs MC SEM and SNR 100/200 | 41 distinct configurations: none reaches SNR 100 or 200 (32 MC-resolved, 9 not); max \|ΔS\| = 2.4e-3 (exponential, ρ = 0.1). Profiles separate from each other beyond 3σ in 39 of 40 pairs, by ≤ 1.7e-3. Shapes fall on one curve vs centroid within noise; curves mono-exponential (residual ≤ 1.4e-4) |
+| P2.5.6 (prerequisite) | Idealised spin echo (instantaneous pulses) = free decay, conventional and exponential layer, TE = 50 ms | \|z\| ≤ 3 | **PASS** (both z = 0.00: equal to 6 digits) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -707,3 +708,15 @@ Plan [2026-10-08-sensitivity-walls.md](../docs/superpowers/plans/2026-10-08-sens
 - **Shape of the decay.** Every layer curve stays mono-exponential within ≤ 1.4e-4 (largest residual of the best mono-exponential fit; the baseline's |curvature| ≤ 3.6e-8 ms⁻²). For a single condition, a conventional model with a fitted θ would therefore absorb these differences: the distribution of the relaxation is not separable from its strength by the curve shape. A joint fit across several D or w was not tested.
 - **Extrapolation (not simulated).** Assuming linear growth in ρ and the measured ×3 from D = 3 to 1, |ΔS| would reach the SNR-200 threshold (0.01) near ρ ≈ 0.4 µm/ms at D = 3, or ≈ 0.14 µm/ms at D = 1 (exponential, h = 0.2, w = 2). At those ρ the mean rate 2ρ/w is 0.4 ms⁻¹ (resp. 0.14), so the peak would fall well before 10 ms and need a finer readout grid. Because the measured peak at ρ = 0.1 is an underestimate, these ρ are upper bounds on what is needed. This is a candidate region for Phase 3 (curved geometry, smaller compartments, stronger relaxation), not a result.
 - **Grid note.** P2.5.2 asked for h/w 0.01–0.5; the run covered 0.025–1 (h = 0.05–2 at w = 2), adding the overlapping, uniform-limit range for the linear and exponential profiles.
+
+## P2.5.6 prerequisite: spin echo = free decay (walls, no off-resonance)
+
+Script [p2_5_t2_spin_echo_check.jl](phase2/p2_5_t2_spin_echo_check.jl) → [results/phase2/p2_5_t2_spin_echo_check/](results/phase2/p2_5_t2_spin_echo_check/). MRIBuilder `SpinEcho(TE = 50, TR = 1000, scanner = Siemens_Prisma, excitation = (phase = 90,))` with instantaneous pulses, as in Rep2, vs free decay; w = 2, h = 0.2, D = 3, ρ = 1/70, R₂_bulk = 1/2000; seeds 1–10, 50000 spins.
+
+| model | S_SE(50) | S_free(50) | combined SEM | z | Outcome |
+|---|---|---|---|---|---|
+| conventional | 0.477950 | 0.477950 | 4.3e-05 | -0.00 | **PASS** |
+| exponential | 0.477652 | 0.477652 | 1.5e-05 | +0.00 | **PASS** |
+
+The two signals agree to all printed digits: with no off-resonance the refocusing pulse leaves |M⊥| unchanged, and the sequence adds no diffusion weighting here. Free decay therefore stands in for the paper's idealised spin echo in P2.5.6/P2.5.7. S(50) ≈ 0.478 gives T₂_app ≈ 67.7 ms, close to 1/(1/2000 + 2ρ/w) = 67.6 ms.
+
