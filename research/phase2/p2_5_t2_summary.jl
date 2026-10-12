@@ -29,7 +29,7 @@ tab = NamedTuple[]
 for s in SWEEPS, r in rows[s]
     push!(tab, (sweep=s, shape=r["shape"], param=num(r, PARAM[s]), TE_ms=num(r, "TE_ms"), T2_layer=num(r, "T2_layer"),
         T2_conv=num(r, "T2_conv"), rel=num(r, "rel"), rel_sem=num(r, "rel_sem"), noise200=num(r, "noise_rel_snr200"),
-        noise100=num(r, "noise_rel_snr100"), level=r["level"], key=(r["shape"], num(r, "h_um"), num(r, "w_um"), num(r, "D"), num(r, "rho"), num(r, "TE_ms"))))
+        noise100=num(r, "noise_rel_snr100"), level=r["level"], cb=num(r, "centroid_um"), key=(r["shape"], num(r, "h_um"), num(r, "w_um"), num(r, "D"), num(r, "rho"), num(r, "TE_ms"))))
 end
 write_csv(joinpath(OUT, "t2_table$(SFX).csv"), [Base.structdiff(t, NamedTuple{(:key,)}) for t in tab])
 uniq = Dict(t.key => t for t in tab)
@@ -37,7 +37,28 @@ te50 = [t for t in values(uniq) if t.TE_ms == 50.0]
 counts = Dict(l => count(t -> t.level == l, te50) for l in ("SNR 100", "SNR 200", "MC only", "not resolved"))
 worst = te50[argmax([abs(t.rel) for t in te50])]
 @printf("TE = 50: %d distinct configurations; levels %s; largest |ΔT2/T2| = %.2e (%s, %s sweep)\n", length(te50), counts, abs(worst.rel), worst.shape, worst.sweep)
+# profile vs profile at TE = 50, distinct configurations only (the reference point appears in every sweep).
+# SEM is UNPAIRED (combined): per-seed T2 are not stored, and the profile runs share seeds, so their errors are positively
+# correlated — conservative for "profiles separate", anti-conservative for "profiles coincide".
+# a configuration is (h, w, D, ρ) for same-h, and (centroid, w, D, ρ) for same-centroid (each profile has its own h there)
+cfg(t) = MATCH == "centroid" ? (round(t.cb, sigdigits=6), t.key[3:5]...) : t.key[2:5]
+bycfg = Dict{Any, Vector{Any}}()
+for t in te50
+    push!(get!(bycfg, cfg(t), Any[]), t)
+end
+pairs_stats = NamedTuple[]
+for (k, ts) in bycfg, i in 1:length(ts), j in i + 1:length(ts)
+    a, b = ts[i], ts[j]
+    d = a.rel - b.rel; σ = hypot(a.rel_sem, b.rel_sem)
+    push!(pairs_stats, (pair=a.shape * "−" * b.shape, h_or_centroid=k[1], w=k[2], D=k[3], rho=k[4], diff=d, sem_unpaired=σ, z=d / max(σ, eps())))
+end
+n_sep = count(p -> abs(p.z) >= 3, pairs_stats)
+pw = pairs_stats[argmax([abs(p.diff) for p in pairs_stats])]
+@printf("profile pairs at TE = 50 (distinct, unpaired SEM): %d, %d beyond 3σ; largest |difference| %.2e (%s at h|c̄=%.3g w=%.3g D=%.3g ρ=%.4g, z = %.1f)\n",
+    length(pairs_stats), n_sep, abs(pw.diff), pw.pair, pw.h_or_centroid, pw.w, pw.D, pw.rho, pw.z)
+write_csv(joinpath(OUT, "profile_pairs$(SFX).csv"), pairs_stats)
 write_json(joinpath(OUT, "summary$(SFX).json"), Dict("provenance" => provenance(), "match" => MATCH, "counts_TE50" => counts, "n_distinct_TE50" => length(te50),
+    "profile_pairs_TE50" => length(pairs_stats), "profile_pairs_beyond_3sigma_unpaired" => n_sep, "profile_pairs_max_abs_diff" => abs(pw.diff),
     "largest_rel_TE50" => Dict("rel" => worst.rel, "shape" => worst.shape, "sweep" => worst.sweep, "param" => worst.param)))
 
 using CairoMakie
