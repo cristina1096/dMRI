@@ -36,11 +36,11 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.4.5 (identity) | Mean-exponent identity E[−ln M] = 2ρt/w, step / linear (incl. overlapping h = 1.5) / exponential, τ = 1e-2 and 4e-2 | \|z\| ≤ 3 | **PASS** (10 of 10; \|z\| ≤ 1.1) |
 | P2.4.5 (sweep) | Exponential profile: attenuation vs h, monotonicity, decay shape (τ = 1e-2) | every step > 2 SEM; curvature reported | **PASS**: 15 of 15 steps; curvature 0 within noise (max 1.1 SEM); S(50) from 1 to 0.00180 (h = 2.0) |
 | P2.5.0 | Conventional model at the same ρ: θ = ρ√(π/D), mean-exponent identity at D = 1, 3, 6, τ = 1e-2, 4e-2 | \|z\| ≤ 3 | **PASS** (6 of 6, \|z\| ≤ 0.9); layer and baseline follow identical trajectories |
-| P2.5.1–P2.5.5 | Sensitivity to the spatial distribution at fixed ρ (layer vs conventional model, and profile vs profile; paired), sweeps h, w, D, ρ | characterisation vs MC SEM and SNR 100/200 | 41 distinct configurations: none reaches SNR 100 or 200 (32 MC-resolved, 9 not); max \|ΔS\| = 2.4e-3 (exponential, ρ = 0.1). Profiles separate from each other beyond 3σ in 39 of 40 pairs, by ≤ 1.7e-3. Shapes fall on one curve vs centroid within noise; curves mono-exponential (residual ≤ 1.4e-4) |
+| P2.5.1–P2.5.5 | Sensitivity to the spatial distribution at fixed ρ (layer vs conventional model, and profile vs profile; paired), sweeps h, w, D, ρ | characterisation vs MC SEM and SNR 100/200 | 41 distinct configurations: none reaches SNR 100 or 200 (32 MC-resolved, 9 not); max \|ΔS\| = 2.4e-3 (exponential, ρ = 0.1). Profiles separate from each other beyond 3σ in 39 of 40 pairs, by ≤ 1.7e-3. Shapes fall on one curve vs centroid within noise; curves mono-exponential (residual ≤ 1.4e-4) **Superseded in part by Review C1 (timestep bias); see the C1 rows.** |
 | P2.5.6 (prerequisite) | Idealised spin echo (instantaneous pulses) = free decay, conventional and exponential layer, TE = 50 ms | \|z\| ≤ 3 | **PASS** (both z = 0.00: equal to 6 digits) |
-| P2.5.6, P2.5.7 | Apparent T₂ vs microstructure and vs TE (paper Figs. 9, 8A analogues), conventional + three profiles at fixed ρ; same h and same centroid | ΔT₂/T₂ vs paired SEM and T₂ noise at SNR 100/200 | none observable at SNR 100/200; ΔT₂/T₂ ≤ 5.7e-3; same h: profiles separate (34/52 distinct pairs > 3σ, unpaired SEM, ≤ 3.8e-3); same centroid: residual ≤ 2.9e-4 (2/51 > 3σ unpaired); ΔT₂/T₂ flat in TE |
+| P2.5.6, P2.5.7 | Apparent T₂ vs microstructure and vs TE (paper Figs. 9, 8A analogues), conventional + three profiles at fixed ρ; same h and same centroid | ΔT₂/T₂ vs paired SEM and T₂ noise at SNR 100/200 | none observable at SNR 100/200; ΔT₂/T₂ ≤ 5.7e-3; same h: profiles separate (34/52 distinct pairs > 3σ, unpaired SEM, ≤ 3.8e-3); same centroid: residual ≤ 2.9e-4 (2/51 > 3σ unpaired); ΔT₂/T₂ flat in TE **Superseded in part by Review C1 (timestep bias); see the C1 rows.** |
 | Review C1 | Timestep bias of the fixed-ρ profile effect (P2.5, P2.5.6/7): paired ΔS at τ = 1e-2, 2.5e-3, 6.25e-4 vs exact 1D continuum | characterisation | **confirmed**: ΔS converges to the continuum as τ falls; thin-layer positive ΔS at τ = 1e-2 is an artefact; \|ΔS\| underestimated 10–65 % at h = 0.2 |
-| Review C1 follow-up | P2.5, P2.5.6/7 recomputed with the exact 1D continuum benchmark; wider ρw/D map with best-fit conventional | validated vs MC within 2.6 SEM | all ΔS, ΔT₂/T₂ < 0 (no sign change); ∝ ρ and ∝ 1/D; same centroid: profiles within 11 %; separable from a fitted conventional model (single curve, SNR 200) only for ρw/D ≳ 3–10 and h/w ≳ 0.05–0.25 depending on profile |
+| Review C1 follow-up | P2.5, P2.5.6/7 recomputed with the exact 1D continuum benchmark; wider ρw/D map with best-fit conventional | validated vs MC within 2.6 SEM | all ΔS, ΔT₂/T₂ < 0 (no sign change); ∝ ρ and ∝ 1/D; same centroid: profiles within 11 %; separable from a fitted conventional model (single curve, SNR 200) only for ρw/D ≳ 3 with h/w ≳ 0.1–0.5 depending on profile (beyond the conventional model's ceiling D·π²/w² no θ fits) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -921,7 +921,7 @@ Independent whole-project review (2026-10-12): an exact 1D continuum solution of
 
 Script [p2_5_tau_check.jl](phase2/p2_5_tau_check.jl) → [results/phase2/p2_5_tau_check/](results/phase2/p2_5_tau_check/). Same paired comparison as P2.5 at τ = 1e-2, 2.5e-3, 6.25e-4 ms (w = 2, D = 3, ρ = 0.01, R₂_bulk = 0, seeds 1–10, 50000 spins). ΔS at t = 90 ms:
 
-| profile | h (µm) | τ = 1e-2 | τ = 2.5e-3 | τ = 6.25e-4 | continuum | (MC at 6.25e-4 − continuum)/SEM |
+| profile | h (µm) | τ = 1e-2 | τ = 2.5e-3 | τ = 6.25e-4 | continuum (reviewer's script, N = 3000; the committed solver gives values within 1 %) | (MC at 6.25e-4 − continuum)/SEM |
 |---|---|---|---|---|---|---|
 | step | 0.05 | +1.21e-04 ± 1e-05 | +3.57e-05 ± 1e-05 | -2.14e-05 ± 8e-06 | -3.95e-05 | +2.4 |
 | linear | 0.05 | +1.61e-04 ± 1e-05 | +6.54e-05 ± 1e-05 | -9.03e-06 ± 7e-06 | -2.78e-05 | +2.6 |
@@ -933,7 +933,7 @@ Script [p2_5_tau_check.jl](phase2/p2_5_tau_check.jl) → [results/phase2/p2_5_ta
 
 **Cause.** The timestep constraint c = 0.005 (P2.6.5) keeps the error in the decay rate R near 0.1 %, which it does. But the profile effect at fixed ρ is itself only ≈ 0.03–0.15 % of R, the same size as that error, and the error depends on the profile. For comparisons of profiles at fixed ρ the timestep must be set by the error in ΔS, not in R.
 
-**Affected claims (not yet corrected; pending decision):** P2.5 and P2.5.6/P2.5.7 statements on the thin-layer sign (positive ΔS / longer T₂), the sign change near centroid 0.05 µm, "linear does not follow 1/D", the ρ-scaling per decade, the extrapolated ρ for SNR 200, and the size of |ΔS| and ΔT₂/T₂ for h ≤ 0.2. Not affected: the absence of any configuration reaching the SNR-100/200 thresholds (continuum maximum |ΔS| ≈ 2.7e-3), the mapping θ = ρ√(π/D), and the step, linear and exponential verifications.
+**Affected claims (corrected in "Review C1 follow-up" below):** P2.5 and P2.5.6/P2.5.7 statements on the thin-layer sign (positive ΔS / longer T₂), the sign change near centroid 0.05 µm, "linear does not follow 1/D", the ρ-scaling per decade, the extrapolated ρ for SNR 200, and the size of |ΔS| and ΔT₂/T₂ for h ≤ 0.2. Not affected: the absence of any configuration reaching the SNR-100/200 thresholds (continuum maximum |ΔS| ≈ 2.7e-3), the mapping θ = ρ√(π/D), and the step, linear and exponential verifications.
 
 ## Review C1 follow-up: P2.5 and P2.5.6/7 recomputed with the exact continuum benchmark
 
@@ -966,7 +966,11 @@ Script [p2_5_continuum.jl](phase2/p2_5_continuum.jl) and figures [p2_5_continuum
 | P2.5 h sweep τ=1e-2 | linear | 2 | -4.05e-04 ± 2e-05 | -4.08e-04 | +0.2 |
 | P2.5 h sweep τ=1e-2 | exponential | 2 | -4.04e-04 ± 2e-05 | -4.08e-04 | +0.2 |
 
-All points agree within 2.6 SEM. The continuum therefore stands in for the Monte Carlo values below; the Monte Carlo at τ = 1e-2 stays recorded above as the biased first pass.
+All points agree within 2.6 SEM. Two caveats:
+- The two thin-layer points (h = 0.05) both sit on the same side (z = +2.3, +2.6), and their τ trend has not clearly levelled off (step h = 0.05: −8.5e-5 then −5.7e-5 per factor-4 step; a first-order extrapolation lands on the continuum value, a √τ extrapolation overshoots it). The negative sign is established; the thin-layer magnitudes are consistent with, but not independently confirmed by, Monte Carlo.
+- Step h = 1 and linear h = 2 are the same uniform model with identical Monte Carlo data, so they count as one comparison.
+
+The continuum is independently checked against an exact non-uniform case (step layer, h < w/2: lowest rate from the matching equation κ·tanh(κh) = k·tan(k(w/2 − h)), agreement to 1.7e-8 relative; review of this follow-up). It therefore stands in for the Monte Carlo values below; the Monte Carlo at τ = 1e-2 stays recorded above as the biased first pass.
 
 **P2.5 corrected (fixed ρ, layer − conventional, readouts 0:10:200).**
 - All 41 distinct configurations give **negative ΔS**: at the same ρ the layer always attenuates slightly more than the conventional model, and ΔS → 0 as h → 0. The largest is −2.68e-3 (exponential, h = 0.2, ρ = 0.1). None reaches the SNR-100/200 thresholds (0.02 / 0.01).
@@ -977,20 +981,20 @@ All points agree within 2.6 SEM. The continuum therefore stands in for the Monte
 
 **P2.5.6/7 corrected (apparent T₂, TE = 50; R₂_bulk = 1/2000).**
 - Every ΔT₂/T₂ is negative, in both matchings and at every TE. The largest is −6.0e-3 (same h) and −3.5e-3 (same centroid), both exponential at D = 0.5. None reaches the two-point T₂ noise at SNR 200.
-- **Centroid matching.** At the same h the three profiles differ by up to 69 % of the effect (largest pair difference 3.65e-3). At the same centroid they agree within 11 % (median 4 %, largest pair difference 2.75e-4). The centroid-collapse conclusion holds, now without the timestep bias; the residual is ≈ 10 %.
+- **Centroid matching** (`p2_5_continuum_figs.jl`, distinct configurations, |a − b|/max(|a|, |b|) per profile pair at TE = 50). At the same h the three profiles differ by up to 69 % of the effect (median 46 %, 52 pairs; largest difference 3.65e-3). At the same centroid they agree within 11 % (median 4 %, 51 pairs; largest difference 2.75e-4). The centroid-collapse conclusion holds, now without the timestep bias; the residual is ≈ 10 %.
 - **TE.** ΔT₂/T₂ is constant in TE from 30 to 200 ms to within 2e-6. There is no thin-layer "longer T₂".
 
 ![continuum T2](results/phase2/p2_5_continuum/p2_5_continuum_t2.png)
 
-**Wider map (w = 2, D = 3, ρw/D = 0.003–30, h/w = 0.01–0.5; five mean decay times).** Two quantities, each against the single-measurement thresholds (0.01 = 2σ at SNR 200):
+**Wider map (w = 2, D = 3, ρw/D = 0.003–30, h/w = 0.01–0.5; no bulk R₂; 41 readouts from 0 until the conventional signal reaches ≈ 1 %).** Two quantities, each against the single-measurement threshold (0.01 = 2σ at SNR 200):
 - max |ΔS| at **fixed ρ** (ρ known);
-- the residual after fitting the **conventional model's ρ freely** to the layer curve, which is the realistic test for a single condition.
+- the minimax residual after fitting the **conventional model's ρ freely** to the layer curve, which is the realistic test for a single condition. The fit is a coarse scan of ρ_fit over e^−4…e^8 × ρ, then golden-section refinement. (Review of this follow-up: the first version searched only ±1.5 decades and stopped at its edge in 18 rows.)
 
 | profile | h/w | fixed ρ: first ρw/D with max\|ΔS\| ≥ 0.01 | best-fit conventional: first ρw/D with residual ≥ 0.01 |
 |---|---|---|---|
 | step | 0.01 | 30 | > 30 |
-| step | 0.05 | 3 | 30 |
-| step | 0.1 | 0.95 | 9.5 |
+| step | 0.05 | 3 | > 30 |
+| step | 0.1 | 0.95 | 30 |
 | step | 0.25 | 0.3 | 3 |
 | step | 0.5 | 0.3 | 3 |
 | linear | 0.01 | > 30 | > 30 |
@@ -1006,8 +1010,10 @@ All points agree within 2.6 SEM. The continuum therefore stands in for the Monte
 
 ![map](results/phase2/p2_5_continuum/p2_5_continuum_map.png)
 
-- At fixed ρ the profile effect becomes visible at SNR 200 once ρw/D is of order 0.3–1 for layers with h/w ≥ 0.1, and later for thinner ones.
-- With the conventional model's ρ free, a single free-decay curve separates from it at SNR 200 only for ρw/D of order 3–10 with a thick enough layer: exponential from h/w ≈ 0.05 (ρw/D ≈ 9.5), step from h/w ≈ 0.1 (≈ 9.5), linear from h/w ≈ 0.25 (≈ 9.5); at h/w ≥ 0.25 already from ρw/D ≈ 3 for step and exponential. Below that, a fitted conventional model reproduces the layer curve within the single-measurement noise.
+- At fixed ρ the profile effect becomes visible at SNR 200 once ρw/D is about 0.3–1 for layers with h/w ≥ 0.1 (exponential from h/w = 0.05), and later for thinner ones.
+- With the conventional model's ρ free, a single free-decay curve separates from it at SNR 200 only for ρw/D ≈ 3–30 with a thick enough layer: from ρw/D ≈ 3 for step and linear at h/w = 0.5, step at 0.25, and exponential at h/w ≥ 0.1; later for thinner layers; not at all within ρw/D ≤ 30 for h/w ≤ 0.05 (step, linear) or 0.01 (all).
+- **Why the fit fails there.** In 15 rows (ρw/D ≥ 9.5) the best conventional fit runs to ρ_fit → ∞, i.e. perfectly absorbing walls. A wall sink cannot decay the signal faster than D·π²/w² = 7.40 ms⁻¹ (w = 2, D = 3), whereas a strong layer relaxes spins inside the volume; for example, step h/w = 0.25 at ρw/D = 9.5 decays at 9.36 ms⁻¹. The residual there has converged to its limit: pushing ρ_fit from e^8 to e^16 × ρ changes it by ≤ 0.2 %. Beyond this ceiling no conventional θ can reproduce the layer curve.
+- **Caveats.** These are single conditions (one w, D) of free decay on walls, with no bulk R₂. The residual is a maximum over 41 correlated readouts compared with a single-point 2σ threshold, so it indicates rather than calibrates detectability. A joint fit across several w, D or TE at a shared ρ is the stronger test and has not been done.
 - All earlier P2.5 runs had ρw/D ≤ 0.07, well inside the region where neither test separates the models.
 
 **Superseded statements.** In the P2.5 and P2.5.6/7 sections above, these statements come from the timestep-biased Monte Carlo and are replaced by this section:

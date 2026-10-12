@@ -42,10 +42,29 @@ for (j, shape) in enumerate(("step", "linear", "exponential")), (i, (k, ttl)) in
     contour!(ax, log10.(xs), log10.(ys), Z, levels=[log10(0.01), log10(0.02)], color=:white, linewidth=2)
     j == 3 && Colorbar(fig2[i, 4], hm, label="log10")
 end
-Label(fig2[0, :], "Continuum (w = 2, D = 3), 5 mean decay times: white contours = 2σ single-measurement thresholds at SNR 200 (0.01) and 100 (0.02)")
+Label(fig2[0, :], "Continuum (w = 2, D = 3), window until the conventional signal ≈ 1 %: white contours = 2σ single-measurement thresholds at SNR 200 (0.01) and 100 (0.02)")
 save(joinpath(OUT, "p2_5_continuum_map.png"), fig2)
 
 t2 = csvrows(joinpath(OUT, "t2_continuum.csv"))
+# profile spread at TE = 50 over DISTINCT configurations (the reference point appears in every sweep):
+# |a − b|/max(|a|, |b|) for each profile pair at the same (h or centroid, w, D, ρ)
+for match in ("h", "centroid")
+    uniq = Dict{Any, Dict{String, Float64}}()
+    for r in t2
+        (r["match"] == match && r["sweep"] != "te" && num(r, "TE_ms") == 50.0) || continue
+        k = (round(num(r, match == "h" ? "h_um" : "centroid_um"), sigdigits=6), num(r, "w_um"), num(r, "D"), num(r, "rho"))
+        get!(uniq, k, Dict{String, Float64}())[r["shape"]] = num(r, "rel")
+    end
+    rels = Float64[]; diffs = Float64[]
+    for (_, d) in uniq, (a, b) in (("step", "linear"), ("step", "exponential"), ("linear", "exponential"))
+        (haskey(d, a) && haskey(d, b)) || continue
+        push!(diffs, abs(d[a] - d[b])); push!(rels, abs(d[a] - d[b]) / max(abs(d[a]), abs(d[b])))
+    end
+    @printf("profile spread (same %s, TE = 50): %d configurations, %d pairs; max %.3f, median %.3f of the effect; max |difference| %.2e\n",
+        match, length(uniq), length(rels), maximum(rels), sort(rels)[cld(length(rels), 2)], maximum(diffs))
+    write_json(joinpath(OUT, "profile_spread_$(match).json"), Dict("configurations" => length(uniq), "pairs" => length(rels),
+        "max_rel_spread" => maximum(rels), "median_rel_spread" => sort(rels)[cld(length(rels), 2)], "max_abs_diff" => maximum(diffs)))
+end
 fig3 = Figure(size=(1300, 700))
 for (i, match) in enumerate(("h", "centroid")), (j, s) in enumerate(("w", match == "h" ? "h" : "c", "D", "rho"))
     pk = Dict("w" => "w_um", "h" => "h_um", "c" => "centroid_um", "D" => "D", "rho" => "rho")[s]

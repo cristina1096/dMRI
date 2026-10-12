@@ -1,4 +1,5 @@
 {
+  "map_fit_at_edge": 15,
   "p25_all_negative": true,
   "p25_distinct": 41,
   "p25_max_abs_dS": 0.0026772536504806044,
@@ -6,9 +7,9 @@
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-10-13T05:18:34.461",
+    "date": "2026-10-13T06:21:31.643",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "d48f9b424977d0706e82091cafee2eb2d3c28ed5",
+    "git_commit": "5fd13f23f9c9bbf0e7584a9bd70a14850d05d0bb",
     "julia": "1.12.7",
     "julia_threads": 8,
     "memory_GB": 16.0,
