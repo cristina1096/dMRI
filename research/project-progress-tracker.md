@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 52 | 41 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 54 | 43 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -229,6 +229,8 @@ Characterisation mode: **ρ fixed**, same reference configuration for every prof
 | P2.5.3 | ☑ | Report centroid λ*ū* alongside λ for each profile (step 0.5λ, linear 0.33λ, poly *n* λ/(*n*+2), exponential 1.0λ) | Centroid column in every shape table | centroid column in every P2.5 table (exponential truncated at w: h(1 − (c+1)e^(−c))/(1 − e^(−c))) |
 | P2.5.4 | ☑ | Replot P2.5.2 against centroid instead of λ | Note whether shape differences shrink | shapes fall on one curve vs centroid within noise (≤ 1.3 combined SEM); resolved sign change between centroids 0.033 and 0.1 µm. `p2_5_centroid.png` |
 | P2.5.5 | ☑ | Summary: where (if anywhere) profiles separate beyond 3σ on walls | Written paragraph with numbers | profiles separate beyond 3σ (MC) in 39 of 40 pairs, by ≤ 1.7e-3; none of 41 configurations reaches SNR 100/200 (vs conventional model max 2.4e-3); layer curves mono-exponential. `phase2_record.md` P2.5 |
+| P2.5.6 | ☑ | Apparent T₂ vs w, h, D, ρ for the conventional model and three profiles at fixed ρ (Fig. 9 analogue, TE = 20/50/100); sub-test at the same centroid (centroid sweep instead of h) | ΔT₂/T₂ reported with paired SEM and two-point T₂ noise at SNR 100/200 | none observable; same h: profiles separate (≤ 3.8e-3); same centroid: profiles coincide (≤ 2.9e-4). `p2_5_t2_summary/` |
+| P2.5.7 | ☑ | Apparent T₂ vs echo time (TE = 5–200 ms) for the conventional model and three profiles at fixed ρ, w = 1, 2, 5 and h = 0.05, 0.2, 0.5; sub-test at the same centroid (Fig. 8A analogue, no off-resonance) | ΔT₂/T₂ vs TE with paired SEM and two-point T₂ noise at SNR 200 | T₂_app flat in TE; ΔT₂/T₂ constant in TE beyond ≈ 30 ms, ≤ 1.4e-3. `p2_5_t2_summary/p2_5_t2_fig8a*.png` |
 
 This is preliminary — the full sensitivity study in Phase 3 uses curved geometry and narrowing gaps, where differences are expected to be larger.
 

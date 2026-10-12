@@ -1,0 +1,31 @@
+{
+  "counts_TE50": {
+    "MC only": 43,
+    "SNR 100": 0,
+    "SNR 200": 0,
+    "not resolved": 10
+  },
+  "largest_rel_TE50": {
+    "param": 0.5,
+    "rel": -0.005684930928,
+    "shape": "exponential",
+    "sweep": "D"
+  },
+  "match": "h",
+  "n_distinct_TE50": 53,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-12T13:41:11.666",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "746ce42aaa2846699cc6d2ce2018d30aba23a178",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p2_5_t2_summary.jl",
+    "src_modified": false
+  }
+}

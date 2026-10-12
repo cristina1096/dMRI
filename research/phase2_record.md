@@ -38,6 +38,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.5.0 | Conventional model at the same ρ: θ = ρ√(π/D), mean-exponent identity at D = 1, 3, 6, τ = 1e-2, 4e-2 | \|z\| ≤ 3 | **PASS** (6 of 6, \|z\| ≤ 0.9); layer and baseline follow identical trajectories |
 | P2.5.1–P2.5.5 | Sensitivity to the spatial distribution at fixed ρ (layer vs conventional model, and profile vs profile; paired), sweeps h, w, D, ρ | characterisation vs MC SEM and SNR 100/200 | 41 distinct configurations: none reaches SNR 100 or 200 (32 MC-resolved, 9 not); max \|ΔS\| = 2.4e-3 (exponential, ρ = 0.1). Profiles separate from each other beyond 3σ in 39 of 40 pairs, by ≤ 1.7e-3. Shapes fall on one curve vs centroid within noise; curves mono-exponential (residual ≤ 1.4e-4) |
 | P2.5.6 (prerequisite) | Idealised spin echo (instantaneous pulses) = free decay, conventional and exponential layer, TE = 50 ms | \|z\| ≤ 3 | **PASS** (both z = 0.00: equal to 6 digits) |
+| P2.5.6, P2.5.7 | Apparent T₂ vs microstructure and vs TE (paper Figs. 9, 8A analogues), conventional + three profiles at fixed ρ; same h and same centroid | ΔT₂/T₂ vs paired SEM and T₂ noise at SNR 100/200 | none observable at SNR 100/200; ΔT₂/T₂ ≤ 5.7e-3; same h: profiles separate (40/61 pairs > 3σ); same centroid: profiles coincide (2/60, ≤ 2.9e-4); ΔT₂/T₂ flat in TE |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -720,3 +721,188 @@ Script [p2_5_t2_spin_echo_check.jl](phase2/p2_5_t2_spin_echo_check.jl) → [resu
 
 The two signals agree to all printed digits: with no off-resonance the refocusing pulse leaves |M⊥| unchanged, and the sequence adds no diffusion weighting here. Free decay therefore stands in for the paper's idealised spin echo in P2.5.6/P2.5.7. S(50) ≈ 0.478 gives T₂_app ≈ 67.7 ms, close to 1/(1/2000 + 2ρ/w) = 67.6 ms.
 
+## P2.5.7: apparent T₂ vs echo time (Fig. 8A analogue)
+
+Plan [2026-10-12-apparent-t2.md](../docs/superpowers/plans/2026-10-12-apparent-t2.md). Paper: Cottaar, Zheng, Miller et al., *Imaging Neuroscience* 4 (2026), Fig. 8A (T₂ from an idealised spin echo vs TE per compartment, without / with surface relaxation; the off-resonance part is not modelled here). Runner [p2_5_t2_apparent.jl](phase2/p2_5_t2_apparent.jl) (`SWEEP=te`, `MATCH=h` / `centroid`) → `results/phase2/p2_5_t2_te[_centroid]/`; summary [p2_5_t2_summary.jl](phase2/p2_5_t2_summary.jl) → [results/phase2/p2_5_t2_summary/](results/phase2/p2_5_t2_summary/).
+
+**Method.**
+- T₂_app(TE) = −TE/ln(S(TE)/S(0)) per seed, at TE = 5:5:200 ms. Free decay stands in for the spin echo (equal to 6 digits, P2.5.6 prerequisite).
+- R₂_bulk = 1/2000 ms⁻¹ (intrinsic T₂ = 2 s, as in the paper). ρ = 1/70 µm/ms, so 2ρ/w = 1/70 at w = 2: the paper's tissue T₂ of ≈ 70 ms. D = 3. Conventional θ = ρ√(π/D).
+- Walls w = 1, 2, 5 µm stand in for compartments with different S/V (2, 1, 0.4 µm⁻¹).
+- Profiles at the **same ρ and the same h** (h = 0.2, plus 0.05 and 0.5 at w = 2), and in a sub-test at the **same ρ and the same centroid** c̄ (0.1, plus 0.025 and 0.25 at w = 2).
+- Paired per seed on identical trajectories; seeds 1–10, 50000 spins. Without surface relaxation, T₂ = 2000 ms exactly.
+
+![Fig. 8A analogue, same h](results/phase2/p2_5_t2_summary/p2_5_t2_fig8a.png)
+
+![Fig. 8A analogue, same centroid](results/phase2/p2_5_t2_summary/p2_5_t2_fig8a_centroid.png)
+
+**Same h** (selected TE; full curves in the figure).
+
+| w (µm) | h (µm) | TE (ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 |
+|---|---|---|---|---|---|---|---|
+| 1 | 0.2 | 5 | 34.43 | -5.4e-04 ± 1e-04 | -3.4e-04 ± 1e-04 | -8.6e-04 ± 1e-04 | 0.105 |
+| 1 | 0.2 | 20 | 34.42 | -4.4e-04 ± 5e-05 | -2.5e-04 ± 5e-05 | -7.0e-04 ± 6e-05 | 0.035 |
+| 1 | 0.2 | 50 | 34.42 | -3.9e-04 ± 4e-05 | -2.0e-04 ± 4e-05 | -6.8e-04 ± 5e-05 | 0.030 |
+| 1 | 0.2 | 100 | 34.43 | -3.8e-04 ± 2e-05 | -1.9e-04 ± 2e-05 | -6.9e-04 ± 3e-05 | 0.063 |
+| 1 | 0.2 | 200 | 34.43 | -3.7e-04 ± 1e-05 | -1.7e-04 ± 1e-05 | -6.7e-04 ± 1e-05 | 0.574 |
+| 2 | 0.05 | 5 | 67.74 | +5.0e-04 ± 1e-04 | +5.1e-04 ± 2e-04 | +6.4e-05 ± 1e-04 | 0.199 |
+| 2 | 0.05 | 20 | 67.72 | +4.3e-04 ± 8e-05 | +4.0e-04 ± 8e-05 | +1.8e-05 ± 6e-05 | 0.057 |
+| 2 | 0.05 | 50 | 67.73 | +4.5e-04 ± 6e-05 | +4.9e-04 ± 5e-05 | +4.9e-05 ± 5e-05 | 0.031 |
+| 2 | 0.05 | 100 | 67.73 | +4.5e-04 ± 3e-05 | +5.1e-04 ± 3e-05 | +4.6e-05 ± 2e-05 | 0.030 |
+| 2 | 0.05 | 200 | 67.74 | +4.6e-04 ± 2e-05 | +5.5e-04 ± 2e-05 | +6.3e-05 ± 2e-05 | 0.065 |
+| 2 | 0.2 | 5 | 67.74 | -2.5e-04 ± 2e-04 | -8.8e-05 ± 2e-04 | -8.7e-04 ± 2e-04 | 0.199 |
+| 2 | 0.2 | 20 | 67.72 | -3.2e-04 ± 1e-04 | -1.3e-04 ± 7e-05 | -8.1e-04 ± 1e-04 | 0.057 |
+| 2 | 0.2 | 50 | 67.73 | -3.3e-04 ± 7e-05 | -1.1e-04 ± 6e-05 | -8.5e-04 ± 7e-05 | 0.031 |
+| 2 | 0.2 | 100 | 67.73 | -3.5e-04 ± 4e-05 | -1.2e-04 ± 3e-05 | -9.0e-04 ± 4e-05 | 0.030 |
+| 2 | 0.2 | 200 | 67.74 | -3.2e-04 ± 3e-05 | -1.0e-04 ± 2e-05 | -8.9e-04 ± 3e-05 | 0.065 |
+| 2 | 0.5 | 5 | 67.74 | -9.9e-04 ± 2e-04 | -6.9e-04 ± 2e-04 | -1.5e-03 ± 3e-04 | 0.199 |
+| 2 | 0.5 | 20 | 67.72 | -8.7e-04 ± 1e-04 | -6.6e-04 ± 1e-04 | -1.2e-03 ± 1e-04 | 0.057 |
+| 2 | 0.5 | 50 | 67.73 | -9.7e-04 ± 8e-05 | -7.0e-04 ± 8e-05 | -1.3e-03 ± 8e-05 | 0.031 |
+| 2 | 0.5 | 100 | 67.73 | -1.0e-03 ± 5e-05 | -7.5e-04 ± 5e-05 | -1.4e-03 ± 5e-05 | 0.030 |
+| 2 | 0.5 | 200 | 67.74 | -1.1e-03 ± 4e-05 | -7.4e-04 ± 3e-05 | -1.4e-03 ± 4e-05 | 0.065 |
+| 5 | 0.2 | 5 | 161.54 | -2.4e-04 ± 2e-04 | -1.1e-04 ± 2e-04 | -9.4e-04 ± 2e-04 | 0.464 |
+| 5 | 0.2 | 20 | 161.38 | -2.4e-04 ± 2e-04 | -7.5e-05 ± 1e-04 | -8.7e-04 ± 1e-04 | 0.122 |
+| 5 | 0.2 | 50 | 161.46 | -2.6e-04 ± 9e-05 | -5.6e-05 ± 7e-05 | -9.5e-04 ± 9e-05 | 0.055 |
+| 5 | 0.2 | 100 | 161.52 | -2.7e-04 ± 5e-05 | -6.7e-05 ± 4e-05 | -9.8e-04 ± 6e-05 | 0.034 |
+| 5 | 0.2 | 200 | 161.50 | -2.5e-04 ± 5e-05 | -3.7e-05 ± 4e-05 | -9.7e-04 ± 5e-05 | 0.029 |
+
+
+**Same centroid** (selected TE; full curves in the figure).
+
+| w (µm) | c̄ (µm) | TE (ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 |
+|---|---|---|---|---|---|---|---|
+| 1 | 0.1 | 5 | 34.43 | -5.4e-04 ± 1e-04 | -5.7e-04 ± 1e-04 | -5.5e-04 ± 1e-04 | 0.105 |
+| 1 | 0.1 | 20 | 34.42 | -4.4e-04 ± 5e-05 | -4.6e-04 ± 5e-05 | -4.5e-04 ± 5e-05 | 0.035 |
+| 1 | 0.1 | 50 | 34.42 | -3.9e-04 ± 4e-05 | -4.2e-04 ± 4e-05 | -4.1e-04 ± 4e-05 | 0.030 |
+| 1 | 0.1 | 100 | 34.43 | -3.8e-04 ± 2e-05 | -4.2e-04 ± 2e-05 | -4.1e-04 ± 2e-05 | 0.063 |
+| 1 | 0.1 | 200 | 34.43 | -3.7e-04 ± 1e-05 | -4.0e-04 ± 1e-05 | -3.9e-04 ± 1e-05 | 0.574 |
+| 2 | 0.025 | 5 | 67.74 | +5.0e-04 ± 1e-04 | +4.3e-04 ± 1e-04 | +3.3e-04 ± 1e-04 | 0.199 |
+| 2 | 0.025 | 20 | 67.72 | +4.3e-04 ± 8e-05 | +3.7e-04 ± 7e-05 | +2.3e-04 ± 7e-05 | 0.057 |
+| 2 | 0.025 | 50 | 67.73 | +4.5e-04 ± 6e-05 | +4.1e-04 ± 5e-05 | +3.1e-04 ± 4e-05 | 0.031 |
+| 2 | 0.025 | 100 | 67.73 | +4.5e-04 ± 3e-05 | +4.2e-04 ± 2e-05 | +3.3e-04 ± 3e-05 | 0.030 |
+| 2 | 0.025 | 200 | 67.74 | +4.6e-04 ± 2e-05 | +4.3e-04 ± 2e-05 | +3.7e-04 ± 2e-05 | 0.065 |
+| 2 | 0.1 | 5 | 67.74 | -2.5e-04 ± 2e-04 | -3.1e-04 ± 2e-04 | -3.4e-04 ± 2e-04 | 0.199 |
+| 2 | 0.1 | 20 | 67.72 | -3.2e-04 ± 1e-04 | -3.6e-04 ± 9e-05 | -3.6e-04 ± 8e-05 | 0.057 |
+| 2 | 0.1 | 50 | 67.73 | -3.3e-04 ± 7e-05 | -3.5e-04 ± 7e-05 | -3.6e-04 ± 6e-05 | 0.031 |
+| 2 | 0.1 | 100 | 67.73 | -3.5e-04 ± 4e-05 | -3.8e-04 ± 4e-05 | -3.8e-04 ± 3e-05 | 0.030 |
+| 2 | 0.1 | 200 | 67.74 | -3.2e-04 ± 3e-05 | -3.6e-04 ± 3e-05 | -3.7e-04 ± 2e-05 | 0.065 |
+| 2 | 0.25 | 5 | 67.74 | -9.9e-04 ± 2e-04 | -1.1e-03 ± 2e-04 | -1.0e-03 ± 2e-04 | 0.199 |
+| 2 | 0.25 | 20 | 67.72 | -8.7e-04 ± 1e-04 | -9.4e-04 ± 1e-04 | -9.5e-04 ± 1e-04 | 0.057 |
+| 2 | 0.25 | 50 | 67.73 | -9.7e-04 ± 8e-05 | -1.0e-03 ± 8e-05 | -1.0e-03 ± 7e-05 | 0.031 |
+| 2 | 0.25 | 100 | 67.73 | -1.0e-03 ± 5e-05 | -1.1e-03 ± 5e-05 | -1.1e-03 ± 4e-05 | 0.030 |
+| 2 | 0.25 | 200 | 67.74 | -1.1e-03 ± 4e-05 | -1.1e-03 ± 4e-05 | -1.1e-03 ± 3e-05 | 0.065 |
+| 5 | 0.1 | 5 | 161.54 | -2.4e-04 ± 2e-04 | -3.0e-04 ± 2e-04 | -3.6e-04 ± 2e-04 | 0.464 |
+| 5 | 0.1 | 20 | 161.38 | -2.4e-04 ± 2e-04 | -2.8e-04 ± 1e-04 | -3.2e-04 ± 1e-04 | 0.122 |
+| 5 | 0.1 | 50 | 161.46 | -2.6e-04 ± 9e-05 | -3.0e-04 ± 8e-05 | -3.3e-04 ± 7e-05 | 0.055 |
+| 5 | 0.1 | 100 | 161.52 | -2.7e-04 ± 5e-05 | -3.1e-04 ± 5e-05 | -3.4e-04 ± 5e-05 | 0.034 |
+| 5 | 0.1 | 200 | 161.50 | -2.5e-04 ± 5e-05 | -3.0e-04 ± 5e-05 | -3.2e-04 ± 4e-05 | 0.029 |
+
+**Interpretation (numbers only).**
+- **T₂_app vs TE.** For every model and configuration T₂_app is nearly flat in TE: it varies by ≤ 0.16 ms over 5–200 ms and ≤ 0.08 ms beyond 30 ms (most of the change between 5 and 30 ms, where the two-point estimate is noisiest), on top of T₂ ≈ 34.4, 67.7 and 161.5 ms for w = 1, 2, 5. The conventional model and all three profiles show the same TE trend.
+- **Profile effect vs TE.** ΔT₂/T₂ is constant in TE within its ±3·SEM band beyond ≈ 30 ms. Same h: from +5e-4 (h = 0.05, step and linear; the exponential ≈ 0 there) to −1.3e-3 (h = 0.5, exponential, TE = 50; ≈ −1.4e-3 at long TE). Same centroid: the three profiles lie within each other's bands (≲ 1e-4 apart) at every TE.
+- **Against noise.** All differences are ≥ 20× below the two-point T₂ noise at SNR 200 (2σ_T₂/T₂ ≥ 0.03 at TE ≈ 50–100 ms, and much larger at short and long TE).
+
+## P2.5.6: apparent T₂ vs microstructure (Fig. 9 analogue)
+
+Paper Fig. 9: T₂ (spin echo, TE = 50 ms) vs (A) axon radius, (B) axonal volume fraction, (C) myelin loss, (D) angle to B₀. Walls have an analogue only for A: the wall spacing w, which sets S/V = 2/w. Added for this model: the layer thickness h (or the centroid c̄), D and ρ. B, C and D are not done (they need two compartments, myelin or off-resonance). Same runner and summary (`SWEEP` = w, h | c, D, rho), TE = 20, 50, 100; the reference point and settings as above.
+
+Observability: the two-point T₂ noise σ_T₂/T₂ = √(1 + r²)/(SNR·r·|ln r|), with r = S(TE)/S(0). "Observable at SNR X" means |ΔT₂/T₂| ≥ 2σ_T₂/T₂; "MC only" means ≥ 3 paired SEM but below both thresholds.
+
+![Fig. 9 analogue, same h](results/phase2/p2_5_t2_summary/p2_5_t2_fig9.png)
+
+![Fig. 9 analogue, same centroid](results/phase2/p2_5_t2_summary/p2_5_t2_fig9_centroid.png)
+
+![same h vs same centroid](results/phase2/p2_5_t2_summary/p2_5_t2_match_compare.png)
+
+**Same h, TE = 50 ms.**
+
+*Sweep w.*
+
+| w (µm) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.5 | 17.36 | -3.8e-04 ± 2e-05 | -2.8e-04 ± 1e-05 | -3.9e-04 ± 2e-05 | 0.062 | MC only |
+| 1 | 34.42 | -3.9e-04 ± 4e-05 | -2.0e-04 ± 4e-05 | -6.8e-04 ± 5e-05 | 0.030 | MC only |
+| 2 | 67.73 | -3.3e-04 ± 7e-05 | -1.1e-04 ± 6e-05 | -8.5e-04 ± 7e-05 | 0.031 | MC only, not resolved |
+| 3 | 99.97 | -2.9e-04 ± 7e-05 | -8.8e-05 ± 5e-05 | -9.0e-04 ± 8e-05 | 0.039 | MC only, not resolved |
+| 5 | 161.46 | -2.6e-04 ± 9e-05 | -5.6e-05 ± 7e-05 | -9.5e-04 ± 9e-05 | 0.055 | MC only, not resolved |
+| 10 | 299.85 | -1.8e-04 ± 1e-04 | +9.2e-06 ± 9e-05 | -9.1e-04 ± 1e-04 | 0.093 | MC only, not resolved |
+
+*Sweep h.*
+
+| h (µm) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.02 | 67.73 | +6.4e-04 ± 6e-05 | +5.3e-04 ± 4e-05 | +3.7e-04 ± 5e-05 | 0.031 | MC only |
+| 0.05 | 67.73 | +4.5e-04 ± 6e-05 | +4.9e-04 ± 5e-05 | +4.9e-05 ± 5e-05 | 0.031 | MC only, not resolved |
+| 0.1 | 67.73 | +9.5e-05 ± 5e-05 | +2.7e-04 ± 5e-05 | -3.6e-04 ± 6e-05 | 0.031 | MC only, not resolved |
+| 0.2 | 67.73 | -3.3e-04 ± 7e-05 | -1.1e-04 ± 6e-05 | -8.5e-04 ± 7e-05 | 0.031 | MC only, not resolved |
+| 0.5 | 67.73 | -9.7e-04 ± 8e-05 | -7.0e-04 ± 8e-05 | -1.3e-03 ± 8e-05 | 0.031 | MC only |
+| 1 | 67.73 | -1.4e-03 ± 9e-05 | -1.2e-03 ± 8e-05 | -1.4e-03 ± 8e-05 | 0.031 | MC only |
+| 2 | 67.73 | — | -1.4e-03 ± 9e-05 | -1.4e-03 ± 9e-05 | 0.031 | MC only |
+
+*Sweep D.*
+
+| D (µm²/ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.5 | 68.23 | -2.9e-03 ± 1e-04 | -1.9e-03 ± 1e-04 | -5.7e-03 ± 1e-04 | 0.032 | MC only |
+| 1 | 67.93 | -1.3e-03 ± 1e-04 | -7.6e-04 ± 8e-05 | -2.7e-03 ± 1e-04 | 0.031 | MC only |
+| 2 | 67.78 | -6.2e-04 ± 7e-05 | -3.2e-04 ± 4e-05 | -1.4e-03 ± 8e-05 | 0.031 | MC only |
+| 3 | 67.73 | -3.3e-04 ± 7e-05 | -1.1e-04 ± 6e-05 | -8.5e-04 ± 7e-05 | 0.031 | MC only, not resolved |
+
+*Sweep rho.*
+
+| ρ (µm/ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.005 | 181.89 | -9.5e-05 ± 7e-05 | -2.6e-05 ± 5e-05 | -2.5e-04 ± 7e-05 | 0.060 | MC only, not resolved |
+| 0.0142857 | 67.73 | -3.3e-04 ± 7e-05 | -1.1e-04 ± 6e-05 | -8.5e-04 ± 7e-05 | 0.031 | MC only, not resolved |
+| 0.03 | 32.89 | -7.2e-04 ± 7e-05 | -2.5e-04 ± 6e-05 | -1.9e-03 ± 7e-05 | 0.031 | MC only |
+| 0.06 | 16.63 | -1.5e-03 ± 7e-05 | -6.6e-04 ± 6e-05 | -3.8e-03 ± 7e-05 | 0.067 | MC only |
+
+
+**Same centroid, TE = 50 ms.**
+
+*Sweep w.*
+
+| w (µm) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.5 | 17.36 | -3.8e-04 ± 2e-05 | -3.7e-04 ± 2e-05 | -3.5e-04 ± 2e-05 | 0.062 | MC only |
+| 1 | 34.42 | -3.9e-04 ± 4e-05 | -4.2e-04 ± 4e-05 | -4.1e-04 ± 4e-05 | 0.030 | MC only |
+| 2 | 67.73 | -3.3e-04 ± 7e-05 | -3.5e-04 ± 7e-05 | -3.6e-04 ± 6e-05 | 0.031 | MC only |
+| 3 | 99.97 | -2.9e-04 ± 7e-05 | -3.2e-04 ± 7e-05 | -3.4e-04 ± 6e-05 | 0.039 | MC only |
+| 5 | 161.46 | -2.6e-04 ± 9e-05 | -3.0e-04 ± 8e-05 | -3.3e-04 ± 7e-05 | 0.055 | MC only, not resolved |
+| 10 | 299.85 | -1.8e-04 ± 1e-04 | -2.3e-04 ± 1e-04 | -2.7e-04 ± 1e-04 | 0.093 | not resolved |
+
+*Sweep c.*
+
+| c̄ (µm) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.01 | 67.73 | +6.4e-04 ± 6e-05 | +4.6e-04 ± 6e-05 | +4.1e-04 ± 4e-05 | 0.031 | MC only |
+| 0.025 | 67.73 | +4.5e-04 ± 6e-05 | +4.1e-04 ± 5e-05 | +3.1e-04 ± 4e-05 | 0.031 | MC only |
+| 0.05 | 67.73 | +9.5e-05 ± 5e-05 | +5.7e-05 ± 5e-05 | +4.9e-05 ± 5e-05 | 0.031 | not resolved |
+| 0.1 | 67.73 | -3.3e-04 ± 7e-05 | -3.5e-04 ± 7e-05 | -3.6e-04 ± 6e-05 | 0.031 | MC only |
+| 0.25 | 67.73 | -9.7e-04 ± 8e-05 | -1.0e-03 ± 8e-05 | -1.0e-03 ± 7e-05 | 0.031 | MC only |
+| 0.5 | 67.73 | -1.4e-03 ± 9e-05 | -1.4e-03 ± 8e-05 | -1.3e-03 ± 8e-05 | 0.031 | MC only |
+
+*Sweep D.*
+
+| D (µm²/ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.5 | 68.23 | -2.9e-03 ± 1e-04 | -3.0e-03 ± 1e-04 | -3.1e-03 ± 1e-04 | 0.032 | MC only |
+| 1 | 67.93 | -1.3e-03 ± 1e-04 | -1.4e-03 ± 9e-05 | -1.4e-03 ± 8e-05 | 0.031 | MC only |
+| 2 | 67.78 | -6.2e-04 ± 7e-05 | -6.5e-04 ± 6e-05 | -6.7e-04 ± 5e-05 | 0.031 | MC only |
+| 3 | 67.73 | -3.3e-04 ± 7e-05 | -3.5e-04 ± 7e-05 | -3.6e-04 ± 6e-05 | 0.031 | MC only |
+
+*Sweep rho.*
+
+| ρ (µm/ms) | T₂ conventional (ms) | ΔT₂/T₂ step | ΔT₂/T₂ linear | ΔT₂/T₂ exponential | 2σ_T₂/T₂ at SNR 200 | levels |
+|---|---|---|---|---|---|---|
+| 0.005 | 181.89 | -9.5e-05 ± 7e-05 | -1.0e-04 ± 6e-05 | -1.0e-04 ± 6e-05 | 0.060 | not resolved |
+| 0.0142857 | 67.73 | -3.3e-04 ± 7e-05 | -3.5e-04 ± 7e-05 | -3.6e-04 ± 6e-05 | 0.031 | MC only |
+| 0.03 | 32.89 | -7.2e-04 ± 7e-05 | -7.9e-04 ± 7e-05 | -8.0e-04 ± 6e-05 | 0.031 | MC only |
+| 0.06 | 16.63 | -1.5e-03 ± 7e-05 | -1.6e-03 ± 7e-05 | -1.8e-03 ± 6e-05 | 0.067 | MC only |
+
+**Interpretation (numbers only).**
+- **Conventional model (Fig. 9A analogue).** T₂_app rises with the compartment size, as in the paper (T₂ ↑ with axon diameter through S/V): 17.36, 34.42, 67.73, 99.97, 161.46 and 299.85 ms for w = 0.5, 1, 2, 3, 5, 10 µm. It falls with ρ (181.89, 67.73, 32.89, 16.63 ms for ρ = 0.005, 1/70, 0.03, 0.06) and decreases slightly with D (68.23 → 67.73 ms for D = 0.5 → 3). All values are close to 1/(1/2000 + 2ρ/w).
+- **Profiles at the same h.** At TE = 50, ΔT₂/T₂ (layer − conventional) ranges from +6.4e-4 (step, h = 0.02) to −5.7e-3 (exponential, D = 0.5). The profiles separate clearly and in a consistent order: exponential most negative, linear least. 40 of 61 profile pairs differ beyond 3 combined SEM; the largest pair difference is 3.8e-3 (exponential − linear, D = 0.5).
+- **Profiles at the same centroid.** The three profiles nearly coincide. Only 2 of 60 pairs differ beyond 3 combined SEM, with the largest pair difference 2.9e-4 (exponential − step, ρ = 0.06). The difference from the conventional model remains and follows the centroid: positive up to c̄ = 0.05 µm (+6.4e-4 to +5e-5), negative from c̄ = 0.1 µm (≈ −3.5e-4), down to −1.4e-3 at c̄ = 0.5 and −3.1e-3 at D = 0.5. At fixed ρ the apparent T₂ depends on the profile almost only through its centroid (the comparison figure shows the same-h spread collapsing once c̄ is matched).
+- **Observability.** No configuration reaches the T₂ noise at SNR 100 or 200 under either matching (same h: 53 distinct configurations at TE = 50, 43 MC-only, 10 not resolved; same centroid: 51 distinct, 41 MC-only, 10 not resolved). The largest |ΔT₂/T₂| is -5.7e-03 (exponential, D = 0.5, same h), against 2σ_T₂/T₂ ≈ 0.03 at SNR 200.
+- **Trends.** |ΔT₂/T₂| grows with ρ and as D falls, as in P2.5, and depends little on w at fixed centroid (−1.8e-4 to −4.2e-4 for w = 0.5–10).
