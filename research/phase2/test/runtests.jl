@@ -6,6 +6,7 @@ isfile(joinpath(@__DIR__, "..", "toy.jl")) && include(joinpath(@__DIR__, "..", "
 isfile(joinpath(@__DIR__, "..", "timestep.jl")) && include(joinpath(@__DIR__, "..", "timestep.jl"))
 isfile(joinpath(@__DIR__, "..", "sensitivity.jl")) && include(joinpath(@__DIR__, "..", "sensitivity.jl"))
 isfile(joinpath(@__DIR__, "..", "continuum.jl")) && include(joinpath(@__DIR__, "..", "continuum.jl"))
+isfile(joinpath(@__DIR__, "..", "overlap.jl")) && include(joinpath(@__DIR__, "..", "overlap.jl"))
 
 @testset "Phase 2 research code" begin
     for f in sort(filter(f -> startswith(f, "test_") && endswith(f, ".jl"), readdir(@__DIR__)))

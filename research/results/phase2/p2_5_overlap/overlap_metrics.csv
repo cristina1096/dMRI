@@ -1,0 +1,15 @@
+shape,h_over_w,overlap_width_um,mid_over_wall,opposite_share,realistic
+linear,0.25,0,0,0,true
+linear,0.5,0,9.999778783e-13,0,true
+linear,0.6,0.4,0.3333333333,0.02777777778,true
+linear,0.75,1,0.6666666667,0.1111111111,true
+linear,0.9,1.6,0.8888888889,0.1975308642,true
+linear,1,2,1,0.25,true
+exponential,0.05,2,9.079985934e-05,4.53978687e-05,true
+exponential,0.1,2,0.01347528222,0.006692850924,true
+exponential,0.25,2,0.2658022288,0.119202922,true
+exponential,0.5,2,0.6480542737,0.2689414214,true
+exponential,0.75,2,0.8126278599,0.3392436312,true
+exponential,1,2,0.886818884,0.3775406688,true
+step,0.5,0,1,0,true
+step,0.75,1,2,0.3333333333,false
