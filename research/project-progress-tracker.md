@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 38 (+6 decisions) | 0 | ☐ planned (2026-10-22) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -294,6 +294,142 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | τ_conv too small to be practical | P2.6.1 no plateau by 10⁻⁵ ms at *h* = 0.1 µm (B5: ≈ 2 h per seed there) | Restrict *h* range; consider escape-from-a-layer approach (proposal Table 1) |
 | Exponential tail truncation contaminates comparison | P2.4.5 loss > 1% | Keep λ ≤ *w*/5 or increase *w* |
 | Shape-dependent *c*_h | P2.6.4 | Use the most demanding shape's constraint |
+
+---
+
+# PHASE 3 — R₂(d) on Cylinders, No RF (weeks TBD)
+
+**Goal.** Extend the verified wall implementation of R₂_total = R₂_bulk + ΔR₂(d), ΔR₂(d) = (ρ/h)·g(d/h), to cylinders: first a single cylinder, then square and rectangular arrays where the layers of neighbouring cylinders can overlap (proposal Milestone 5). Verify it with the same standards as Phase 2, then repeat the comparison with the conventional model in curved geometry (proposal Milestone 6).
+
+**Order decision (user, 2026-10-22).** Cylinders without RF come before walls with RF (proposal Milestone 4). Finite RF on walls and on cylinders is a later phase.
+
+**What changes from walls.**
+- On a cylinder the distance to the surface along a straight step, d(t) = |r(t)⊥ − c| − R (outside) or R − |r(t)⊥ − c| (inside), is **not linear in time**. The closed forms of Phase 2 therefore hold only for the step profile, where the time spent in the shell R − h ≤ r ≤ R comes from exact line–circle intersections. Linear and exponential profiles need either a closed-form integral of a function of √(quadratic) or a quadrature with a tolerance. This activates the deferred Phase 2 items P2.4.6, P2.6.6, P2.6.7 and P2.6.9.
+- The volume element carries curvature, (1 ± d/R). How ρ is defined (per unit surface area, or along the normal) changes the integrated relaxation and the "same ρ" comparison (decision D3.1).
+- The conventional mapping ρ = θ√(D/π) is exact in expectation only for planar walls. On curved surfaces it must be verified (P3.1.6).
+- The exact 1D continuum benchmark extends naturally to a single cylinder (radial problem). Arrays need either a 2D solver or the Monte Carlo alone.
+
+**Exit criterion.**
+- Sections 3.2–3.4 pass for the step profile and for every profile adopted in D3.2, on a single cylinder and on arrays.
+- The timestep constant and the integration tolerance are confirmed on cylinders (3.6).
+- The overlap configurations are characterised (3.5).
+- Tag `rd-cylinders-v1`.
+
+**Carry-over from Phase 2** (to close or consciously defer before the tag):
+- tags `rd-profiles-v1` and `rd-walls-v1`;
+- P2.4.4 polynomial profile;
+- P2.4.6 quadrature path, now needed for linear and exponential on cylinders (3.3);
+- the deferred minors listed in the Phase 2 record (exponential `h > spacing` check, `layer_cutoff` NaN message, stuck spins without layer, user docs).
+
+## 3.0 Design decisions (needed before 3.2)
+
+| ID | ☐ | Decision | Options | Recommendation / note |
+|---|---|---|---|---|
+| D3.1 | ☐ | Meaning of ρ on a curved surface | (a) along the normal, ρ = ∫ΔR₂ dd (as on walls); (b) per unit surface area, ρ = (1/A)∫ΔR₂ dV, i.e. g renormalised with the curvature factor (1 ± d/R) | (b) keeps "same ρ" equal to the conventional relaxivity per area and keeps the mean-exponent identity simple; (a) keeps g identical to walls. Record whichever is chosen in every table |
+| D3.2 | ☐ | Profiles on cylinders | step only first; step + linear + exponential | Step first (exact), then linear and exponential once 3.3 exists |
+| D3.3 | ☐ | Integration of non-step profiles along a segment | closed form where it exists (linear: ∫√(quadratic)); adaptive quadrature with tolerance ε_R₂ for all; both, cross-checked | Quadrature for all profiles plus a closed form for linear as its test |
+| D3.4 | ☐ | Sides | inside (intra-cylinder) and outside (extra) layers, side-specific (ρ, h, profile) as on walls | Both sides, side-specific, symmetric default |
+| D3.5 | ☐ | Exponential support on cylinders | inside: d ≤ R (centre); outside: up to the nearest neighbour or a fixed cutoff | inside R; outside `layer_cutoff`, default half the smallest centre spacing |
+| D3.6 | ☐ | Arrays | square; rectangular (for one-direction overlap); random packing later | square and rectangular (proposal M5); random packing as optional 3.7 extension |
+
+## 3.1 Cylinder baselines (old code)
+
+| ID | ☐ | Test | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.1.1 | ☐ | **C-B1** null run: single cylinder and square array, no relaxation | M⊥ = 1 exactly; τ_max recorded | record |
+| P3.1.2 | ☐ | **C-B2** bulk R₂ only | exp(−R₂t) within the roundoff bound; trajectories unchanged | record |
+| P3.1.3 | ☐ | **C-B3** density across the cylinder (inside and outside) and fraction within h of the surface | uniform within \|z\| ≤ 2; fraction = shell area fraction (curvature included) | fig + table |
+| P3.1.4 | ☐ | **C-B4** conventional θ reference curves: single cylinder (inside), square array (inside and outside), several radii | τ-converged (two τ within 2 SEM); bulk factorisation | reference set |
+| P3.1.5 | ☐ | **C-B5** runtime vs τ for cylinders | cost reference | table |
+| P3.1.6 | ☐ | Conventional mapping on curved surfaces: E[−ln M] = θ√(D/π)·(S/V)·t at D = 1, 3, 6, several radii and τ | \|z\| ≤ 3, or the measured correction is recorded and used as the mapping | table |
+
+Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused as context.
+
+## 3.2 Geometry, distance and layer bookkeeping (step profile)
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.2.1 | ☐ | Signed distance to a cylinder surface, inside and outside, for any rotation of the cylinder axis | unit tests vs direct geometry, rotated axes | tests |
+| P3.2.2 | ☐ | Entry and exit of the shell R − h ≤ r ≤ R (inside) or R ≤ r ≤ R + h (outside) along a straight piece, from exact line–circle intersections (axial motion ignored) | unit tests vs brute-force sampling, incl. tangent and chord-only cases | tests |
+| P3.2.3 | ☐ | Repeating arrays: loop over neighbouring cylinders within reach (= support), sum of overlapping contributions (Eq. 10) | tests with two and four overlapping cylinders vs brute force | tests |
+| P3.2.4 | ☐ | `Cylinders` fields: `layer_rho`, `layer_h`, `layer_shape`, side-specific (inner/outer), validation (h vs radius and spacing), JSON and CLI | round trip; invalid input rejected | tests |
+| P3.2.5 | ☐ | V0b: ρ = 0 bit-identical to no layer (positions and M⊥) | identical | record |
+| P3.2.6 | ☐ | Timestep: the layer constraint uses the largest summed rate (overlap included) | test | code |
+
+## 3.3 Non-step profiles: integration along a segment where d(t) is not linear
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.3.1 | ☐ | Quadrature path (adaptive, tolerance ε_R₂) for any profile along a straight piece through the shell | agrees with brute force at small ε; error vs ε measured | tests + table |
+| P3.3.2 | ☐ | Closed form for the linear profile (integral of √(quadratic)) as an independent check | agrees with quadrature to ε | tests |
+| P3.3.3 | ☐ | Walls regression: the quadrature path reproduces the wall closed forms | ≤ ε | tests |
+| P3.3.4 | ☐ | Cost of the quadrature vs ε (sub-intervals per step, runtime) | table | table |
+
+## 3.4 Verification on cylinders (each profile adopted)
+
+| ID | ☐ | Test | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.4.1 | ☐ | Single-spin trace through the shell and reflections | every step \|M⊥_sim/M⊥_pred − 1\| ≤ 1e-6 (brute-force prediction) | trace |
+| P3.4.2 | ☐ | Exact uniform case: step, inside, h = R gives a uniform rate | per spin ≤ 1e-10; ensemble ≤ roundoff bound | record |
+| P3.4.3 | ☐ | Mean-exponent identity, curved form: E[−ln M] = t·⟨ΔR₂⟩_volume for every profile, inside and outside, single cylinder and array | \|z\| ≤ 3 | table |
+| P3.4.4 | ☐ | Additivity with bulk R₂ | per spin ≤ 1e-10 | record |
+| P3.4.5 | ☐ | Density and occupancy with the layer on (C-B3 repeated) | positions identical to no layer | record |
+| P3.4.6 | ☐ | Radial continuum benchmark (single cylinder, inside; finite-volume radial eigen-solver), unit-tested against an exact case | solver tests pass; Monte Carlo at converged τ within 3 SEM | table |
+| P3.4.7 | ☐ | Side-specific checks (inner vs outer layer) | each side affects only its region | record |
+
+## 3.5 Overlapping layers in arrays (proposal Milestone 5)
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.5.1 | ☐ | Three configurations: separated (gap > 2h in both directions), one-direction overlap (rectangular array), two-direction overlap | configurations defined by gap/h; occupancy recorded | table |
+| P3.5.2 | ☐ | Realism of the summed rate in 2D: no interior maximum above the surface value (interstitial points included); step counter-example | pass/fail per configuration | fig + table |
+| P3.5.3 | ☐ | Identification of multiple nearby surfaces: brute-force sum vs implementation on random points and segments | ≤ 1e-10 | tests |
+| P3.5.4 | ☐ | Signal vs overlap degree, compared with the conventional model at the same ρ (see 3.7) | characterisation | fig |
+
+## 3.6 Timestep, tolerance and cost on cylinders
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.6.1 | ☐ | τ scans on cylinders (step; then other profiles) incl. small radius and thin layers | error vs ΔR₂(0)·τ and vs curvature (h/R, √(Dτ)/R) recorded | fig |
+| P3.6.2 | ☐ | Confirm or adjust c = 0.005; for comparison studies set τ from the error in the difference (lesson from Review C1) | constraint documented | code/record |
+| P3.6.3 | ☐ | Fix ε_R₂ (signal error vs ε) | ε chosen with margin | table |
+| P3.6.4 | ☐ | Runtime vs walls and vs C-B5 | table | table |
+
+## 3.7 Comparison with the conventional model on cylinders (proposal Milestone 6)
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.7.1 | ☐ | Fixed-ρ comparison (mapping from P3.1.6): ΔS(t) and apparent T₂ vs radius (true Fig. 9A analogue), h (and centroid), D, ρ; single cylinder (continuum + MC) and arrays (MC) | ΔS and ΔT₂/T₂ with paired SEM vs SNR 100/200 (T₂ at TE* = T₂) | figs + tables |
+| P3.7.2 | ☐ | Packing density / volume fraction (Fig. 9B analogue), intra and extra compartments separately and summed | as above | fig |
+| P3.7.3 | ☐ | Best-fit conventional residual (single condition) and the D-dependence signature found on walls (thick/overlapping layers) | characterisation | table |
+| P3.7.4 | ☐ | Summary: where the spatial distribution becomes observable on cylinders, compared with walls | written paragraph with numbers | note |
+
+## 3.8 Record and tag
+
+| ID | ☐ | Task | Pass criterion | Output |
+|---|---|---|---|---|
+| P3.8.1 | ☐ | Phase 3 record (`research/phase3_record.md`) with every test, settings, σ, rulings | complete | record |
+| P3.8.2 | ☐ | User documentation for the cylinder layer fields | docs build | docs |
+| P3.8.3 | ☐ | Tag `rd-cylinders-v1` | tag exists | git tag |
+
+## Phase 3 deliverables
+
+- Layer on cylinders (single and arrays), step plus the profiles adopted in D3.2, with side-specific parameters, all verified.
+- Quadrature path with a fixed tolerance, cross-checked against closed forms.
+- Radial continuum benchmark for a single cylinder.
+- Cylinder baselines C-B1–C-B5 and the curved-surface conventional mapping.
+- Overlap and comparison results on cylinders; `phase3_record.md`; tag `rd-cylinders-v1`.
+
+## Phase 3 risks
+
+| Risk | Early warning | Response |
+|---|---|---|
+| Incorrect shell entry/exit on curved surfaces (proposal Table 1) | P3.2.2 brute-force mismatch, tangent cases | Exact line–circle intersections with tangent handling; restrict to verified primitives |
+| Quadrature cost too high for thin layers or steep profiles | P3.3.4, P3.6.4 | Closed forms where available; adaptive splitting only inside the shell |
+| ρ definition changes the comparison (curvature) | D3.1 undecided before 3.7 | Decide D3.1 first; report both conventions where cheap |
+| Conventional mapping biased on curved surfaces | P3.1.6 \|z\| > 3 | Use the measured mapping |
+| Timestep bias comparable to the effect (as in Review C1) | P3.6.1 | Set τ from the error in the difference; continuum check for single cylinders |
+| No independent benchmark for arrays | P3.4.6 covers single cylinders only | 2D finite-volume solver as an optional addition; Monte Carlo convergence otherwise |
 
 ---
 
