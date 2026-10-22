@@ -815,6 +815,15 @@ Paper Fig. 9: T₂ (spin echo, TE = 50 ms) vs (A) axon radius, (B) axonal volume
 
 Observability: the two-point T₂ noise σ_T₂/T₂ = √(1 + r²)/(SNR·r·|ln r|), with r = S(TE)/S(0). "Observable at SNR X" means |ΔT₂/T₂| ≥ 2σ_T₂/T₂; "MC only" means ≥ 3 paired SEM but below both thresholds.
 
+**Note on the fixed TE = 50 ms** (added 2026-10-22, after the P2.5.9 design review). TE = 50 is close to the conventional T₂ at the reference point (≈ 68 ms) and everywhere with T₂ ≥ 33 ms (S(50) ≥ 0.2). At two sweep points it lies well past T₂, so the two-point noise threshold is wider than at the T₂-optimal echo time TE = T₂ (continuum values, `p2_5_continuum/t2_continuum.csv`):
+
+| point | conventional T₂ | S(50) | 2σ_T₂/T₂ at TE = 50 (SNR 200) | at TE = T₂ | largest \|ΔT₂/T₂\| there |
+|---|---|---|---|---|---|
+| ρ = 0.06 (ρ sweep) | 16.6 ms | 0.050 | 0.067 | 0.029 | 4.3e-3 |
+| w = 0.5 (w sweep) | 17.4 ms | 0.056 | 0.062 | 0.029 | 3.9e-4 |
+
+There the threshold is ≈ 2.3× wider than necessary. The effect is still 7× (ρ = 0.06) and 75× (w = 0.5) below even the optimal threshold, so the conclusion "none observable at SNR 100/200" is unchanged. The P2.5.9 overlap study, whose T₂ goes down to ≈ 0.3 ms, measures at TE = T₂ instead.
+
 ![Fig. 9 analogue, same h](results/phase2/p2_5_t2_summary/p2_5_t2_fig9.png)
 
 ![Fig. 9 analogue, same centroid](results/phase2/p2_5_t2_summary/p2_5_t2_fig9_centroid.png)
