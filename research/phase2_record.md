@@ -41,6 +41,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.5.6, P2.5.7 | Apparent T₂ vs microstructure and vs TE (paper Figs. 9, 8A analogues), conventional + three profiles at fixed ρ; same h and same centroid | ΔT₂/T₂ vs paired SEM and T₂ noise at SNR 100/200 | none observable at SNR 100/200; ΔT₂/T₂ ≤ 5.7e-3; same h: profiles separate (34/52 distinct pairs > 3σ, unpaired SEM, ≤ 3.8e-3); same centroid: residual ≤ 2.9e-4 (2/51 > 3σ unpaired); ΔT₂/T₂ flat in TE **Superseded in part by Review C1 (timestep bias); see the C1 rows.** |
 | Review C1 | Timestep bias of the fixed-ρ profile effect (P2.5, P2.5.6/7): paired ΔS at τ = 1e-2, 2.5e-3, 6.25e-4 vs exact 1D continuum | characterisation | **confirmed**: ΔS converges to the continuum as τ falls; thin-layer positive ΔS at τ = 1e-2 is an artefact; \|ΔS\| underestimated 10–65 % at h = 0.2 |
 | Review C1 follow-up | P2.5, P2.5.6/7 recomputed with the exact 1D continuum benchmark; wider ρw/D map with best-fit conventional | validated vs MC within 2.6 SEM | all ΔS, ΔT₂/T₂ < 0 (no sign change); ∝ ρ and ∝ 1/D; same centroid: profiles within 11 %; separable from a fitted conventional model (single curve, SNR 200) only for ρw/D ≳ 3 with h/w ≳ 0.1–0.5 depending on profile (beyond the conventional model's ceiling D·π²/w² no θ fits) |
+| P2.5.9 | Overlapping layers (linear, exponential): profile realism; comparison with the conventional model vs overlap and ρw/D; D dependence | profile check pass/fail; MC spot check \|z\| ≤ 3; comparison characterisation | **profiles realistic** (never higher mid-gap; step h > w/2 flagged); MC **PASS** 8/8; overlap saturates the fixed-ρ difference; best-fit residual ≤ 0.021; overlapping layers ~D-independent (≤ 0.5 % / 4.6 %) vs conventional +5.5 % / +47 % (ρ = 0.1 / 1) |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -1024,3 +1025,170 @@ The continuum is independently checked against an exact non-uniform case (step l
 - the magnitudes of |ΔS| and ΔT₂/T₂ for h ≤ 0.2.
 
 These are unchanged: no configuration in those sweeps is observable at SNR 100/200, the θ ↔ ρ mapping, and all verifications of the layer code.
+
+## P2.5.9: overlapping layers (linear, exponential) vs the conventional model
+
+Plan [2026-10-22-overlapping-layers.md](../docs/superpowers/plans/2026-10-22-overlapping-layers.md). Scripts [overlap.jl](phase2/overlap.jl), [p2_5_overlap_profiles.jl](phase2/p2_5_overlap_profiles.jl), [p2_5_overlap.jl](phase2/p2_5_overlap.jl), [p2_5_overlap_mc_check.jl](phase2/p2_5_overlap_mc_check.jl), [p2_5_overlap_figs.jl](phase2/p2_5_overlap_figs.jl) → [results/phase2/p2_5_overlap/](results/phase2/p2_5_overlap/), [results/phase2/p2_5_overlap_mc_check/](results/phase2/p2_5_overlap_mc_check/). Walls w = 2 µm, D = 3 unless stated; layers on both faces; exponential truncated at w and renormalised.
+
+**1. Is the overlapping profile realistic?** The summed rate across the gap, ΔR₂(x) = (ρ/h)[g(x/h) + g((w − x)/h)], was evaluated from the simulator itself (layer exponent of a stationary spin, all wall images) and in closed form. The two agree to 1e-10 at every interior point (`test_overlap.jl`).
+- **Linear**, w/2 < h ≤ w: a flat plateau (ρ/h)(4 − 2w/h) on the overlap region [w − h, h], never above the wall value 2ρ/h. At h = w it is uniform, 2ρ/w.
+- **Exponential**: 2(ρ/h)·e^(−w/2h)·cosh((x − w/2)/h)/(1 − e^(−w/h)), lowest exactly mid-gap. Because the tail is cut at w, it always overlaps; the overlap is graded by the mid/wall ratio.
+- **Realism test** (ΔR₂ non-increasing from wall to middle): passes for every linear (h/w = 0.25–1.0) and exponential (0.05–1.0) configuration. The step counter-example at h/w = 0.75 fails (mid/wall = 2), which shows the test detects the unrealistic case.
+- Ruling: at exactly x = 0, x = w, or where two step supports touch (h = w/2, x = w/2), a point can be counted from both sides. These are measure-zero boundary points, so the checks sample inside the gap (±1e-9 µm).
+
+![overlapping profiles](results/phase2/p2_5_overlap/p2_5_overlap_profiles.png)
+
+| profile | h/w | overlap width (µm) | mid/wall | share of one face beyond mid-gap | realistic |
+|---|---|---|---|---|---|
+| linear | 0.25 | 0.00 | 0 | 0 | yes |
+| linear | 0.5 | 0.00 | 1e-12 | 0 | yes |
+| linear | 0.6 | 0.40 | 0.333 | 0.0278 | yes |
+| linear | 0.75 | 1.00 | 0.667 | 0.111 | yes |
+| linear | 0.9 | 1.60 | 0.889 | 0.198 | yes |
+| linear | 1 | 2.00 | 1 | 0.25 | yes |
+| exponential | 0.05 | 2.00 | 9.08e-05 | 4.54e-05 | yes |
+| exponential | 0.1 | 2.00 | 0.0135 | 0.00669 | yes |
+| exponential | 0.25 | 2.00 | 0.266 | 0.119 | yes |
+| exponential | 0.5 | 2.00 | 0.648 | 0.269 | yes |
+| exponential | 0.75 | 2.00 | 0.813 | 0.339 | yes |
+| exponential | 1 | 2.00 | 0.887 | 0.378 | yes |
+| step | 0.5 | 0.00 | 1 | 0 | yes |
+| step | 0.75 | 1.00 | 2 | 0.333 | **no** |
+
+**2. Monte Carlo spot check** (τ from the summed maximum rate, a quarter of the layer constraint; seeds 1–10, 50000 spins; readouts until the conventional signal ≈ 0.05):
+
+| ρ | profile | h/w | τ (ms) | max \|z\| | max \|MC − continuum\| | Outcome |
+|---|---|---|---|---|---|---|
+| 0.1 | linear | 0.75 | 9.4e-03 | 1.90 | 1.1e-05 | **PASS** |
+| 0.1 | linear | 1 | 1.0e-02 | 1.16 | 1.2e-09 | **PASS** |
+| 0.1 | exponential | 0.5 | 9.5e-03 | 2.19 | 1.2e-05 | **PASS** |
+| 0.1 | exponential | 1 | 1.0e-02 | 1.66 | 2.6e-06 | **PASS** |
+| 1 | linear | 0.75 | 9.4e-04 | 1.99 | 4.2e-05 | **PASS** |
+| 1 | linear | 1 | 1.3e-03 | 0.04 | 4.2e-11 | **PASS** |
+| 1 | exponential | 0.5 | 9.5e-04 | 2.04 | 4.0e-05 | **PASS** |
+| 1 | exponential | 1 | 1.2e-03 | 1.90 | 9.7e-06 | **PASS** |
+
+The fully overlapping linear layer (uniform) matches its exact decay to ≤ 1.2e-9.
+
+**3. Comparison with the conventional model at the same ρ** (continuum benchmark). For each configuration:
+- max |ΔS| over a window running until the conventional signal ≈ 1 %;
+- ΔT₂/T₂ at TE* = the conventional model's own T₂ (S_conv(TE*) = e^(−1), bulk T₂ = 2 s). Ruling: a fixed TE = 50 ms is unmeasurable at ρw/D ≥ 0.3, where T₂ ≤ 10 ms;
+- the best-fit-conventional residual (ρ_c free, single curve);
+- the mono-exponential residual of the layer curve.
+
+*Linear:*
+
+| h/w | mid/wall | ρw/D | max\|ΔS\| | ΔT₂/T₂ at TE* | TE* (ms) | 2σ_T₂/T₂ (SNR 200) | best-fit residual | layer mono-exp residual |
+|---|---|---|---|---|---|---|---|---|
+| 0.25 | 0 | 0.0067 | 2.35e-04 | -6.10e-04 | 94.9 | 0.029 | 6.4e-08 | 1.3e-07 |
+| 0.25 | 0 | 0.1 | 3.48e-03 | -9.38e-03 | 6.75 | 0.029 | 1.3e-05 | 2.9e-05 |
+| 0.25 | 0 | 0.3 | 1.02e-02 | -2.73e-02 | 2.33 | 0.029 | 1.2e-04 | 2.6e-04 |
+| 0.25 | 0 | 1 | 3.15e-02 | -8.22e-02 | 0.777 | 0.029 | 1.2e-03 | 2.5e-03 |
+| 0.25 | 0 | 3 | 7.77e-02 | -1.91e-01 | 0.332 | 0.029 | 6.9e-03 | 1.6e-02 |
+| 0.5 | 1e-12 | 0.0067 | 3.69e-04 | -9.55e-04 | 94.9 | 0.029 | 1.4e-07 | 3.2e-08 |
+| 0.5 | 1e-12 | 0.1 | 5.46e-03 | -1.47e-02 | 6.75 | 0.029 | 3.0e-05 | 7.2e-06 |
+| 0.5 | 1e-12 | 0.3 | 1.61e-02 | -4.28e-02 | 2.33 | 0.029 | 2.7e-04 | 6.5e-05 |
+| 0.5 | 1e-12 | 1 | 5.05e-02 | -1.29e-01 | 0.777 | 0.029 | 2.8e-03 | 6.6e-04 |
+| 0.5 | 1e-12 | 3 | 1.29e-01 | -3.00e-01 | 0.332 | 0.029 | 1.8e-02 | 4.4e-03 |
+| 0.6 | 0.33 | 0.0067 | 3.94e-04 | -1.02e-03 | 94.9 | 0.029 | 1.5e-07 | 1.3e-08 |
+| 0.6 | 0.33 | 0.1 | 5.83e-03 | -1.57e-02 | 6.75 | 0.029 | 3.3e-05 | 2.9e-06 |
+| 0.6 | 0.33 | 0.3 | 1.72e-02 | -4.57e-02 | 2.33 | 0.029 | 3.0e-04 | 2.6e-05 |
+| 0.6 | 0.33 | 1 | 5.41e-02 | -1.37e-01 | 0.777 | 0.029 | 3.1e-03 | 2.6e-04 |
+| 0.6 | 0.33 | 3 | 1.39e-01 | -3.20e-01 | 0.332 | 0.029 | 2.0e-02 | 1.7e-03 |
+| 0.75 | 0.67 | 0.0067 | 4.08e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 1.6e-09 |
+| 0.75 | 0.67 | 0.1 | 6.04e-03 | -1.62e-02 | 6.75 | 0.029 | 3.5e-05 | 3.6e-07 |
+| 0.75 | 0.67 | 0.3 | 1.78e-02 | -4.73e-02 | 2.33 | 0.029 | 3.1e-04 | 3.2e-06 |
+| 0.75 | 0.67 | 1 | 5.61e-02 | -1.42e-01 | 0.777 | 0.029 | 3.3e-03 | 3.3e-05 |
+| 0.75 | 0.67 | 3 | 1.44e-01 | -3.30e-01 | 0.332 | 0.029 | 2.1e-02 | 2.2e-04 |
+| 0.9 | 0.89 | 0.0067 | 4.10e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 3.0e-11 |
+| 0.9 | 0.89 | 0.1 | 6.07e-03 | -1.63e-02 | 6.75 | 0.029 | 3.5e-05 | 6.6e-09 |
+| 0.9 | 0.89 | 0.3 | 1.79e-02 | -4.75e-02 | 2.33 | 0.029 | 3.2e-04 | 6.0e-08 |
+| 0.9 | 0.89 | 1 | 5.64e-02 | -1.43e-01 | 0.777 | 0.029 | 3.3e-03 | 6.1e-07 |
+| 0.9 | 0.89 | 3 | 1.45e-01 | -3.32e-01 | 0.332 | 0.029 | 2.1e-02 | 4.1e-06 |
+| 1 | 1 | 0.0067 | 4.10e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 1.6e-15 |
+| 1 | 1 | 0.1 | 6.07e-03 | -1.63e-02 | 6.75 | 0.029 | 3.5e-05 | 6.7e-16 |
+| 1 | 1 | 0.3 | 1.79e-02 | -4.75e-02 | 2.33 | 0.029 | 3.2e-04 | 4.0e-15 |
+| 1 | 1 | 1 | 5.64e-02 | -1.43e-01 | 0.777 | 0.029 | 3.3e-03 | 1.8e-15 |
+| 1 | 1 | 3 | 1.45e-01 | -3.32e-01 | 0.332 | 0.029 | 2.1e-02 | 1.8e-15 |
+
+*Exponential:*
+
+| h/w | mid/wall | ρw/D | max\|ΔS\| | ΔT₂/T₂ at TE* | TE* (ms) | 2σ_T₂/T₂ (SNR 200) | best-fit residual | layer mono-exp residual |
+|---|---|---|---|---|---|---|---|---|
+| 0.05 | 9.1e-05 | 0.0067 | 1.60e-04 | -4.13e-04 | 94.9 | 0.029 | 3.7e-08 | 1.7e-07 |
+| 0.05 | 9.1e-05 | 0.1 | 2.35e-03 | -6.36e-03 | 6.75 | 0.029 | 7.0e-06 | 3.8e-05 |
+| 0.05 | 9.1e-05 | 0.3 | 6.89e-03 | -1.86e-02 | 2.33 | 0.029 | 6.1e-05 | 3.3e-04 |
+| 0.05 | 9.1e-05 | 1 | 2.12e-02 | -5.60e-02 | 0.777 | 0.029 | 5.9e-04 | 3.1e-03 |
+| 0.05 | 9.1e-05 | 3 | 5.18e-02 | -1.31e-01 | 0.332 | 0.029 | 3.5e-03 | 1.8e-02 |
+| 0.1 | 0.013 | 0.0067 | 2.71e-04 | -7.01e-04 | 94.9 | 0.029 | 8.3e-08 | 1.0e-07 |
+| 0.1 | 0.013 | 0.1 | 4.00e-03 | -1.08e-02 | 6.75 | 0.029 | 1.8e-05 | 2.3e-05 |
+| 0.1 | 0.013 | 0.3 | 1.18e-02 | -3.15e-02 | 2.33 | 0.029 | 1.6e-04 | 2.0e-04 |
+| 0.1 | 0.013 | 1 | 3.67e-02 | -9.50e-02 | 0.777 | 0.029 | 1.6e-03 | 2.0e-03 |
+| 0.1 | 0.013 | 3 | 9.25e-02 | -2.24e-01 | 0.332 | 0.029 | 1.0e-02 | 1.2e-02 |
+| 0.25 | 0.27 | 0.0067 | 3.89e-04 | -1.01e-03 | 94.9 | 0.029 | 1.5e-07 | 1.7e-08 |
+| 0.25 | 0.27 | 0.1 | 5.75e-03 | -1.55e-02 | 6.75 | 0.029 | 3.2e-05 | 3.7e-06 |
+| 0.25 | 0.27 | 0.3 | 1.70e-02 | -4.51e-02 | 2.33 | 0.029 | 2.9e-04 | 3.3e-05 |
+| 0.25 | 0.27 | 1 | 5.34e-02 | -1.35e-01 | 0.777 | 0.029 | 3.0e-03 | 3.3e-04 |
+| 0.25 | 0.27 | 3 | 1.37e-01 | -3.16e-01 | 0.332 | 0.029 | 1.9e-02 | 2.2e-03 |
+| 0.5 | 0.65 | 0.0067 | 4.08e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 1.7e-09 |
+| 0.5 | 0.65 | 0.1 | 6.04e-03 | -1.62e-02 | 6.75 | 0.029 | 3.5e-05 | 3.7e-07 |
+| 0.5 | 0.65 | 0.3 | 1.78e-02 | -4.73e-02 | 2.33 | 0.029 | 3.1e-04 | 3.3e-06 |
+| 0.5 | 0.65 | 1 | 5.61e-02 | -1.42e-01 | 0.777 | 0.029 | 3.3e-03 | 3.4e-05 |
+| 0.5 | 0.65 | 3 | 1.44e-01 | -3.30e-01 | 0.332 | 0.029 | 2.1e-02 | 2.3e-04 |
+| 0.75 | 0.81 | 0.0067 | 4.09e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 3.7e-10 |
+| 0.75 | 0.81 | 0.1 | 6.06e-03 | -1.63e-02 | 6.75 | 0.029 | 3.5e-05 | 8.2e-08 |
+| 0.75 | 0.81 | 0.3 | 1.79e-02 | -4.75e-02 | 2.33 | 0.029 | 3.2e-04 | 7.3e-07 |
+| 0.75 | 0.81 | 1 | 5.63e-02 | -1.42e-01 | 0.777 | 0.029 | 3.3e-03 | 7.5e-06 |
+| 0.75 | 0.81 | 3 | 1.45e-01 | -3.31e-01 | 0.332 | 0.029 | 2.1e-02 | 5.0e-05 |
+| 1 | 0.89 | 0.0067 | 4.10e-04 | -1.06e-03 | 94.9 | 0.029 | 1.6e-07 | 1.2e-10 |
+| 1 | 0.89 | 0.1 | 6.07e-03 | -1.63e-02 | 6.75 | 0.029 | 3.5e-05 | 2.7e-08 |
+| 1 | 0.89 | 0.3 | 1.79e-02 | -4.75e-02 | 2.33 | 0.029 | 3.2e-04 | 2.4e-07 |
+| 1 | 0.89 | 1 | 5.64e-02 | -1.42e-01 | 0.777 | 0.029 | 3.3e-03 | 2.5e-06 |
+| 1 | 0.89 | 3 | 1.45e-01 | -3.32e-01 | 0.332 | 0.029 | 2.1e-02 | 1.6e-05 |
+
+![overlap vs signal](results/phase2/p2_5_overlap/p2_5_overlap_signal.png)
+
+**4. D dependence of the apparent T₂** (one TE per ρ, the conventional T₂ at D = 3, used for every D; same ρ for both models at every D):
+
+| ρ (µm/ms) | TE (ms) | model | h/w | T₂(D=0.5) | T₂(D=1) | T₂(D=2) | T₂(D=3) | T₂(0.5)/T₂(3) − 1 |
+|---|---|---|---|---|---|---|---|---|
+| 0.1 | 10.1 | conventional | — | 10.609 | 10.280 | 10.115 | 10.060 | +5.45e-02 |
+| 0.1 | 10.1 | linear | 0.25 | 10.230 | 10.090 | 10.020 | 9.997 | +2.33e-02 |
+| 0.1 | 10.1 | linear | 0.5 | 10.015 | 9.983 | 9.967 | 9.961 | +5.43e-03 |
+| 0.1 | 10.1 | linear | 0.6 | 9.976 | 9.963 | 9.957 | 9.955 | +2.14e-03 |
+| 0.1 | 10.1 | linear | 0.75 | 9.954 | 9.952 | 9.951 | 9.951 | +2.83e-04 |
+| 0.1 | 10.1 | linear | 0.9 | 9.950 | 9.950 | 9.950 | 9.950 | +6.12e-06 |
+| 0.1 | 10.1 | linear | 1 | 9.950 | 9.950 | 9.950 | 9.950 | -5.19e-09 |
+| 0.1 | 10.1 | exponential | 0.05 | 10.351 | 10.151 | 10.051 | 10.017 | +3.33e-02 |
+| 0.1 | 10.1 | exponential | 0.1 | 10.172 | 10.062 | 10.006 | 9.988 | +1.85e-02 |
+| 0.1 | 10.1 | exponential | 0.25 | 9.984 | 9.967 | 9.959 | 9.956 | +2.81e-03 |
+| 0.1 | 10.1 | exponential | 0.5 | 9.954 | 9.952 | 9.951 | 9.951 | +2.83e-04 |
+| 0.1 | 10.1 | exponential | 0.75 | 9.951 | 9.951 | 9.950 | 9.950 | +6.21e-05 |
+| 0.1 | 10.1 | exponential | 1 | 9.950 | 9.950 | 9.950 | 9.950 | +2.04e-05 |
+| 1 | 1.11 | conventional | — | 1.629 | 1.327 | 1.165 | 1.110 | +4.67e-01 |
+| 1 | 1.11 | linear | 0.25 | 1.260 | 1.137 | 1.070 | 1.046 | +2.04e-01 |
+| 1 | 1.11 | linear | 0.5 | 1.057 | 1.031 | 1.016 | 1.010 | +4.58e-02 |
+| 1 | 1.11 | linear | 0.6 | 1.021 | 1.012 | 1.006 | 1.004 | +1.75e-02 |
+| 1 | 1.11 | linear | 0.75 | 1.002 | 1.001 | 1.000 | 1.000 | +2.30e-03 |
+| 1 | 1.11 | linear | 0.9 | 1.000 | 1.000 | 1.000 | 1.000 | +5.16e-05 |
+| 1 | 1.11 | linear | 1 | 1.000 | 1.000 | 1.000 | 1.000 | +1.58e-11 |
+| 1 | 1.11 | exponential | 0.05 | 1.372 | 1.197 | 1.100 | 1.067 | +2.86e-01 |
+| 1 | 1.11 | exponential | 0.1 | 1.198 | 1.107 | 1.055 | 1.037 | +1.55e-01 |
+| 1 | 1.11 | exponential | 0.25 | 1.028 | 1.015 | 1.008 | 1.005 | +2.27e-02 |
+| 1 | 1.11 | exponential | 0.5 | 1.002 | 1.001 | 1.000 | 1.000 | +2.29e-03 |
+| 1 | 1.11 | exponential | 0.75 | 1.000 | 1.000 | 1.000 | 1.000 | +5.03e-04 |
+| 1 | 1.11 | exponential | 1 | 1.000 | 1.000 | 1.000 | 1.000 | +1.66e-04 |
+
+![D dependence](results/phase2/p2_5_overlap/p2_5_overlap_ddep.png)
+
+**Conclusions (numbers only).**
+- **Profiles are realistic.** Overlapping linear and exponential layers never relax more mid-gap than at the walls, in the simulator and in closed form. Only the step profile with h > w/2 does, which is why it stays excluded.
+- **At fixed ρ, overlap adds little beyond the thick-layer value.** The difference from the conventional model rises with h/w and saturates once the layers overlap: from h/w ≈ 0.5 for linear and ≈ 0.25 for exponential, it is within ≈ 10 % of the fully uniform value. At ρw/D = 0.0067 (the P2.5 reference) it is ≤ 4.1e-4 in S and ≤ 1.1e-3 in T₂. At ρw/D = 0.3 it reaches ΔT₂/T₂ ≈ −4.8 %, above the 2σ two-point noise at SNR 200 (2.9 %), but only if ρ is known. At ρw/D = 1 and 3 it is −14 % and −33 %.
+- **A fitted conventional model still mimics a single curve.** The best-fit residual for overlapping layers is 3.5e-5 (ρw/D = 0.1), 3.2e-4 (0.3), 3.3e-3 (1) and 0.021 (3). It crosses the single-measurement threshold 0.01 only at ρw/D = 3, as in the C1 map.
+- **The D dependence is the distinguishing feature of overlap.** With the layers overlapping (h/w ≥ 0.5), the apparent T₂ barely changes with D: T₂(D = 0.5)/T₂(D = 3) − 1 ≤ 5.4e-3 (ρ = 0.1) and ≤ 4.6e-2 (ρ = 1), and exactly 0 at full linear overlap (uniform relaxation). The conventional model changes by +5.5 % (ρ = 0.1) and +47 % (ρ = 1). Thin (non-overlapping) layers sit in between: exponential h/w = 0.05 +3.3 % / +29 %, linear h/w = 0.25 +2.3 % / +20 %. Comparing two single two-point T₂ measurements at SNR 200 (σ of the ratio ≈ 2 %, so 2σ ≈ 4 %), the conventional +5.5 % at ρ = 0.1 is marginal and +47 % at ρ = 1 is clear, while an overlapping layer shows ≈ 0.
+- **Limitations.**
+  - Walls only, free decay.
+  - Overlap needs h ≳ w/2, so it is relevant mainly for small compartments.
+  - The D comparison assumes ρ does not change with D (a temperature change might change both).
+  - At ρ = 1 the T₂ is ≈ 1 ms, far shorter than typical tissue values; at ρ = 0.1 it is ≈ 10 ms.
+  - Thresholds are for single measurements.

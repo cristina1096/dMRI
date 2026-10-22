@@ -13,7 +13,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 | Phase | Weeks | Scope | Tasks | Done | Status |
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
-| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 54 | 43 | ◐ |
+| **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
 | Phase 3 | 12–13 | Sensitivity studies (C1–C7), cylinder and sphere geometry | — | — | not yet planned |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
@@ -235,6 +235,7 @@ Characterisation mode: **ρ fixed**, same reference configuration for every prof
 | P2.5.5 | ☑ | Summary: where (if anywhere) profiles separate beyond 3σ on walls | Written paragraph with numbers | profiles separate beyond 3σ (MC) in 39 of 40 pairs, by ≤ 1.7e-3; none of 41 configurations reaches SNR 100/200 (vs conventional model max 2.4e-3); layer curves mono-exponential. `phase2_record.md` P2.5 **Corrected (Review C1):** continuum: all ΔS < 0, ∝ ρ, ∝ 1/D, max 2.7e-3; separable from a fitted conventional model only for ρw/D ≳ 3 with thick layers (h/w ≳ 0.1–0.5). |
 | P2.5.6 | ☑ | Apparent T₂ vs w, h, D, ρ for the conventional model and three profiles at fixed ρ (Fig. 9 analogue, TE = 20/50/100); sub-test at the same centroid (centroid sweep instead of h) | ΔT₂/T₂ reported with paired SEM and two-point T₂ noise at SNR 100/200 | none observable; same h: profiles separate (34/52 pairs > 3σ unpaired, ≤ 3.8e-3); same centroid: residual ≤ 2.9e-4 (2/51 > 3σ). `p2_5_t2_summary/` **Corrected (Review C1):** continuum ΔT₂/T₂ < 0 everywhere, max −6.0e-3 (same h), −3.5e-3 (same centroid), profiles within 11 % at same centroid. |
 | P2.5.7 | ☑ | Apparent T₂ vs echo time (TE = 5–200 ms) for the conventional model and three profiles at fixed ρ, w = 1, 2, 5 and h = 0.05, 0.2, 0.5; sub-test at the same centroid (Fig. 8A analogue, no off-resonance) | ΔT₂/T₂ vs TE with paired SEM and two-point T₂ noise at SNR 200 | T₂_app flat in TE; ΔT₂/T₂ constant in TE beyond ≈ 30 ms, |ΔT₂/T₂| ≤ 1.5e-3. `p2_5_t2_summary/p2_5_t2_fig8a*.png` **Corrected (Review C1):** continuum ΔT₂/T₂ < 0 and constant in TE (30–200 ms) within 2e-6. |
+| P2.5.9 | ☑ | Overlapping layers (linear, exponential): realistic summed profile (never higher mid-gap), and comparison with the conventional model vs overlap and ρw/D, incl. D dependence | profile check pass/fail; comparison as characterisation | realistic (step h > w/2 flagged); MC 8/8; overlap saturates the fixed-ρ difference; overlapping layers ~D-independent vs conventional +5.5 %/+47 % (ρ = 0.1/1). `p2_5_overlap/`, `p2_5_overlap_mc_check/` |
 
 This is preliminary — the full sensitivity study in Phase 3 uses curved geometry and narrowing gaps, where differences are expected to be larger.
 
