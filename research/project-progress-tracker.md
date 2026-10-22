@@ -213,7 +213,9 @@ Characterisation mode: **ρ fixed**, same reference configuration for every prof
 
 **Implementation plan:** [docs/superpowers/plans/2026-10-08-sensitivity-walls.md](../docs/superpowers/plans/2026-10-08-sensitivity-walls.md).
 
-**Joint-fit plan (P2.5.8):** [docs/superpowers/plans/2026-10-13-joint-fit.md](../docs/superpowers/plans/2026-10-13-joint-fit.md).
+**Overlapping-layers plan (P2.5.9):** [docs/superpowers/plans/2026-10-22-overlapping-layers.md](../docs/superpowers/plans/2026-10-22-overlapping-layers.md).
+
+**Joint-fit plan (P2.5.8, deferred to future work, user 2026-10-22):** [docs/superpowers/plans/2026-10-13-joint-fit.md](../docs/superpowers/plans/2026-10-13-joint-fit.md).
 
 **Apparent-T₂ plan (P2.5.6 Fig. 9 and P2.5.7 Fig. 8A analogues of Cottaar et al. 2026):** [docs/superpowers/plans/2026-10-12-apparent-t2.md](../docs/superpowers/plans/2026-10-12-apparent-t2.md).
 
