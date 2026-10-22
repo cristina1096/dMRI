@@ -41,7 +41,7 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.5.6, P2.5.7 | Apparent T₂ vs microstructure and vs TE (paper Figs. 9, 8A analogues), conventional + three profiles at fixed ρ; same h and same centroid | ΔT₂/T₂ vs paired SEM and T₂ noise at SNR 100/200 | none observable at SNR 100/200; ΔT₂/T₂ ≤ 5.7e-3; same h: profiles separate (34/52 distinct pairs > 3σ, unpaired SEM, ≤ 3.8e-3); same centroid: residual ≤ 2.9e-4 (2/51 > 3σ unpaired); ΔT₂/T₂ flat in TE **Superseded in part by Review C1 (timestep bias); see the C1 rows.** |
 | Review C1 | Timestep bias of the fixed-ρ profile effect (P2.5, P2.5.6/7): paired ΔS at τ = 1e-2, 2.5e-3, 6.25e-4 vs exact 1D continuum | characterisation | **confirmed**: ΔS converges to the continuum as τ falls; thin-layer positive ΔS at τ = 1e-2 is an artefact; \|ΔS\| underestimated 10–65 % at h = 0.2 |
 | Review C1 follow-up | P2.5, P2.5.6/7 recomputed with the exact 1D continuum benchmark; wider ρw/D map with best-fit conventional | validated vs MC within 2.6 SEM | all ΔS, ΔT₂/T₂ < 0 (no sign change); ∝ ρ and ∝ 1/D; same centroid: profiles within 11 %; separable from a fitted conventional model (single curve, SNR 200) only for ρw/D ≳ 3 with h/w ≳ 0.1–0.5 depending on profile (beyond the conventional model's ceiling D·π²/w² no θ fits) |
-| P2.5.9 | Overlapping layers (linear, exponential): profile realism; comparison with the conventional model vs overlap and ρw/D; D dependence | profile check pass/fail; MC spot check \|z\| ≤ 3; comparison characterisation | **profiles realistic** (never higher mid-gap; step h > w/2 flagged); MC **PASS** 8/8; overlap saturates the fixed-ρ difference; best-fit residual ≤ 0.021; overlapping layers ~D-independent (≤ 0.5 % / 4.6 %) vs conventional +5.5 % / +47 % (ρ = 0.1 / 1) |
+| P2.5.9 | Overlapping layers (linear, exponential): profile realism; comparison with the conventional model vs overlap and ρw/D; D dependence | profile check pass/fail; MC spot check \|z\| ≤ 3; comparison characterisation | **profiles realistic** (never higher mid-gap; step h > w/2 flagged); MC **PASS** 8/8; overlap saturates the fixed-ρ difference; best-fit residual ≤ 0.021; thick or overlapping layers (h ≳ w/2) ~D-independent (≤ 0.5 % / 4.6 %) vs conventional +5.5 % / +47 % (ρ = 0.1 / 1), observable only where T₂ ≈ 1–10 ms |
 | P2.6.1 | V1: timestep plateau (toy, h = 0.1, ΔR₂(0) = 0.1, τ = 1e-5–0.1 ms) + MCMR at 4 τ | τ_conv at 1 % / 0.1 %; MCMR = toy within 2 SEM | 1 % never exceeded (τ_conv ≥ 0.1 ms); τ_conv(0.1 %) = 0.086 ms; bias at 0.1 ms −1.1e-3 (less attenuation); MCMR vs toy **PASS** (\|z\| ≤ 1.3) |
 | P2.6.2, P2.6.3 | V2 (h²) and V3 (1/D) scaling of τ_conv; decision point (rate) | τ_conv·D/h² and τ_conv·D constant within ±30 % | **V2 FAIL, V3 FAIL** (no h² or 1/D scaling; h/D trends at ΔR₂(0) = 0.1 within noise). τ_conv set by ΔR₂(0)·τ: 0.048–0.13 (1 %), 0.0028–0.0065 (0.1 %) over h = 0.01–0.4, D = 1–3; bias at 0.1 ms ∝ ΔR₂(0) |
 | P2.6.4 | Profile dependence of the timestep error (linear vs step, toy + MCMR check) | record whether the constraint depends on shape | linear less demanding in every pair (bias at 0.1 ms 0.53–0.78× step); error at c = 0.005 at most 1.2e-3 ± 3e-4 (linear), 1.5e-3 ± 4e-4 (step), 8.3e-4 ± 2e-4 (exponential) → same c for all three; MCMR = toy for linear (\|z\| ≤ 1.3) |
@@ -1033,7 +1033,7 @@ Plan [2026-10-22-overlapping-layers.md](../docs/superpowers/plans/2026-10-22-ove
 **1. Is the overlapping profile realistic?** The summed rate across the gap, ΔR₂(x) = (ρ/h)[g(x/h) + g((w − x)/h)], was evaluated from the simulator itself (layer exponent of a stationary spin, all wall images) and in closed form. The two agree to 1e-10 at every interior point (`test_overlap.jl`).
 - **Linear**, w/2 < h ≤ w: a flat plateau (ρ/h)(4 − 2w/h) on the overlap region [w − h, h], never above the wall value 2ρ/h. At h = w it is uniform, 2ρ/w.
 - **Exponential**: 2(ρ/h)·e^(−w/2h)·cosh((x − w/2)/h)/(1 − e^(−w/h)), lowest exactly mid-gap. Because the tail is cut at w, it always overlaps; the overlap is graded by the mid/wall ratio.
-- **Realism test** (ΔR₂ non-increasing from wall to middle): passes for every linear (h/w = 0.25–1.0) and exponential (0.05–1.0) configuration. The step counter-example at h/w = 0.75 fails (mid/wall = 2), which shows the test detects the unrealistic case.
+- **Realism test** (ΔR₂ non-increasing from wall to middle): passes for every linear (h/w = 0.25–1.0) and exponential (0.05–1.0) configuration. This holds in general: for any convex, decreasing single-face profile, f(x) + f(w − x) is non-increasing on [0, w/2]. Linear (with its zero tail) and exponential are convex; step is not, which is why it fails. The step counter-example at h/w = 0.75 fails (mid/wall = 2), which shows the test detects the unrealistic case.
 - Ruling: at exactly x = 0, x = w, or where two step supports touch (h = w/2, x = w/2), a point can be counted from both sides. These are measure-zero boundary points, so the checks sample inside the gap (±1e-9 µm).
 
 ![overlapping profiles](results/phase2/p2_5_overlap/p2_5_overlap_profiles.png)
@@ -1041,7 +1041,7 @@ Plan [2026-10-22-overlapping-layers.md](../docs/superpowers/plans/2026-10-22-ove
 | profile | h/w | overlap width (µm) | mid/wall | share of one face beyond mid-gap | realistic |
 |---|---|---|---|---|---|
 | linear | 0.25 | 0.00 | 0 | 0 | yes |
-| linear | 0.5 | 0.00 | 1e-12 | 0 | yes |
+| linear | 0.5 | 0.00 | 0 (touching) | 0 | yes |
 | linear | 0.6 | 0.40 | 0.333 | 0.0278 | yes |
 | linear | 0.75 | 1.00 | 0.667 | 0.111 | yes |
 | linear | 0.9 | 1.60 | 0.889 | 0.198 | yes |
@@ -1068,11 +1068,11 @@ Plan [2026-10-22-overlapping-layers.md](../docs/superpowers/plans/2026-10-22-ove
 | 1 | exponential | 0.5 | 9.5e-04 | 2.04 | 4.0e-05 | **PASS** |
 | 1 | exponential | 1 | 1.2e-03 | 1.90 | 9.7e-06 | **PASS** |
 
-The fully overlapping linear layer (uniform) matches its exact decay to ≤ 1.2e-9.
+The fully overlapping linear layer (uniform) matches its exact decay to ≤ 1.2e-9. Its z uses an SEM floor of 1e-9, so its pass is a roundoff check (|difference| ≤ 3e-9) rather than a statistical one.
 
 **3. Comparison with the conventional model at the same ρ** (continuum benchmark). For each configuration:
 - max |ΔS| over a window running until the conventional signal ≈ 1 %;
-- ΔT₂/T₂ at TE* = the conventional model's own T₂ (S_conv(TE*) = e^(−1), bulk T₂ = 2 s). Ruling: a fixed TE = 50 ms is unmeasurable at ρw/D ≥ 0.3, where T₂ ≤ 10 ms;
+- ΔT₂/T₂ at TE* = the conventional model's own T₂ (S_conv(TE*) = e^(−1), bulk T₂ = 2 s). Ruling: a fixed TE = 50 ms is unmeasurable from ρw/D ≈ 0.1 on (TE* = 6.75 ms there, S(50) ≈ 6e-4, below the SNR-200 noise). TE* = T₂ is also the TE with the lowest two-point T₂ noise, so the 2σ column is the most favourable case;
 - the best-fit-conventional residual (ρ_c free, single curve);
 - the mono-exponential residual of the layer curve.
 
@@ -1185,10 +1185,15 @@ The fully overlapping linear layer (uniform) matches its exact decay to ≤ 1.2e
 - **Profiles are realistic.** Overlapping linear and exponential layers never relax more mid-gap than at the walls, in the simulator and in closed form. Only the step profile with h > w/2 does, which is why it stays excluded.
 - **At fixed ρ, overlap adds little beyond the thick-layer value.** The difference from the conventional model rises with h/w and saturates once the layers overlap: from h/w ≈ 0.5 for linear and ≈ 0.25 for exponential, it is within ≈ 10 % of the fully uniform value. At ρw/D = 0.0067 (the P2.5 reference) it is ≤ 4.1e-4 in S and ≤ 1.1e-3 in T₂. At ρw/D = 0.3 it reaches ΔT₂/T₂ ≈ −4.8 %, above the 2σ two-point noise at SNR 200 (2.9 %), but only if ρ is known. At ρw/D = 1 and 3 it is −14 % and −33 %.
 - **A fitted conventional model still mimics a single curve.** The best-fit residual for overlapping layers is 3.5e-5 (ρw/D = 0.1), 3.2e-4 (0.3), 3.3e-3 (1) and 0.021 (3). It crosses the single-measurement threshold 0.01 only at ρw/D = 3, as in the C1 map.
-- **The D dependence is the distinguishing feature of overlap.** With the layers overlapping (h/w ≥ 0.5), the apparent T₂ barely changes with D: T₂(D = 0.5)/T₂(D = 3) − 1 ≤ 5.4e-3 (ρ = 0.1) and ≤ 4.6e-2 (ρ = 1), and exactly 0 at full linear overlap (uniform relaxation). The conventional model changes by +5.5 % (ρ = 0.1) and +47 % (ρ = 1). Thin (non-overlapping) layers sit in between: exponential h/w = 0.05 +3.3 % / +29 %, linear h/w = 0.25 +2.3 % / +20 %. Comparing two single two-point T₂ measurements at SNR 200 (σ of the ratio ≈ 2 %, so 2σ ≈ 4 %), the conventional +5.5 % at ρ = 0.1 is marginal and +47 % at ρ = 1 is clear, while an overlapping layer shows ≈ 0.
+- **The D dependence separates thick or overlapping layers (h ≳ w/2) from the conventional model.** The D dependence of the apparent T₂ falls smoothly as the rate spreads across the gap. It is the spreading of the rate, not the overlap as such, that removes it: the bound below is set by linear h/w = 0.5, where the two layers only touch.
+  - For h/w ≥ 0.5, T₂(D = 0.5)/T₂(D = 3) − 1 ≤ 5.4e-3 (ρ = 0.1) and ≤ 4.6e-2 (ρ = 1), and exactly 0 at full linear overlap (uniform relaxation).
+  - The conventional model changes by +5.5 % (ρ = 0.1) and +47 % (ρ = 1).
+  - Thin layers sit in between: exponential h/w = 0.05 +3.3 % / +29 %, linear h/w = 0.25 +2.3 % / +20 %.
+  - Against noise: comparing two single two-point T₂ measurements at SNR 200 (σ of the ratio ≈ 2 %, so 2σ ≈ 4 %), the conventional +5.5 % at ρ = 0.1 is marginal and +47 % at ρ = 1 is clear, while a thick or overlapping layer shows ≈ 0.
 - **Limitations.**
   - Walls only, free decay.
   - Overlap needs h ≳ w/2, so it is relevant mainly for small compartments.
-  - The D comparison assumes ρ does not change with D (a temperature change might change both).
+  - The D comparison assumes ρ does not change with D (a temperature change might change both). "Same ρ" means MCMR's θ = ρ√(π/D) changes with D. If θ were the fixed quantity instead, the conventional model's D dependence would be larger.
+  - The conventional model's D dependence grows with ρw/D. Here it is +5.5 % at ρw/D = 0.07–0.4 (ρ = 0.1, T₂ ≈ 10 ms). By the same scaling it would be ≈ 0.5 % at the P2.5 reference strength (ρw/D ≈ 0.0067, T₂ ≈ 95 ms); this is an extrapolation and was not run. The D-dependence separation is therefore observable only where T₂ is about 1–10 ms at w = 2.
   - At ρ = 1 the T₂ is ≈ 1 ms, far shorter than typical tissue values; at ρ = 0.1 it is ≈ 10 ms.
   - Thresholds are for single measurements.
