@@ -8,6 +8,8 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 
 **Reference configuration:** `Walls(repeats=2)` (w = 2 µm), D = 3 µm²/ms, no RF, spins start transverse in a ±500 µm box, readouts 0, 5, …, 50 ms, τ = 1e-2 ms, seeds 1–10, 10⁵ spins per seed, step-profile layer on both faces, ΔR₂(0) = 0.1 ms⁻¹ (ρ = ΔR₂(0)·h), R₂_bulk = 0 unless stated. Uncertainty of a mean = SEM over seeds.
 
+Each section states its **design** (what was chosen, the alternatives, why), its **method** (the equations computed and the estimators), the **result** and a **conclusion** tied to the formulas. The model, the per-step update, two identities (M2, M3) and the estimators used throughout are collected once in "Model, notation and estimators" below. That section and the Design/Method/Conclusion paragraphs of the older sections were added on 2026-10-24. No result, table or ruling changed.
+
 ## Summary
 
 | ID | Test | Criterion | Outcome |
@@ -48,11 +50,99 @@ Baselines are in [baseline_record.md](baseline_record.md). The baseline θ_relax
 | P2.6.5 | Layer constraint in the simulator's timestep | constraint active; binding term reported | **Done** (user decision): option `layer`, τ ≤ c/ΔR₂(0)_max, default c = 0.005; verbose message names it when it binds; suite 2894/2894 |
 | P2.6.8, P2.6.10–P2.6.12 | Cost with the layer; consequences for τ = 1e-2 results | cost tabulated; earlier results judged | layer overhead ×1.2–1.4 vs B5 (×2.1 at h = 0.01); full run ≤ 0.11 h up to ΔR₂(0) = 2, 0.63 h at 10; all earlier τ = 1e-2 results (ΔR₂(0) = 0.1) biased ≤ 6.4e-4 in R → **no reruns needed** |
 
+## Model, notation and estimators (common to all sections)
+
+Figure script [p2_0_model_fig.jl](phase2/p2_0_model_fig.jl) → [results/phase2/p2_0_model/](results/phase2/p2_0_model/). It is an illustration only: panel C uses the continuum benchmark of Review C1, and `jensen_gap.csv` holds its values.
+
+**Model.** Each wall face carries a layer. At distance d from a face, measured into the gap,
+
+  R₂,total = R₂,bulk + ΔR₂(d),  ΔR₂(d) = (ρ/h)·g(d/h),  ∫ g(u) du = 1 over the support,
+
+so ρ = ∫ ΔR₂(d) dd is the relaxation per unit wall area (µm/ms), h is the thickness and ΔR₂(0) = (ρ/h)·g(0) is the surface rate.
+
+| profile | g(u) | support | ΔR₂(0) | centroid c̄ = h∫u g(u) du |
+|---|---|---|---|---|
+| step | 1 | 0 ≤ u < 1 | ρ/h | h/2 |
+| linear | 2(1 − u) | 0 ≤ u ≤ 1 | 2ρ/h | h/3 |
+| exponential | e^(−u)/(1 − e^(−c)), c = L/h | 0 ≤ u ≤ c (cutoff L = w in Phase 2) | ρ/(h(1 − e^(−w/h))) | h(1 − (c + 1)e^(−c))/(1 − e^(−c)) |
+
+With faces at x = 0 and x = w the contributions add (proposal Eq. 10):
+
+  ΔR₂(x) = (ρ/h)[g(x/h) + g((w − x)/h)].   (M1)
+
+**Which quantity is held fixed.**
+- **P2.2–P2.4 and P2.6** hold the surface rate ΔR₂(0) = 0.1 ms⁻¹ fixed and vary h. So ρ = ΔR₂(0)·h/g(0) changes with h and with the profile:
+  - step: ρ = ΔR₂(0)·h;
+  - linear: ρ = ΔR₂(0)·h/2;
+  - exponential: ρ = ΔR₂(0)·h·(1 − e^(−w/h)).
+- **From P2.5.0 on**, ρ is held fixed, because the comparison with the conventional model needs it.
+
+**Per-step update.** In one step of length τ a spin moves along straight pieces j, reflected at the walls. On piece j, of duration dt_j, the distance d changes linearly from d₀ to d₁. The exponent of the piece is
+
+  E_j = dt_j ∫₀¹ ΔR₂(d₀ + s(d₁ − d₀)) ds.
+
+`side_exponent` evaluates it exactly. Let f be the fraction of the piece inside the support. Then:
+- **step:** E = ΔR₂(0)·dt·f;
+- **linear:** E = (ρ/h)·g(d_mid/h)·dt·f, where d_mid is the midpoint of the inside part. This is exact because g is linear there;
+- **exponential:** E = (ρ/h)/(1 − e^(−c)) · e^(−d_near/h) · (1 − e^(−x))/x · dt·f, with x = |d₁ − d₀|·f/h. It is evaluated from the end nearer the wall.
+
+Then M⊥ ← M⊥·exp(−R₂,bulk·τ − Σ_j E_j).
+- Images of each face are summed out to the cutoff, so overlapping layers add as in (M1).
+- The layer changes M⊥ only. It changes neither positions nor random numbers.
+
+**Conventional reference (MCMR θ).** Each wall collision multiplies M⊥ by e^(−θ√τ). The equivalent surface relaxivity is ρ = θ√(D/π) (P2.5.0).
+
+**Two identities used throughout.** Start from a uniform density between reflecting walls; it stays uniform. Let X = −ln M⊥(t) be the layer exponent of one spin (R₂,bulk = 0). Then
+
+  E[X] = t·⟨ΔR₂⟩_volume = 2ρt/w   (mean-exponent identity, P2.4.5; any profile, h and τ),   (M2)
+
+  S(t) = E[e^(−X)] = e^(−E[X])·e^J,  J = ln E[e^(−X)] + E[X] ≥ 0 (Jensen),  J ≈ Var[X]/2.   (M3)
+
+**What (M2) and (M3) imply.**
+- At the same ρ, every model has the same mean exponent. The signals differ only through the spread of X between spins, measured by J.
+- A uniform rate gives J = 0 and the lowest S.
+- The conventional surface sink puts all relaxation at d = 0 and gives the largest J.
+
+Panel C shows J from the exact continuum at ρ = 0.02 µm/ms and t = 50 ms (E[X] = 1):
+
+| case | step | linear | exponential |
+|---|---|---|---|
+| conventional | 2.215e-3 | — | — |
+| same h = 0.2 µm | 1.420e-3 | 1.642e-3 | 0.754e-3 |
+| same centroid c̄ = 0.1 µm | 1.420e-3 | 1.387e-3 | 1.354e-3 (within 5 % of the others) |
+
+This is the common mechanism behind the later findings:
+- at fixed ρ the layer attenuates more than the conventional model (ΔS < 0, Review C1);
+- a more spread-out profile attenuates more;
+- profiles with the same centroid nearly coincide;
+- V4 fits land on ρ* ≈ θ√(D/π).
+
+![model, profiles and Jensen gap](results/phase2/p2_0_model/p2_0_model.png)
+
+**Estimators.** n = 10 seeds and N spins per seed. S(t) = ⟨M⊥(t)⟩/⟨M⊥(0)⟩ is computed per seed. Then:
+- mean over seeds, with SEM = σ_seeds/√n;
+- one estimate against an exact value: z = (x − x₀)/SEM;
+- two independent estimates: z = (a − b)/√(SEM_a² + SEM_b²) ("combined SEM"). If the runs share seeds without being paired, their errors are positively correlated and this z is conservative;
+- paired estimates (same seeds, identical trajectories): d_s = a_s − b_s per seed, z = mean(d)/SEM(d);
+- MRI levels: a single measurement with relative noise 1/SNR is "observable" when |ΔS| ≥ 2/SNR, i.e. 0.02 at SNR 100 and 0.01 at SNR 200.
+
 ## P2.2.9: single-spin trace with the layer on
 
 Script [p2_2_9_layer_trace.jl](phase2/p2_2_9_layer_trace.jl) → [results/phase2/p2_2_9_layer_trace/](results/phase2/p2_2_9_layer_trace/) (`trace_spin1.csv`: every step of spin 1)
 
 **What / why.** The P1.2.6 trace repeated with the layer on. Each step's change in M⊥ is predicted from the simulator's own reflected path, with the layer time on every straight piece computed by brute-force sampling (10⁴ points per piece), independently of the `Layers` code. Agreement shows that distance, crossings, reflection handling, segmentation and the M⊥ update (P2.2.1–P2.2.7) work together.
+
+**Design.** The check is per step rather than on the ensemble. Some errors cancel in averages: the wrong face, the wrong order of pieces, segmentation at a reflection. Those show up only in individual steps. The prediction shares no code with `Layers`. The tolerance, 1e-6, is 20× above the sampling resolution.
+
+**Method.** For every step of every spin the script predicts
+
+  M⊥,pred = M⊥,sim(previous step) · exp(−R₂,bulk·τ − ΔR₂(0)·Σ_j dt_j·f̂_j),  dt_j = τ·ℓ_j/Σℓ.
+
+Here:
+- ℓ_j is the 3D length of reflected piece j (time is proportional to path length);
+- f̂_j = (1/K)·Σ_k 1[d(s_k) < h] is the brute-force layer fraction, with s_k = (k − ½)/K and K = 10⁴.
+
+The error is ε = max over all steps of |M⊥,sim/M⊥,pred − 1|. Midpoint sampling misplaces a layer edge by at most 1/(2K) of a piece, so the exponent error per edge crossing is at most ΔR₂(0)·τ/(2K) = 0.1·0.01/(2·10⁴) = 5e-8.
 
 | Field | Value |
 |---|---|
@@ -63,9 +153,21 @@ Script [p2_2_9_layer_trace.jl](phase2/p2_2_9_layer_trace.jl) → [results/phase2
 | Runtime | ≈ 15 s (1 thread) |
 | Outcome | **PASS** |
 
+**Conclusion.** The maximum error, 5.0e-8, equals the single-crossing sampling bound. So the per-step layer exponent agrees with the brute-force integral to the precision of the check. 4848 of the 50 000 steps had a reflection inside the layer, so segmentation at reflections was exercised.
+
 ## P2.1.4: noise floor and spin count
 
 Script [p2_1_4_noise_floor.jl](phase2/p2_1_4_noise_floor.jl) → [results/phase2/p2_1_4_noise_floor/](results/phase2/p2_1_4_noise_floor/) (`pilot_pairs.csv`)
+
+**Design.** The spin count must be large enough that the h sweep (P2.3.4(b)) can order neighbouring grid points. With A = 1 − S(50), the requirement is
+
+  sep_k = |A_{k+1} − A_k| / √(SEM_k² + SEM_{k+1}²) ≥ 10  for every neighbouring pair.
+
+If the worst sep falls below 10, N is raised to N·(10/sep)², since SEM ∝ 1/√N.
+
+**Method.**
+- σ(t) over 10 seeds at h = 0.1 and 0.5 µm.
+- A pilot sweep with 3 seeds over all of H_GRID. The SEM of a 10-seed mean is estimated as σ_pilot/√10.
 
 | h (µm) | S(50) | σ(50) (one seed) | SEM(50) (10 seeds) | max σ over readouts | runtime (10 seeds) |
 |---|---|---|---|---|---|
@@ -76,11 +178,28 @@ Pilot sweep (3 seeds, 10⁵ spins): the closest pair of neighbouring h values (0
 
 H_GRID coverage of the B4 range (1 − S(50) from 0.048 to 0.912): pilot 1 − S(50) = 0.0488 at h = 0.01 and 0.9176 at h = 0.5 → **covered**; h = 1.0 gives S(50) = 0.00674 (= e⁻⁵ = 0.00674, the exact end point).
 
+**Conclusion.** The worst separation, 4287 SEM, exceeds the requirement by a factor of 430, so the spin count is not limited by this criterion.
+
+The per-spin variance is small for a physical reason. The diffusion length over 50 ms is √(2Dt) = √300 ≈ 17 µm, much larger than w = 2 µm. So every spin samples the layer occupancy 2h/w many times, and X concentrates around its mean (M2).
+
 ## P2.3.1, P2.3.4(a), P2.3.11: exact checks at full size
 
 Script [p2_3_exact_checks.jl](phase2/p2_3_exact_checks.jl) → [results/phase2/p2_3_exact_checks/](results/phase2/p2_3_exact_checks/)
 
 These hold in any diffusion regime, so they are pass/fail to floating-point precision. Same seeds (1–10) and 100000 spins per seed throughout.
+
+**Design.** Three cases where the answer is known for every spin without statistics, so a failure points to the code rather than to noise.
+- **V0b.** ρ = 0 must leave the run bit-identical to a run without a layer. The side is skipped (`iszero(rho)`) and no random numbers are consumed.
+- **h = w/2, step profile on both faces.** By (M1) the two supports [0, w/2) and (w/2, w] tile the gap. So ΔR₂(x) = ΔR₂(0) everywhere except the measure-zero mid-plane, and every spin decays as M⊥(t) = exp(−(ΔR₂(0) + R₂,bulk)·t) whatever its path. This is also the end point of the h sweep, S(50) = e⁻⁵.
+- **Additivity.** The bulk term multiplies every step by e^(−R₂,bulk·τ). So for each spin, M⊥(bulk on)/M⊥(bulk off) = e^(−R₂,bulk·t) exactly, with identical positions.
+
+**Method.**
+- Per spin: max |M⊥/M⊥,exact − 1| ≤ 1e-10.
+- Ensemble: max over readouts of |S/S_exact − 1| ≤ B, the roundoff bound
+
+  B = (t_max/τ + N)·ε_mach = (50/0.01 + 10⁵)·2.2e-16 = 2.3e-11.
+
+  The bound allows one rounding per multiplicative step and one per term of the N-spin sum.
 
 | Check | Configuration | Max deviation per spin | Max deviation ensemble | Bound | Outcome |
 |---|---|---|---|---|---|
@@ -90,11 +209,21 @@ These hold in any diffusion regime, so they are pass/fail to floating-point prec
 | h = w/2, bulk on | same + R₂_bulk = 1/80 | 1.4e-13 | 1.9e-12 | 2.3e-11 | **PASS** |
 | additivity | h = 0.2, ΔR₂(0) = 0.1, R₂_bulk 0 vs 1/80; positions identical: True | 6.6e-14 | 7.5e-14 | 2.3e-11 | **PASS** |
 
+**Conclusion.** The deviations are ≈ 1e-13 per spin and at most 2.6e-12 for the ensemble, 9× or more below B. The ρ = 0 path, the uniform-rate exponent and its product with the bulk term are therefore exact to floating point.
+
 ## P2.3.2, P2.3.3: density and occupancy with the layer on
 
 Script [p2_3_2_density_occupancy.jl](phase2/p2_3_2_density_occupancy.jl) → [results/phase2/p2_3_2_density_occupancy/](results/phase2/p2_3_2_density_occupancy/)
 
 The layer changes |Mxy| only, so final positions with the layer on (h = 0.5 µm, ΔR₂(0) = 0.1 ms⁻¹) are compared with the no-layer run (same seeds); the B3 statistics are then recomputed on the layer-on positions at t = 50 ms (10⁶ spins pooled).
+
+**Design.**
+- **Motion.** The layer must not change how spins move. The strongest test is that final positions are bit-identical to the no-layer run with the same seeds.
+- **Occupancy, the gate for section 2.4.** By (M2), the mean exponent of the step layer is ΔR₂(0)·t times the fraction of time spent inside the layer. For a uniform density that fraction is 2h/w. A density error near the walls would bias every later result.
+
+**Method.** Positions x mod w are pooled at t = 50 ms (10⁶ spins).
+- **Histogram:** 100 bins of 0.02 µm, χ² against uniform, z_χ = (χ² − dof)/√(2·dof) with dof = 99. Pass if |z_χ| ≤ 3.
+- **Occupancy:** count the n spins within h of either face, with p = 2h/w and z = (n − Np)/√(Np(1 − p)). This is a binomial test; distinct spins are independent. Pass if |z| ≤ 2 for each h.
 
 | τ (ms) | Positions identical to no layer | χ²/dof (z) | Occupancy z for h = 0.05 / 0.1 / 0.2 / 0.4 / 0.5 | Outcome |
 |---|---|---|---|---|
@@ -103,9 +232,20 @@ The layer changes |Mxy| only, so final positions with the layer on (h = 0.5 µm,
 
 At the default τ the histogram statistic equals B3's value at t = 50 ms (χ²/dof 0.948), as expected: same seeds, same positions.
 
+**Conclusion.**
+- Positions are identical to the no-layer run at both τ.
+- The histogram gives χ²/dof = 0.95 (z = −0.36).
+- Every occupancy z has |z| ≤ 1.52. The 1σ resolution of the test, √((1 − p)/(Np)), is 0.1 % at h = 0.5 and 0.4 % at h = 0.05, so occupancy = 2h/w holds at that level.
+
 ## P2.3.4(b), P2.3.5, P2.3.6: h sweep
 
 Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) → [results/phase2/p2_3_4_h_sweep/](results/phase2/p2_3_4_h_sweep/) (`sweep.csv` per seed, figure `p2_3_4_h_sweep.png`). Step profile, both faces, ΔR₂(0) = 0.1 ms⁻¹, τ = 1e-2 ms (provisional until P2.6), 100000 spins × 10 seeds.
+
+**Design.** Proposal §3.2 VI: with the profile and ΔR₂(0) fixed, a larger h must attenuate more. Because ΔR₂(0) is fixed, ρ = ΔR₂(0)·h grows with h. The grid runs from 0 to the exact end point h = w/2. It was chosen to cover the B4 range 1 − S(50) = 0.048–0.912 (P2.1.4), which the V4 fit needs.
+
+**Method.**
+- **Monotonicity (P2.3.5):** A_{k+1} − A_k > 2√(SEM_k² + SEM_{k+1}²) for every neighbouring pair, with A = 1 − S(50).
+- **Decay shape (P2.3.6):** per seed, a least-squares fit ln S(t) = a + b·t + c·t² over the 11 readouts. A single exponential has c = 0. The curvature c is reported as mean ± SEM over seeds.
 
 | h (µm) | S(25) | S(50) ± SEM | 1 − S(50) | curvature c ± SEM (ms⁻²) |
 |---|---|---|---|---|
@@ -145,9 +285,26 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) → [results/phase2/p2_3_4_
 
 It agrees to 4–5 digits for thin layers and drifts slightly for thicker ones (0.08240 vs 0.08209 at h = 0.5). This is a description of this geometry and diffusivity only. The differences from the baseline are what V4 measures.
 
+**Why it agrees, and why it drifts (added 2026-10-24).**
+- For the step profile at fixed ΔR₂(0), 2ρ/w = ΔR₂(0)·2h/w. So the column exp(−ΔR₂(0)·(2h/w)·t) is exactly e^(−E[X]) by (M2).
+- By (M3) the simulated S must lie above it by the factor e^J, and it does in every row.
+- J = ln(S_sim·e^(E[X])) grows with h to 3.8e-3 at h = 0.5 (0.08240 vs 0.08208), then falls to 0 at h = w/2, where the rate is uniform.
+- At τ = 1e-2 these J values also contain the timestep bias of R (P2.6: about 3–6e-4 of E[X]), which is comparable to J for thin layers. The exact J at fixed ρ is in panel C of the model section.
+
+**Conclusion.**
+- Attenuation is monotone in h.
+- The decay is single-exponential at this precision.
+- The deviation from e^(−E[X]) is the Jensen term of (M3), at most 4e-3 in ln S here.
+
 ## P2.3.7: V11, endpoint rule vs exact overlap
 
 Script [p2_3_7_endpoint.jl](phase2/p2_3_7_endpoint.jl) → [results/phase2/p2_3_7_endpoint/](results/phase2/p2_3_7_endpoint/). 1D toy walk identical to MCMR's x-motion between walls ([toy.jl](phase2/toy.jl)); h = 0.1 µm, ΔR₂(0) = 0.1 ms⁻¹, T = 50 ms, seeds 1–10. The **exact** rule integrates the layer time along every reflected straight piece (as MCMR does); the **endpoint** rule charges a whole step to the layer if the step's end point is inside it.
+
+**Design.** A simpler implementation would use the endpoint rule, E_end = ΔR₂(0)·τ·1[d(x_end) < h]. The question is whether the exact segment rule (model section) is worth its cost. The 1D toy reproduces MCMR's x-motion exactly and is cheap, so it runs both rules on the same paths.
+
+**Method.**
+- Bias = S_end(50) − S_exact(50), in units of √(SEM_end² + SEM_exact²).
+- Cross-check: toy exact rule against MCMR at τ = 1e-2. The random streams are independent; pass if |z| ≤ 2.
 
 | τ (ms) | spins per seed | S(50) exact ± SEM | S(50) endpoint ± SEM | bias (endpoint − exact) | bias in SEM |
 |---|---|---|---|---|---|
@@ -160,10 +317,19 @@ Cross-check: toy exact vs MCMR (P2.3.4(b), h = 0.1, τ = 1e-2): 0.60690 vs 0.606
 **Interpretation.**
 - The endpoint rule's bias is small here and **changes sign with τ**: indistinguishable from zero at τ = 1e-3 ms, slightly negative (more attenuation) at 1e-2, and positive (less attenuation, +1.4 × 10⁻⁴) at 4e-2 ms. The tracker's expectation "endpoint under-counts" is therefore not confirmed as a general rule for this configuration; the bias depends on τ and is small because the end points of steps sample the layer occupancy without bias in a uniform ensemble.
 - The exact rule itself also moves with τ (S(50) = 0.60679 → 0.60690 → 0.60707 for τ = 1e-3 → 1e-2 → 4e-2 ms, i.e. +4.6 × 10⁻⁴ relative over the range). That is the straight-line timestep effect of the proposal §3.2 V, to be quantified in V1 (P2.6). At τ = 1e-2 it is +1.8 × 10⁻⁴ relative to τ = 1e-3, larger than the 10⁻⁵ SEM, so results at τ = 1e-2 are not yet timestep-converged at this precision.
+- **Why the endpoint bias is small (added 2026-10-24).** For a uniform density the end point of a step is uniformly distributed, so E[1[d_end < h]] = 2h/w. That is the same mean as the exact fraction, so both rules satisfy (M2). They differ only in the per-spin spread of X, i.e. in J (M3). That is a second-order effect and can have either sign, as observed.
+- **Conclusion.** The exact rule is kept. It is exact for every path (P2.2.9), which the endpoint rule is not, and it costs ×1.2–1.4 in runtime (P2.6.8).
 
 ## P2.3.12: side-specific layer
 
 Script [p2_3_12_sides.jl](phase2/p2_3_12_sides.jl) → [results/phase2/p2_3_12_sides/](results/phase2/p2_3_12_sides/) (first version kept in `first_pass/`). h = 0.2 µm, ΔR₂(0) = 0.1 ms⁻¹ unless stated; asymmetric: positive h = 0.2 / ΔR₂(0) = 0.1, negative h = 0.4 / ΔR₂(0) = 0.05 (same ρ = 0.02 µm/ms on both sides).
+
+**Design.** Each face has its own (ρ, h, g); D3.4 applies the same idea to cylinders. The code paths for the two sides must be mirror images, and this can be tested deterministically. Flipping the wall normal swaps "positive" and "negative" geometrically. So a positive-side layer on −x walls and a negative-side layer on +x walls must give identical runs.
+
+**Method.**
+- (a) Exact: signals and positions compared with ==.
+- (b) Paired: d_s(t) = S₊,s − S₋,s per seed, z = mean(d)/SEM(d) at each readout.
+- (c) Characterisation of S(t).
 
 | Case | S(25) ± SEM | S(50) ± SEM |
 |---|---|---|
@@ -180,9 +346,28 @@ Script [p2_3_12_sides.jl](phase2/p2_3_12_sides.jl) → [results/phase2/p2_3_12_s
 
 **Characterisation.** Layers on both sides attenuate more than a layer on one side (0.368 vs 0.608 at 50 ms). The asymmetric layer, with the same ρ on both sides but different h and ΔR₂(0), gives almost the same S(50) as the symmetric one (0.36834 vs 0.36847, a 1.3 × 10⁻⁴ difference that is resolved at this precision). No baseline exists for asymmetric surfaces, because MCMR's θ_relax is the same on both sides.
 
+**Conclusion (formula, added 2026-10-24).**
+- By (M2) the asymmetric layer has E[X] = (ρ₊ + ρ₋)·t/w = 2·0.02·t/w, the same as the symmetric one. Their signals can differ only through J.
+- The thicker, lower-rate layer on the negative side spreads the rate further into the gap. That lowers J and so lowers S slightly (0.36834 < 0.36847), as (M3) predicts.
+- One side alone: E[X] = 0.02·50/2 = 0.5, e^(−0.5) = 0.6065, against 0.6077 simulated (J ≈ 2e-3).
+
 ## P2.3.9: V4, h*(θ) fitted to the baseline reference
 
 Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) (start and parabola refinement) and [p2_3_9b_gauss_newton.jl](phase2/p2_3_9b_gauss_newton.jl) (final step) → [results/phase2/p2_3_9_fit_h/](results/phase2/p2_3_9_fit_h/) (`h_star_final.csv`, figure `p2_3_9_fit_h.png`; earlier stages in `first_pass/` and `parabola_pass/`). Step profile, both faces, ΔR₂(0) = 0.1 ms⁻¹, τ = 1e-2 ms, seeds 1–10, 10⁵ spins. The baseline is a reference, not the truth: residuals show where the two models differ.
+
+**Design.**
+- **One free parameter.** B4 has one parameter (θ); the layer has two (ρ, h) for a given profile. V4 holds ΔR₂(0) = 0.1 fixed and fits h only, so both models have one free parameter. The test is then purely whether the layer can reproduce the shape of S_θ(t).
+- **Why h rather than ρ.** Fitting ρ at fixed h would test the same thing to first order, since ρ sets the mean exponent (M2). h at fixed ΔR₂(0) was chosen because the P2.3.4(b) sweep then serves as the starting grid and supplies the slope.
+
+**Formulas.**
+- **Objective:** χ²(h) = Σ_t [(S_model(t; h) − S_ref(t))/σ_t]², with σ_t = √(SEM_model² + SEM_ref²).
+  - dof = (number of readouts with σ_t > 0) − 1;
+  - residual in SEM: (S_model − S_ref)/σ_t.
+- **Parabola stage:** χ² is evaluated at h₀(1 − δ), h₀ and h₀(1 + δ), with δ = 5 %. The new h* is the vertex −B/(2A) of the parabola through these three points.
+- **Jackknife:** h*₋ₛ is the vertex from the same three runs with seed s removed, and σ_jack = √((n − 1)/n · Σ_s (h*₋ₛ − mean)²).
+- **Gauss–Newton stage:** Δh = −Σ_t r_t·J_t/σ_t² / Σ_t J_t²/σ_t², where:
+  - r_t = S_model − S_ref;
+  - J_t = ∂S/∂h, taken from the sweep with ln S linear in h between neighbouring grid points.
 
 **Method (three stages, recorded as rulings).**
 1. Start: h from the P2.3.4(b) sweep, S(t; h) interpolated linearly in h. The residuals of direct runs at this h were 8–660 SEM. That was interpolation error between grid points, because the SEM (about 10⁻⁵) is far below the interpolation accuracy (`first_pass/`).
@@ -213,6 +398,11 @@ Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) (start and parabola refinement
 **Interpretation.**
 - For every θ in the B4 grid, a single layer thickness h* reproduces the **whole** baseline curve S_θ(t), 0–50 ms, to within a few 10⁻⁵ relative. In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms) the step-profile layer and the baseline θ_relax model cannot be told apart from the signal once h is fitted. Any difference in curve shape is below about 10⁻⁵.
 - h* is almost exactly proportional to θ: h*/θ = 9.74–9.77 µm per unit θ over the whole range, drifting by 0.3% from the smallest to the largest θ. Equivalently, the fitted integrated relaxivity ρ* = ΔR₂(0)·h* = 0.974–0.977·θ in these units. This is an empirical result of the fit, reported as found.
+- **Why ρ*/θ ≈ 0.977 (added 2026-10-24).**
+  - By (M2) the layer's mean exponent is 2ρt/w. The conventional model's is 2θ√(D/π)·t/w (P2.5.0).
+  - Matching the mean exponents gives ρ = θ√(D/π) = θ√(3/π) = 0.977θ at D = 3.
+  - The fit lands there because J ≪ E[X], so the mean exponent dominates S.
+- **Why the drift.** The 0.3 % drift with θ is the J difference. At larger θ the fitted layer is thicker, its J falls further below the conventional J, and the fit compensates with slightly less ρ. h*/θ therefore falls from 9.772 to 9.736.
 - Whether the shape of the decay ever distinguishes the two models (narrower gaps, thicker layers, other profiles, curved geometry) is the subject of the shape comparison (P2.5) and Phase 3.
 
 ## Gate for section 2.4 (2026-10-03)
@@ -222,6 +412,16 @@ P2.2.9 single-spin trace: **PASS**. P2.3.3 occupancy: **PASS**. P2.3.4(a) exact 
 ## P2.6.1: V1, timestep plateau
 
 Toy 1D walk (exact segment rule, step profile, both faces, w = 2 µm, D = 3 µm²/ms), h = 0.1 µm, ΔR₂(0) = 0.1 ms⁻¹, T = 10 ms, 100000 spins × 10 seeds, τ = 1e-5 … 0.1 ms (3 per decade). Observable R = −ln S(T_eff)/T_eff; reference = τ = 1e-5. Script `research/phase2/p2_6_scan.jl`; output `research/results/phase2/p2_6_scan_V1_h0.1/`.
+
+**Design.**
+- **Observable.** The timestep error is measured on the effective rate R = −ln S(T_eff)/T_eff, where T_eff = round(T/τ)·τ is the time actually simulated. R is the quantity a timestep criterion must protect, and it does not depend on the readout grid.
+- **Toy model.** The toy is a 1D walk with the same reflect-and-segment rule; its linear and exponential paths call the package's `side_exponent`. It is used because a dense scan down to τ = 1e-5 is affordable only in 1D. The MCMR check below confirms it.
+- **T = 10 ms.** This keeps τ = 1e-5 (10⁶ steps per spin) affordable.
+
+**Method.**
+- Relative error e(τ) = |R(τ) − R_ref|/R_ref, with R_ref at the smallest τ.
+- τ_conv(tol) is the largest τ such that every τ' ≤ τ in the grid has e ≤ tol, interpolated linearly in log τ to the crossing.
+- If no τ fails, the largest τ is reported as a lower bound (≥).
 
 | τ (ms) | R (ms⁻¹) | SEM | R/R_ref − 1 |
 |---|---|---|---|
@@ -260,6 +460,12 @@ Sizing (ledger rulings): 100000 spins per seed (relative SEM of R ≈ 1.6e-4 < t
 
 Same toy, 100000 spins × 10 seeds, T = 10 ms, τ = 1e-4 … 0.1 ms, reference τ = 1e-4 (V1: 1e-5). Besides the planned V2/V3 scans, the probes during sizing showed no τ dependence for a thin layer but a growing one with the rate, so the tracker's decision point (τ_conv vs ΔR₂(0)) was measured too: ΔR₂(0) = 0.5, 1, 2 at h = 0.1, and h = 0.01 at ΔR₂(0) = 10 (same ρ = ΔR₂(0)·h as h = 0.1 at 1) to separate ΔR₂(0) from ρ. Script `research/phase2/p2_6_2_scaling.jl`; output `research/results/phase2/p2_6_2_scaling/`.
 
+**Design.** Two candidate controls of the timestep error were tested.
+1. **The spec's Eq. 11, τ ≤ c_h·h²/D.** The r.m.s. step √(2Dτ) must resolve the layer. This predicts that τ_conv·D/h² is constant. The tracker's criterion: τ_conv·D/h² (V2) and τ_conv·D (V3) constant within ±30 %.
+2. **The per-step layer exponent ΔR₂(0)·τ.** Each step multiplies M⊥ by e^(−E), and the discretisation error was expected to grow with E. This predicts that ΔR₂(0)·τ_conv is constant.
+
+The scan h = 0.01 at ΔR₂(0) = 10 has the same ρ as h = 0.1 at ΔR₂(0) = 1, which separates ΔR₂(0) from ρ.
+
 | scan | h (µm) | ΔR₂(0) (ms⁻¹) | ρ (µm/ms) | D | bias at τ = 0.1 ms | τ_conv 1 % (ms) | τ_conv 0.1 % (ms) |
 |---|---|---|---|---|---|---|---|
 | V2_h0.01 | 0.01 | 0.1 | 0.001 | 3 | −4.6e-04 | ≥ 0.1 | ≥ 0.1 |
@@ -292,6 +498,10 @@ Every bias is negative: large τ gives less attenuation. The last two rows and t
 Decision (user, 2026-10-06) after P2.6.2/P2.6.3: the constraint follows the measured control, ΔR₂(0)·τ, not the spec's c_h·h²/D.
 
 - `src/timesteps.jl`: new option `layer` in `TimeStep`, giving τ ≤ `layer` / ΔR₂(0)_max, where ΔR₂(0)_max = max ρ/h over all layer sides with ρ > 0 (`Internal.max_layer_rate`; 0 without a layer, so the option is Inf and existing timesteps are unchanged). Override with `Simulation(...; timestep=(layer=...,))`.
+- **Formula.** τ = min(existing constraints, c/ΔR₂(0)_max), with ΔR₂(0)_max = max over sides with ρ > 0 of (ρ/h)·g(0):
+  - step: ρ/h;
+  - linear: 2ρ/h (P2.4);
+  - exponential: ρ/(h(1 − e^(−L/h))) (P2.4.5).
 - Default c = **0.005**: ΔR₂(0)·τ ≈ 0.05 gives 1 % error in R (P2.6.2), divided by 10. At ΔR₂(0)·τ = 0.005 the measured error is 1.4e-3 (ΔR₂(0) = 0.5, τ = 1e-2) and 1.3e-3 (ΔR₂(0) = 1, τ ≈ 4.6e-3 grid point), i.e. about 0.1 %.
 - When it binds: for w = 2 µm, D = 3 the tortuosity default is 0.04 ms, so the layer constraint binds for ΔR₂(0) > 0.125 ms⁻¹. At the Phase 2 reference ΔR₂(0) = 0.1 it does not bind.
 - Tests: `test/test_layer.jl` "layer timestep constraint" (max rate with side-specific values, ρ = 0 ignored, binding value, unchanged without a layer, default, verbose message).
@@ -299,6 +509,10 @@ Decision (user, 2026-10-06) after P2.6.2/P2.6.3: the constraint follows the meas
 ## P2.6.8, P2.6.10–P2.6.12: cost and consequences
 
 Script `research/phase2/p2_6_8_cost.jl`; output `research/results/phase2/p2_6_8_cost/`. Runtimes are single runs (1 seed, 10000 spins) on the same machine; B5 was measured on an earlier day, so ratios carry a load uncertainty of order 10–20 %.
+
+**Method.**
+- **Cost model:** runtime ≈ t_ss·N·T/τ, where t_ss is the runtime per spin-step (µs).
+- **Noise at a fixed budget:** at a fixed budget N ∝ τ, so σ ∝ 1/√N ∝ √(τ_default/τ).
 
 **Runtime per spin-step with the layer** (h = 0.1, ΔR₂(0) = 0.1) vs B5 (no layer):
 
@@ -332,6 +546,8 @@ Script `research/phase2/p2_6_8_cost.jl`; output `research/results/phase2/p2_6_8_
 
 Script [p2_2_9_layer_trace.jl](phase2/p2_2_9_layer_trace.jl) with `SHAPE=linear` → [results/phase2/p2_2_9_layer_trace_linear/](results/phase2/p2_2_9_layer_trace_linear/). Same configuration as P2.2.9 (h = 0.5 µm, ΔR₂(0) = 0.1 ms⁻¹ so ρ = 0.025 µm/ms, R₂_bulk = 1/80, τ = 0.01 ms, 100 spins × 500 steps). The prediction samples g(d/h) = 2(1 − d/h) along every piece, independently of the `Layers` code.
 
+**Method.** As in P2.2.9, with the layer fraction replaced by the sampled mean of the profile: E_j = (ρ/h)·dt_j·(1/K)·Σ_k g(d(s_k)/h). The predicted values are compared with the closed form E = (ρ/h)·g(d_mid/h)·dt·f (model section).
+
 | Max relative error per step | Steps with a reflection inside the layer | Outcome |
 |---|---|---|
 | 2.4e-12 | 4848 | **PASS** |
@@ -344,6 +560,8 @@ Script [p2_4_3_linear_exact.jl](phase2/p2_4_3_linear_exact.jl) → [results/phas
 
 **Exact case.** With the linear profile on both faces and h = w, a point at u in the gap is inside both layers, and ΔR₂(u) = (2ρ/w)(1 − u/w) + (2ρ/w)(1 − (w − u)/w) = 2ρ/w, the same everywhere. Since ΔR₂(0) = (ρ/h)·g(0) = 2ρ/w, every spin decays at exactly ΔR₂(0) whatever its path: S = e^(−ΔR₂(0)·t) (× e^(−R₂_bulk·t) with bulk on). The case uses overlapping layers, so it also tests the overlap sum end to end.
 
+**Design.** h = w is the linear profile's only uniform case, the counterpart of step h = w/2. The criteria and the roundoff bound B are those of P2.3.1.
+
 | Check | Configuration | Max deviation per spin | Max deviation ensemble | Bound | Outcome |
 |---|---|---|---|---|---|
 | V0b, bulk on (1/80) | linear, ρ = 0, h = 0.5 vs no layer | identical (==) | identical | — | **PASS** |
@@ -351,9 +569,13 @@ Script [p2_4_3_linear_exact.jl](phase2/p2_4_3_linear_exact.jl) → [results/phas
 | h = w, bulk on | same + R₂_bulk = 1/80 | 1.4e-13 | 1.9e-12 | 2.3e-11 | **PASS** |
 | additivity | linear, h = 0.2, ΔR₂(0) = 0.1, R₂_bulk 0 vs 1/80; positions identical: true | 6.5e-14 | 8.7e-14 | 2.3e-11 | **PASS** |
 
+**Conclusion.** The uniform-case deviations (8.5e-14 and 1.4e-13 per spin) equal the step profile's at h = w/2. Both runs evolve the same trajectories under the same exact rate, so they make the same roundoff. The linear exponent and the overlap sum are exact to floating point.
+
 ## P2.4.3: linear profile — h sweep, monotonicity, decay shape
 
 Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=linear` → [results/phase2/p2_3_4_h_sweep_linear/](results/phase2/p2_3_4_h_sweep_linear/). Linear profile, both faces, ΔR₂(0) = 0.1 ms⁻¹ (ρ = ΔR₂(0)·h/2), h ∈ H_GRID_LINEAR (to h = w = 2 µm), τ = 1e-2 ms, 100000 spins × 10 seeds.
+
+**Design and method.** As P2.3.4(b), with ρ = ΔR₂(0)·h/2. The grid extends to h = w because that is the linear profile's uniform end point.
 
 | h (µm) | S(25) | S(50) ± SEM | 1 − S(50) | curvature c ± SEM (ms⁻²) |
 |---|---|---|---|---|
@@ -390,6 +612,8 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=linear` → [re
 | 1 | 0.08221 | 0.08240 | -2.3e-03 |
 | 2 | 0.00674 | 0.00674 | +0.0e+00 |
 
+**Why (added 2026-10-24).** Linear at h and step at h/2 have the same ρ = ΔR₂(0)·h/2, and so the same E[X] by (M2). Their signals differ only through J (M3). The linear layer at h reaches twice as far into the gap: its centroid is h/3, against h/4 for the step at h/2. Its rate is therefore more spread out, its J smaller and its S lower, as observed. At h = 2 / 1 both are uniform (J = 0) and coincide.
+
 ## P2.4.7 (linear): V4, h*(θ) fitted to the baseline reference
 
 Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) and [p2_3_9b_gauss_newton.jl](phase2/p2_3_9b_gauss_newton.jl) with `SHAPE=linear` → [results/phase2/p2_3_9_fit_h_linear/](results/phase2/p2_3_9_fit_h_linear/). Same three stages as the step V4 (start from the linear sweep, parabola refinement over h₀·(1 ± 5 %), one Gauss–Newton step), linear profile on both faces, ΔR₂(0) = 0.1 ms⁻¹, τ = 1e-2 ms, 100000 spins × 10 seeds, reference = B4 (τ = 1e-2). After the parabola stage the residuals were 5.6–26 SEM, all of one sign (negative) at every θ, as in the step fit; after the Gauss–Newton step every θ has residuals of both signs, so no further step was run.
@@ -418,10 +642,16 @@ Scripts [p2_3_9_fit_h.jl](phase2/p2_3_9_fit_h.jl) and [p2_3_9b_gauss_newton.jl](
 **Interpretation.**
 - For every θ in the B4 grid a single linear-layer thickness h* reproduces the whole baseline curve S_θ(t), 0–50 ms, within 5e-05 relative (max residual 0.46 combined SEM). As for the step profile, the fitted linear layer and the baseline cannot be told apart from the signal in this configuration.
 - h*/θ = 19.45–19.55 µm per unit θ, drifting by 0.5 % from the smallest to the largest θ.
+- **Formula (added 2026-10-24).** h*/θ ≈ 2 × 9.77 because ρ = ΔR₂(0)·h/2 for the linear profile: ρ* = 0.1·19.54θ/2 = 0.977θ. That is the same θ√(3/π) as the step fit (M2, P2.5.0). The method and formulas are those of P2.3.9.
 
 ## P2.4.8 (step vs linear): profile comparison at fixed ΔR₂(0)
 
 Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) → [results/phase2/p2_4_8_compare_step_linear/](results/phase2/p2_4_8_compare_step_linear/). Reads the two sweeps and the two V4 fits; ΔR₂(0) = 0.1 ms⁻¹ for both profiles, so ρ = ΔR₂(0)·h (step) and ΔR₂(0)·h/2 (linear). σ of the ρ* ratio = jackknife σ of each fit added in quadrature (written by the script). Two caveats on σ: the jackknife is from the parabola stage while the ratio uses the Gauss–Newton h*; and both fits share seeds 1–10 and the B4 reference, so their errors are correlated and this σ is an overestimate (z conservative).
+
+**Method.**
+- ρ*_lin/ρ*_step = (h*_lin/2)/h*_step.
+- Relative σ = √((σ_lin/h*_lin)² + (σ_step/h*_step)²).
+- z = (ratio − 1)/σ.
 
 | θ_relax | h* step (µm) | h* linear (µm) | h* ratio | ρ* ratio − 1 ± σ | z | max \|res\| step (SEM) | max \|res\| linear (SEM) |
 |---|---|---|---|---|---|---|---|
@@ -443,6 +673,7 @@ Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) →
 - Neither profile fits the reference better: max |residual| is 0.1–0.4 SEM for the step and 0.1–0.5 SEM for the linear fit, and both match every curve within 5e-5 relative.
 - Attenuation at fixed ΔR₂(0) and h (figure, left): the linear layer attenuates less than the step layer of the same h (it has half the ρ).
 - In this configuration (walls 2 µm apart, D = 3 µm²/ms, up to 50 ms, τ = 1e-2) both profiles reproduce every reference curve once h is fitted, and the fitted ρ* differs between them by less than 1e-3. Whether conditions exist where the shapes separate is P2.5.
+- **Why the drift (added 2026-10-24).** Both ρ* follow θ√(D/π) to first order (M2). At the same ρ the linear layer is thicker (h*_lin ≈ 2h*_step; centroid 2h*_step/3 against h*_step/2), so its rate is more spread out and its J lower (M3). It therefore attenuates slightly more, and the fit needs slightly less ρ. The effect grows with θ because J grows with the layer's extent.
 
 **Exponential added (2026-10-08; attenuation only, no V4 fit for the exponential by user decision).** S(50) at ΔR₂(0) = 0.1 ms⁻¹ for every h in all three sweeps (`attenuation.csv`; step grid ends at h = 1.0 = w/2):
 
@@ -470,6 +701,10 @@ Script [p2_4_8_compare_step_linear.jl](phase2/p2_4_8_compare_step_linear.jl) →
 ## P2.6.4: profile dependence of the timestep error (step vs linear)
 
 Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's linear `:exact` rule calls MCMR's `side_exponent`, the step path is unchanged), same settings as P2.6.1–P2.6.3 (100000 spins × 10 seeds, T = 10 ms, reference τ = 1e-5 for h = 0.1/ΔR₂(0) = 0.1 and h = 0.01/ΔR₂(0) = 10, 1e-4 otherwise). ΔR₂(0) is the profile's own surface rate, (ρ/h)·g(0), so ρ = ΔR₂(0)·h/2 for linear. Comparison: [p2_6_4_profile.jl](phase2/p2_6_4_profile.jl) → [results/phase2/p2_6_4_profile/](results/phase2/p2_6_4_profile/).
+
+**Design.** The constraint uses ΔR₂(0) = (ρ/h)·g(0), which already differs between profiles at the same (ρ, h). The question is whether the coefficient c must also depend on the profile. Profiles are compared at the same ΔR₂(0) and h, so that the only difference is the profile.
+
+**Method.** τ_conv as in P2.6.1, expressed as ΔR₂(0)·τ_conv. The error at the default c is interpolated in log τ at τ = 0.005/ΔR₂(0); the note below the table gives the details.
 
 **MCMR vs toy, linear** (h = 0.1, ΔR₂(0) = 1, [p2_6_1_mcmr_check.jl](phase2/p2_6_1_mcmr_check.jl) with `SCAN=L_rate1` → `p2_6_1_mcmr_check_L_rate1/`): z = −0.31, +1.31, +0.04 at τ = 0.1, 1e-2, 1e-3 → **PASS**.
 
@@ -516,15 +751,28 @@ Toy scans with `SHAPE=linear` ([p2_6_scan.jl](phase2/p2_6_scan.jl); the toy's li
 
 Script [p2_2_9_layer_trace.jl](phase2/p2_2_9_layer_trace.jl) with `SHAPE=exponential` → [results/phase2/p2_2_9_layer_trace_exponential/](results/phase2/p2_2_9_layer_trace_exponential/). Same configuration as P2.2.9 (h = 0.5 µm, ΔR₂(0) = 0.1 ms⁻¹, R₂_bulk = 1/80, τ = 0.01 ms, 100 spins × 500 steps). Exponential truncated at the cutoff = w = 2 µm and renormalised, so ρ = ΔR₂(0)·h·(1 − e^(−w/h)); each face's layer reaches the opposite wall, so the two faces overlap everywhere. The prediction samples g(d/h) along every piece, independently of the `Layers` code.
 
+**Method.** The predicted exponent is E_j = (ρ/h)·dt_j·(1/K)·Σ_k [g(d(s_k)/h) + g((w − d(s_k))/h)], summing both faces. The package evaluates the same exponent with the near-end expm1 form (model section).
+
 | Max relative error per step | Steps with a reflection inside the layer | Outcome |
 |---|---|---|
 | 7.1e-13 | 4848 | **PASS** |
+
+**Conclusion.** The error, 7.1e-13, is far below the step trace's 5e-8, for two reasons. g is smooth, so the midpoint sampling error falls as K⁻². And the truncation edge lies at the opposite wall, so there is no edge inside the gap. The closed form with the near-end expm1 evaluation is exact to roundoff on real paths.
 
 ## P2.4.5: mean-exponent identity (all profiles)
 
 Script [p2_4_5_mean_exponent.jl](phase2/p2_4_5_mean_exponent.jl) → [results/phase2/p2_4_5_mean_exponent/](results/phase2/p2_4_5_mean_exponent/). Seeds 1–10, 100000 spins per seed, ΔR₂(0) = 0.1 ms⁻¹, R₂_bulk = 0, t = 50 ms.
 
 **Identity.** Between reflecting walls the uniform density is stationary under MCMR's step-and-mirror walk, and every point along a straight piece (x₀ + s·Δx, folded) is uniform too. Each spin's layer exponent is ∫ΔR₂ dt along its pieces, so its expectation is t·⟨ΔR₂⟩_volume = t·2·(1/w)∫(ρ/h)g(d/h) dd = 2ρt/w whenever each layer's support lies inside the gap — for any profile, h and τ. So E[−ln M⊥(t)] = 2ρt/w exactly. It tests normalisation, truncation, the overlap sum and the image loop end to end. It does not constrain the signal S = ⟨M⊥⟩, which depends on the higher moments of the exponent — where profiles can differ.
+
+**Design.** The identity is exact for any profile and in any diffusion regime. It is sensitive to everything that sets the volume integral of ΔR₂: the normalisation of g, the truncation, the overlap sum and the image loop. Cases:
+- one non-overlapping layer per profile;
+- an overlapping linear layer (h = 1.5 > w/2);
+- the exponential at h = 0.5, where truncation lowers ρ by 1.8 %.
+
+Two τ values check that the identity holds for any τ.
+
+**Method.** X̄_s is the mean of −ln M⊥ over the spins of seed s, and z = (mean_s X̄_s − 2ρt/w)/SEM. Pass if |z| ≤ 3.
 
 | profile | h (µm) | τ (ms) | ρ (µm/ms) | 2ρt/w | mean −ln M ± SEM | z | Outcome |
 |---|---|---|---|---|---|---|---|
@@ -544,6 +792,8 @@ All ten |z| ≤ 1.1. All ten z are positive: the runs share seeds 1–10 (same i
 ## P2.4.5: exponential profile — h sweep, monotonicity, decay shape
 
 Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=exponential` → [results/phase2/p2_3_4_h_sweep_exponential/](results/phase2/p2_3_4_h_sweep_exponential/). Exponential profile truncated at the cutoff = w = 2 µm and renormalised, both faces, ΔR₂(0) = 0.1 ms⁻¹, so ρ = ΔR₂(0)·h·(1 − e^(−w/h)); h ∈ H_GRID_LINEAR, τ = 1e-2 ms, 100000 spins × 10 seeds. No V4 fit follows (user decision).
+
+**Design and method.** As P2.3.4(b). Because ρ = ΔR₂(0)·h·(1 − e^(−w/h)), ρ equals the step's ρ at the same h to within e^(−w/h) for thin layers, and falls below it once truncation matters (h ≳ 0.3).
 
 | h (µm) | ρ (µm/ms) | S(25) | S(50) ± SEM | 1 − S(50) | curvature c ± SEM (ms⁻²) |
 |---|---|---|---|---|---|
@@ -588,11 +838,19 @@ Script [p2_3_4_h_sweep.jl](phase2/p2_3_4_h_sweep.jl) with `SHAPE=exponential` �
 
   For h ≤ 0.2 µm the two profiles have essentially the same ρ (relative difference e^(−w/h) ≤ 4.5e-5), so by the mean-exponent identity the same mean of −ln M. S(50) still differs, beyond noise for h = 0.05–0.2: the exponential attenuates more, by up to 7.4e-4 relative at h = 0.2 (z = −14.8, conservative). That is a profile-shape effect at (almost) fixed ρ, of order 10⁻³ here. At h = 0.3 the ρ difference (−1.3e-3 relative: 0.02996 vs 0.03) already outweighs it (it alone raises S(50) by ≈ +1.9e-3), hence the sign change there (+1.5e-4, z = +2.4). For h ≥ 0.5 the truncation lowers the exponential's ρ (0.0491 vs 0.05 at h = 0.5; 0.0865 vs 0.1 at h = 1.0), and the differences above mainly reflect that.
 
+  **Mechanism (added 2026-10-24).** At equal ρ, (M3) puts the difference in J. The exponential's centroid (≈ h) is twice the step's (h/2), so its rate is more spread out, its J smaller and its S lower. The model-section panel C shows the same ordering from the exact continuum.
+
 ## P2.5.0: conventional model at the same ρ — θ = ρ√(π/D)
 
 Script [p2_5_1_theta_mapping.jl](phase2/p2_5_1_theta_mapping.jl) → [results/phase2/p2_5_1_theta_mapping/](results/phase2/p2_5_1_theta_mapping/). w = 2 µm, ρ = 0.01 µm/ms, t = 50 ms, seeds 1–10, 100000 spins per seed.
 
 **Mapping.** MCMR's conventional surface relaxation multiplies M⊥ by e^(−θ√τ) at every wall collision. With Gaussian steps of variance 2Dτ per axis, walkers at density n hit a wall n·√(D/(πτ)) times per unit area and time, so the loss per unit area and time is n·θ·√(D/π): the conventional model's surface relaxivity is **ρ = θ·√(D/π)**. For a uniform start this gives the baseline its own mean-exponent identity, E[−ln M_base(t)] = 2θ√(D/π)·t/w, which equals the layer's 2ρt/w (P2.4.5) when θ = ρ√(π/D). It also explains the V4 result ρ*/θ ≈ 0.977 = √(3/π).
+
+**Formula.**
+
+  collision rate per unit area = n·√(D/(πτ)),  loss per collision = θ√τ  ⇒  ρ = θ·√(D/π),  θ = ρ·√(π/D).
+
+**Method.** As in P2.4.5: z = (mean −ln M_base − 2ρt/w)/SEM, pass if |z| ≤ 3. The paired difference between the baseline and the exponential layer (h = 0.2) is d_s = X̄_base,s − X̄_layer,s, and should be 0 within noise.
 
 | D (µm²/ms) | τ (ms) | θ | 2ρt/w | baseline mean −ln M ± SEM | z | paired base − exponential layer (h = 0.2) ± SEM (z) | identical paths | Outcome |
 |---|---|---|---|---|---|---|---|---|
@@ -621,6 +879,7 @@ Plan [2026-10-08-sensitivity-walls.md](../docs/superpowers/plans/2026-10-08-sens
   - "MC only": resolved by the simulation (≥ 3 paired SEM) but below both MRI thresholds.
   - "not resolved": < 3 SEM.
 - **Secondary.** The best mono-exponential residual of the layer curve: what a fitted conventional model could not absorb, given that the baseline is itself mono-exponential (|curvature| ≤ 3.6e-08 ms⁻² in every configuration).
+  Formula: R̂ = −Σ_t t·ln S(t) / Σ_t t² (least squares on ln S through the origin), residual = max_t |S(t) − e^(−R̂t)|.
 
 **Sweep h** (others at the reference point):
 
@@ -949,7 +1208,13 @@ Script [p2_5_tau_check.jl](phase2/p2_5_tau_check.jl) → [results/phase2/p2_5_ta
 
 **Why.** Review check C1 showed the Monte Carlo fixed-ρ profile effect at the adopted τ is timestep-biased (thin-layer sign flipped, |ΔS| underestimated). The decision (user, 2026-10-13) was to recompute with an exact benchmark rather than rerun at small τ.
 
-**Benchmark.** [continuum.jl](phase2/continuum.jl): the same models on walls solved without Monte Carlo or timestep, as 1D diffusion on [0, w] with reflecting walls and a uniform start. The layer enters as ΔR₂(x) = (ρ/h)[g(x/h) + g((w − x)/h)], both faces, exponential truncated at w and renormalised. The conventional model enters as a surface sink ρ on both walls, ρ = θ√(D/π) (P2.5.0). It uses N = 3000 finite-volume cells (Neumann Laplacian, ΔR₂ cell-averaged by sub-sampling, the sink as ρ/dx in the wall cells) and an eigen-decomposition. The profile code is written independently of the package. Unit tests ([test_continuum.jl](phase2/test/test_continuum.jl)):
+**Benchmark.** [continuum.jl](phase2/continuum.jl): the same models on walls solved without Monte Carlo or timestep, as 1D diffusion on [0, w] with reflecting walls and a uniform start. The layer enters as ΔR₂(x) = (ρ/h)[g(x/h) + g((w − x)/h)], both faces, exponential truncated at w and renormalised. The conventional model enters as a surface sink ρ on both walls, ρ = θ√(D/π) (P2.5.0). It uses N = 3000 finite-volume cells (Neumann Laplacian, ΔR₂ cell-averaged by sub-sampling, the sink as ρ/dx in the wall cells) and an eigen-decomposition. The profile code is written independently of the package. In formulas, with m(x, t) the local transverse magnetisation:
+
+  ∂m/∂t = D ∂²m/∂x² − [R₂,bulk + ΔR₂(x)]·m,  boundary conditions ∂m/∂x = 0 (layer) or D ∂m/∂n = −ρ·m (conventional, Robin),
+
+  S(t) = Σ_k ⟨u₀, φ_k⟩² e^(−λ_k t),
+
+where u₀ is the uniform start and (λ_k, φ_k) are the eigenpairs of the discretised operator. Unit tests ([test_continuum.jl](phase2/test/test_continuum.jl)):
 - free diffusion and bulk-only are exact;
 - step h = w/2 and linear h = w give the exact uniform rate (≤ 2.3e-8 absolute);
 - the initial slope is −2ρ/w for every model;
