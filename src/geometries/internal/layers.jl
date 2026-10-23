@@ -3,13 +3,14 @@ Near-surface transverse relaxation layer (proposal Eqs. 5–10):
 
     R2_total(d) = R2_bulk + ΔR2(d),    ΔR2(d) = (ρ/h)·g(d/h)
 
-Implemented: planar walls; profiles step g(u) = 1 (0 ≤ u ≤ 1), linear g(u) = 2(1 − u) (0 ≤ u ≤ 1) and
+Implemented: planar walls (all profiles below) and cylinders (step profile only); profiles step g(u) = 1 (0 ≤ u ≤ 1), linear g(u) = 2(1 − u) (0 ≤ u ≤ 1) and
 exponential g(u) = e^(−u)/(1 − e^(−c)) (0 ≤ u ≤ c = cutoff/h, truncated and renormalised); no finite RF pulses.
 Each side of a wall has its own (ρ, h).
 """
 module Layers
 
 import StaticArrays: SVector
+import LinearAlgebra: norm
 import ..FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, rotate_from_global
 
 "Profiles implemented in `profile_g`."
@@ -120,6 +121,100 @@ function side_exponent(side::LayerSide, d0::Float64, d1::Float64, dt::Float64)
     end
     d_mid = d0 + (d1 - d0) * (s_enter + s_exit) / 2
     return side.rho / side.h * profile_g(side.shape, d_mid / side.h) * dt * fraction
+end
+
+"""
+    CylinderLayer(centre, radius, inner, outer)
+
+Near-surface layers of one cylinder of radius `radius` (um) with its axis at `centre` (local 2D coordinates of its
+group, um): `inner` inside the cylinder (0 ≤ d = R − r ≤ h), `outer` outside it (0 ≤ d = r − R ≤ h).
+ρ is per unit surface area (D3.1): ΔR2(d) = (ρ/h)·g(d/h)/κ with κ = 1 ∓ c̄/R (− inside, + outside).
+"""
+struct CylinderLayer
+    centre :: SVector{2, Float64}
+    radius :: Float64
+    inner :: LayerSide
+    outer :: LayerSide
+end
+
+"""
+    centroid(side)
+
+Profile centroid c̄ = h∫u g(u) du (um). Only the step profile (c̄ = h/2) is supported on cylinders so far (D3.2).
+"""
+function centroid(side::LayerSide)
+    side.shape == :step && return side.h / 2
+    error("Layer profile $(side.shape) is not supported on cylinders yet (step only).")
+end
+
+"""
+    kappa(side, radius, inside)
+
+Curvature normalisation κ = ∫g(u)(1 ∓ u·h/R) du = 1 ∓ c̄/R (D3.1): − inside the cylinder, + outside.
+"""
+kappa(side::LayerSide, radius::Float64, inside::Bool) = 1 + (inside ? -1 : 1) * centroid(side) / radius
+
+"""
+    cylinder_surface_rate(side, radius, inside)
+
+ΔR2 at the cylinder surface on one side, (ρ/h)·g(0)/κ (1/ms); 0 without a layer.
+"""
+cylinder_surface_rate(side::LayerSide, radius::Float64, inside::Bool) =
+    iszero(side.rho) ? 0.0 : surface_rate(side) / kappa(side, radius, inside)
+
+"""
+    disk_length(a, b, q, X)
+
+Length of {s ∈ [0, 1] : a s² + b s + q ≤ X} for a ≥ 0. The squared distance from a cylinder axis along a straight
+piece is this convex quadratic, so the set is one interval; its ends are the roots, computed with the
+cancellation-free form t = −(b + sign(b)√disc)/2, roots t/a and (q − X)/t.
+"""
+function disk_length(a::Float64, b::Float64, q::Float64, X::Float64)
+    if iszero(a)
+        return q <= X ? 1.0 : 0.0
+    end
+    disc = b * b - 4 * a * (q - X)
+    disc <= 0 && return 0.0
+    t = -(b + copysign(sqrt(disc), b)) / 2
+    (s1, s2) = minmax(t / a, (q - X) / t)
+    return max(0.0, min(1.0, s2) - max(0.0, s1))
+end
+
+"""
+    shell_fraction(p0, p1, centre, r_lo, r_hi)
+
+Fraction of the straight piece p(s) = p0 + s(p1 − p0), s ∈ [0, 1] (2D, um), with r_lo ≤ |p(s) − centre| ≤ r_hi.
+Exact: |p(s) − centre|² = a s² + b s + q, so the fraction is disk_length(r_hi²) − disk_length(r_lo²).
+"""
+function shell_fraction(p0::SVector{2, Float64}, p1::SVector{2, Float64}, centre::SVector{2, Float64}, r_lo::Float64, r_hi::Float64)
+    u = p0 - centre
+    Δ = p1 - p0
+    a = Δ[1] * Δ[1] + Δ[2] * Δ[2]
+    b = 2 * (u[1] * Δ[1] + u[2] * Δ[2])
+    q = u[1] * u[1] + u[2] * u[2]
+    if iszero(a)
+        return (r_lo^2 <= q <= r_hi^2) ? 1.0 : 0.0
+    end
+    inner = r_lo > 0 ? disk_length(a, b, q, r_lo^2) : 0.0
+    return max(0.0, disk_length(a, b, q, r_hi^2) - inner)
+end
+
+"""
+    cylinder_exponent(layer, centre, p0, p1, dt)
+
+∫ΔR2 dt of both layers of one cylinder (axis at `centre`, local 2D) over the straight piece p0 → p1 of duration `dt`
+(ms). Step profile: ΔR2(0)·dt·(fraction of the piece inside the shell), exact.
+"""
+function cylinder_exponent(layer::CylinderLayer, centre::SVector{2, Float64}, p0::SVector{2, Float64}, p1::SVector{2, Float64}, dt::Float64)
+    R = layer.radius
+    total = 0.0
+    if !iszero(layer.inner.rho)
+        total += cylinder_surface_rate(layer.inner, R, true) * dt * shell_fraction(p0, p1, centre, R - layer.inner.h, R)
+    end
+    if !iszero(layer.outer.rho)
+        total += cylinder_surface_rate(layer.outer, R, false) * dt * shell_fraction(p0, p1, centre, R, R + layer.outer.h)
+    end
+    return total
 end
 
 """

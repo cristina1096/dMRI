@@ -25,6 +25,7 @@ all_tests = [
     "various",
     "subsets",
     "layer",
+    "layer_cylinders",
     "swc",
     "plots",
     "cli",
