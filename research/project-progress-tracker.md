@@ -321,16 +321,16 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 - P2.4.6 quadrature path, now needed for linear and exponential on cylinders (3.3);
 - the deferred minors listed in the Phase 2 record (exponential `h > spacing` check, `layer_cutoff` NaN message, stuck spins without layer, user docs).
 
-## 3.0 Design decisions (needed before 3.2)
+## 3.0 Design decisions (decided 2026-10-24; explained with formulas in `research/phase3_record.md`)
 
 | ID | ☐ | Decision | Options | Recommendation / note |
 |---|---|---|---|---|
-| D3.1 | ☐ | Meaning of ρ on a curved surface | (a) along the normal, ρ = ∫ΔR₂ dd (as on walls); (b) per unit surface area, ρ = (1/A)∫ΔR₂ dV, i.e. g renormalised with the curvature factor (1 ± d/R) | (b) keeps "same ρ" equal to the conventional relaxivity per area and keeps the mean-exponent identity simple; (a) keeps g identical to walls. Record whichever is chosen in every table |
-| D3.2 | ☐ | Profiles on cylinders | step only first; step + linear + exponential | Step first (exact), then linear and exponential once 3.3 exists |
-| D3.3 | ☐ | Integration of non-step profiles along a segment | closed form where it exists (linear: ∫√(quadratic)); adaptive quadrature with tolerance ε_R₂ for all; both, cross-checked | Quadrature for all profiles plus a closed form for linear as its test |
-| D3.4 | ☐ | Sides | inside (intra-cylinder) and outside (extra) layers, side-specific (ρ, h, profile) as on walls | Both sides, side-specific, symmetric default |
-| D3.5 | ☐ | Exponential support on cylinders | inside: d ≤ R (centre); outside: up to the nearest neighbour or a fixed cutoff | inside R; outside `layer_cutoff`, default half the smallest centre spacing |
-| D3.6 | ☐ | Arrays | square; rectangular (for one-direction overlap); random packing later | square and rectangular (proposal M5); random packing as optional 3.7 extension |
+| D3.1 | ☑ | Meaning of ρ on a curved surface | (a) along the normal, ρ = ∫ΔR₂ dd (as on walls); (b) per unit surface area, ρ = (1/A)∫ΔR₂ dV, i.e. g renormalised with the curvature factor (1 ± d/R) | **Decided (b)** per unit surface area: ΔR₂ = (ρ/h)g(d/h)/κ, κ = 1 ∓ c̄/R (checked to 1.6e-9). `phase3_record.md` D3.1 |
+| D3.2 | ☑ | Profiles on cylinders | step only first; step + linear + exponential | **Decided:** step first, then linear and exponential after 3.3 |
+| D3.3 | ☑ | Integration of non-step profiles along a segment | closed form where it exists (linear: ∫√(quadratic)); adaptive quadrature with tolerance ε_R₂ for all; both, cross-checked | **Decided:** adaptive quadrature for all profiles between exact shell roots; linear closed form (∫√(quadratic)) as its test |
+| D3.4 | ☑ | Sides | inside (intra-cylinder) and outside (extra) layers, side-specific (ρ, h, profile) as on walls | **Decided:** inside and outside, side-specific, symmetric default |
+| D3.5 | ☑ | Exponential support on cylinders | inside: d ≤ R (centre); outside: up to the nearest neighbour or a fixed cutoff | **Decided:** inside support R; outside `layer_cutoff`, default = smallest surface gap s − 2R (wall analogue; corrected from "half the centre spacing") |
+| D3.6 | ☑ | Arrays | square; rectangular (for one-direction overlap); random packing later | **Decided:** square and rectangular arrays; random packing optional |
 
 ## 3.1 Cylinder baselines (old code)
 
