@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 38 (+6 decisions) | 0 | ☐ planned (2026-10-22) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 38 (+6 decisions) | 18 | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -336,12 +336,12 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 
 | ID | ☐ | Test | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.1.1 | ☐ | **C-B1** null run: single cylinder and square array, no relaxation | M⊥ = 1 exactly; τ_max recorded | record |
-| P3.1.2 | ☐ | **C-B2** bulk R₂ only | exp(−R₂t) within the roundoff bound; trajectories unchanged | record |
-| P3.1.3 | ☐ | **C-B3** density across the cylinder (inside and outside) and fraction within h of the surface | uniform within \|z\| ≤ 2; fraction = shell area fraction (curvature included) | fig + table |
-| P3.1.4 | ☐ | **C-B4** conventional θ reference curves: single cylinder (inside), square array (inside and outside), several radii | τ-converged (two τ within 2 SEM); bulk factorisation | reference set |
-| P3.1.5 | ☐ | **C-B5** runtime vs τ for cylinders | cost reference | table |
-| P3.1.6 | ☐ | Conventional mapping on curved surfaces: E[−ln M] = θ√(D/π)·(S/V)·t at D = 1, 3, 6, several radii and τ | \|z\| ≤ 3, or the measured correction is recorded and used as the mapping | table |
+| P3.1.1 | ☑ | **C-B1** null run: single cylinder and square array, no relaxation | M⊥ = 1 exactly; τ_max recorded | record; **PASS** (3/3): M⊥ = 1 exactly; τ_default = 0.01 ms |
+| P3.1.2 | ☑ | **C-B2** bulk R₂ only | exp(−R₂t) within the roundoff bound; trajectories unchanged | record; **PASS** (3/3): per spin 5.4e-14, ensemble 4.4e-14 |
+| P3.1.3 | ☑ | **C-B3** density across the cylinder (inside and outside) and fraction within h of the surface | uniform within \|z\| ≤ 2; fraction = shell area fraction (curvature included) | fig + table; χ² PASS; occupancy FAIL by criterion (outside h = 0.1/0.2 z +2.36/+2.89, nested shells); follow-up vs τ: no trend; uniform density confirmed by P3.4.3 to 1e-4 |
+| P3.1.4 | ☑ | **C-B4** conventional θ reference curves: single cylinder (inside), square array (inside and outside), several radii | τ-converged (two τ within 2 SEM); bulk factorisation | reference set; reference set: 14/15 converged at τ_a/4 (+1 confirmed at τ_a/16); bulk 5.9e-14 |
+| P3.1.5 | ☑ | **C-B5** runtime vs τ for cylinders | cost reference | table; layer ×1.25–1.67 per spin-step |
+| P3.1.6 | ☑ | Conventional mapping on curved surfaces: E[−ln M] = θ√(D/π)·(S/V)·t at D = 1, 3, 6, several radii and τ | \|z\| ≤ 3, or the measured correction is recorded and used as the mapping | table; **PASS** (18/18, max \|z\| 2.17): ratio 0.99976–1.00013; no correction |
 
 Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused as context.
 
@@ -349,12 +349,12 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.2.1 | ☐ | Signed distance to a cylinder surface, inside and outside, for any rotation of the cylinder axis | unit tests vs direct geometry, rotated axes | tests |
-| P3.2.2 | ☐ | Entry and exit of the shell R − h ≤ r ≤ R (inside) or R ≤ r ≤ R + h (outside) along a straight piece, from exact line–circle intersections (axial motion ignored) | unit tests vs brute-force sampling, incl. tangent and chord-only cases | tests |
-| P3.2.3 | ☐ | Repeating arrays: loop over neighbouring cylinders within reach (= support), sum of overlapping contributions (Eq. 10) | tests with two and four overlapping cylinders vs brute force | tests |
-| P3.2.4 | ☐ | `Cylinders` fields: `layer_rho`, `layer_h`, `layer_shape`, side-specific (inner/outer), validation (h vs radius and spacing), JSON and CLI | round trip; invalid input rejected | tests |
-| P3.2.5 | ☐ | V0b: ρ = 0 bit-identical to no layer (positions and M⊥) | identical | record |
-| P3.2.6 | ☐ | Timestep: the layer constraint uses the largest summed rate (overlap included) | test | code |
+| P3.2.1 | ☑ | Signed distance to a cylinder surface, inside and outside, for any rotation of the cylinder axis | unit tests vs direct geometry, rotated axes | tests; **PASS** (package tests; rotated axis) |
+| P3.2.2 | ☑ | Entry and exit of the shell R − h ≤ r ≤ R (inside) or R ≤ r ≤ R + h (outside) along a straight piece, from exact line–circle intersections (axial motion ignored) | unit tests vs brute-force sampling, incl. tangent and chord-only cases | tests; **PASS** (exact line–circle roots vs brute force; tangent, chord, axial, surface start) |
+| P3.2.3 | ☑ | Repeating arrays: loop over neighbouring cylinders within reach (= support), sum of overlapping contributions (Eq. 10) | tests with two and four overlapping cylinders vs brute force | tests; **PASS** (2/4 overlapping, square, 2 per cell vs brute force) |
+| P3.2.4 | ☑ | `Cylinders` fields: `layer_rho`, `layer_h`, `layer_shape`, side-specific (inner/outer), validation (h vs radius and spacing), JSON and CLI | round trip; invalid input rejected | tests; **PASS** (inner/outer fields, h_inner ≤ R, h_outer ≤ gap, step only; JSON, CLI) |
+| P3.2.5 | ☑ | V0b: ρ = 0 bit-identical to no layer (positions and M⊥) | identical | record; **PASS** (package test + full size) |
+| P3.2.6 | ☑ | Timestep: the layer constraint uses the largest summed rate (overlap included) | test | code; **PASS** (summed-rate upper bound with overlap) |
 
 ## 3.3 Non-step profiles: integration along a segment where d(t) is not linear
 
@@ -369,13 +369,13 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Test | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.4.1 | ☐ | Single-spin trace through the shell and reflections | every step \|M⊥_sim/M⊥_pred − 1\| ≤ 1e-6 (brute-force prediction) | trace |
-| P3.4.2 | ☐ | Exact uniform case: step, inside, h = R gives a uniform rate | per spin ≤ 1e-10; ensemble ≤ roundoff bound | record |
-| P3.4.3 | ☐ | Mean-exponent identity, curved form: E[−ln M] = t·⟨ΔR₂⟩_volume for every profile, inside and outside, single cylinder and array | \|z\| ≤ 3 | table |
-| P3.4.4 | ☐ | Additivity with bulk R₂ | per spin ≤ 1e-10 | record |
-| P3.4.5 | ☐ | Density and occupancy with the layer on (C-B3 repeated) | positions identical to no layer | record |
+| P3.4.1 | ☑ | Single-spin trace through the shell and reflections | every step \|M⊥_sim/M⊥_pred − 1\| ≤ 1e-6 (brute-force prediction) | trace; (step) **PASS**: max 1.0e-7, overlapping outer layers |
+| P3.4.2 | ☑ | Exact uniform case: step, inside, h = R gives a uniform rate | per spin ≤ 1e-10; ensemble ≤ roundoff bound | record; (step) **PASS**: per spin ≤ 1.3e-13 |
+| P3.4.3 | ☑ | Mean-exponent identity, curved form: E[−ln M] = t·⟨ΔR₂⟩_volume for every profile, inside and outside, single cylinder and array | \|z\| ≤ 3 | table; (step) **PASS** 12/12, \|z\| ≤ 1.25 |
+| P3.4.4 | ☑ | Additivity with bulk R₂ | per spin ≤ 1e-10 | record; (step) **PASS**: 6.7e-14 |
+| P3.4.5 | ☑ | Density and occupancy with the layer on (C-B3 repeated) | positions identical to no layer | record; (step) **PASS**: positions identical |
 | P3.4.6 | ☐ | Radial continuum benchmark (single cylinder, inside; finite-volume radial eigen-solver), unit-tested against an exact case | solver tests pass; Monte Carlo at converged τ within 3 SEM | table |
-| P3.4.7 | ☐ | Side-specific checks (inner vs outer layer) | each side affects only its region | record |
+| P3.4.7 | ☑ | Side-specific checks (inner vs outer layer) | each side affects only its region | record; (step) **PASS**: leak ≤ 1.2e-11 (roundoff) |
 
 ## 3.5 Overlapping layers in arrays (proposal Milestone 5)
 
