@@ -272,6 +272,7 @@ Largest near-surface rate ΔR2(0) = (ρ/h)·g(0) (1/ms) over all layer sides wit
 """
 max_layer_rate(::Nothing) = 0.0
 max_layer_rate(layers::Vector{WallLayer}) = maximum((surface_rate(s) for l in layers for s in (l.positive, l.negative)); init=0.0)
+max_layer_rate(layers::Vector{CylinderLayer}) = maximum((cylinder_surface_rate(s, l.radius, inside) for l in layers for (s, inside) in ((l.inner, true), (l.outer, false))); init=0.0)
 max_layer_rate(geometry::FixedGeometry) = maximum((max_layer_rate(g.layer) for g in geometry); init=0.0)
 
 end

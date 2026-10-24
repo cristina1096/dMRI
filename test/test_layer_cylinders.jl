@@ -85,3 +85,76 @@
         @test Layers.cylinder_exponent(layer_out, O, P(0.5, 0.), P(0.9, 0.), 1.0) == 0.0
     end
 end
+
+@testset "test_layer_cylinders.jl: cylinder layer parameters" begin
+    geom(c) = mr.Simulation([]; geometry=c, verbose=false).geometry
+
+    @testset "no layer gives nothing" begin
+        @test geom(mr.Cylinders(radius=1.))[1].layer === nothing
+        @test geom(mr.Cylinders(radius=1., layer_h=0.2))[1].layer === nothing       # ρ = 0
+    end
+
+    @testset "same layer on both sides" begin
+        l = geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2))[1].layer[1]
+        @test l.centre == SVector(0., 0.)
+        @test l.radius == 1.0
+        @test (l.inner.rho, l.inner.h, l.inner.shape) == (0.02, 0.2, :step)
+        @test (l.outer.rho, l.outer.h, l.outer.shape) == (0.02, 0.2, :step)
+    end
+
+    @testset "side-specific values override both-sides values" begin
+        l = geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, layer_rho_outer=0.05, layer_h_inner=0.4))[1].layer[1]
+        @test (l.inner.rho, l.inner.h) == (0.02, 0.4)
+        @test (l.outer.rho, l.outer.h) == (0.05, 0.2)
+        l = geom(mr.Cylinders(radius=1., layer_rho_inner=0.02, layer_h_inner=0.2))[1].layer[1]
+        @test l.outer.rho == 0.0
+    end
+
+    @testset "per-cylinder values and centres" begin
+        layers = geom(mr.Cylinders(radius=[1., 0.5], position=[[0., 0.], [5., 0.]], layer_rho=[0.02, 0.], layer_h=0.2))[1].layer
+        @test [l.centre for l in layers] == [SVector(0., 0.), SVector(5., 0.)]
+        @test [l.radius for l in layers] == [1.0, 0.5]
+        @test layers[2].inner.rho == 0.0
+    end
+
+    @testset "centres are wrapped into the unit cell as the obstructions are" begin
+        l = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], position=[2.0, 0.0], layer_rho=0.02, layer_h=0.2))[1].layer[1]
+        @test l.centre ≈ SVector(-0.5, 0.0)
+    end
+
+    @testset "h_inner = R is allowed (uniform inner rate)" begin
+        l = geom(mr.Cylinders(radius=1., layer_rho_inner=0.05, layer_h_inner=1.0))[1].layer[1]
+        @test l.inner.h == 1.0
+    end
+
+    @testset "validation" begin
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=-0.1, layer_h=0.2))
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=-0.2))
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1))                              # h = 0
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.1, layer_h_inner=1.5))  # h_inner > R
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.6))  # h_outer > gap 0.5
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., position=[[0., 0.], [2.4, 0.]], layer_rho=0.1, layer_h=0.5))  # h 0.5 > gap 0.4
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="linear"))   # step only
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="bogus"))
+        # h_outer = gap exactly is allowed; a side with ρ = 0 is not checked against the gap
+        @test geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.5))[1].layer !== nothing
+        @test geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho_inner=0.1, layer_h_inner=0.2, layer_h_outer=0.9))[1].layer !== nothing
+    end
+
+    @testset "warning when spins can stick to the surface" begin
+        @test_logs (:warn, r"not applied while a spin is stuck") geom(
+            mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, density=1., dwell_time=1.))
+    end
+
+    @testset "JSON round trip keeps the layer fields" begin
+        c = mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_h_outer=0.3)
+        io = IOBuffer()
+        mr.write_geometry(io, c)
+        back = mr.read_geometry_json(String(take!(io)))
+        @test back.layer_rho.value == 0.02
+        @test back.layer_h.value == 0.2
+        @test back.layer_h_outer.value == 0.3
+        @test isnothing(back.layer_rho_inner.value)
+        @test back.layer_shape.value == "step"
+    end
+end

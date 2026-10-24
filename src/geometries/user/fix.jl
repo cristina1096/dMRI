@@ -112,7 +112,76 @@ function fix_type(cylinders::Cylinders, index::Int, original_index::Int; kwargs.
     else
         base_obstructions = [Internal.Cylinder(r) for r in cylinders.radius.value]
     end
-    apply_properties(cylinders, base_obstructions, index, original_index; surface="surface", volume="inside", kwargs...)
+    layer = cylinder_layers(cylinders; density=kwargs[:density])
+    apply_properties(cylinders, base_obstructions, index, original_index; surface="surface", volume="inside", layer=layer, kwargs...)
+end
+
+"""
+    cylinder_layers(cylinders; density=0.)
+
+Resolves the near-surface layer parameters of every cylinder into `Internal.CylinderLayer` objects (D3.1–D3.4):
+`inner` is the layer inside the cylinder, `outer` the one outside. Side-specific fields (`layer_rho_inner`, ...)
+override the both-sides fields. Only the step profile is supported on cylinders so far.
+
+Returns `nothing` if no cylinder has a layer, so that simulations without a layer run the unmodified code.
+"""
+function cylinder_layers(cylinders::Cylinders; density=0.)
+    function resolve(quantity::String, side::String, i::Int)
+        specific = getproperty(cylinders, Symbol("layer_" * quantity * "_" * side))[i]
+        isnothing(specific) || return Float64(specific)
+        both = getproperty(cylinders, Symbol("layer_" * quantity))[i]
+        return isnothing(both) ? 0.0 : Float64(both)
+    end
+    function resolve_shape(side::String, i::Int)
+        specific = getproperty(cylinders, Symbol("layer_shape_" * side))[i]
+        shape = isnothing(specific) ? cylinders.layer_shape[i] : specific
+        shape = isnothing(shape) ? "step" : shape
+        shape == "step" || error("Cylinder $i, $side side: only layer_shape = \"step\" is supported on cylinders so far, got \"$shape\".")
+        return :step
+    end
+    radii = value_as_vector(cylinders.radius)
+    centres = obstruction_shifts(cylinders)
+    layers = Internal.CylinderLayer[]
+    for i in 1:length(cylinders)
+        R = Float64(isglobal(cylinders.radius) ? cylinders.radius.value : radii[i])
+        (inner, outer) = map(("inner", "outer")) do side
+            rho = resolve("rho", side, i)
+            h = resolve("h", side, i)
+            rho < 0 && error("Cylinder $i, $side side: layer_rho must be >= 0, got $rho.")
+            h < 0 && error("Cylinder $i, $side side: layer_h must be >= 0, got $h.")
+            rho > 0 && iszero(h) && error("Cylinder $i, $side side: layer_h must be > 0 when layer_rho > 0.")
+            Internal.LayerSide(rho, h, resolve_shape(side, i))
+        end
+        inner.rho > 0 && inner.h > R && error("Cylinder $i: layer_h_inner = $(inner.h) um exceeds the radius ($R um).")
+        push!(layers, Internal.CylinderLayer(SVector{2, Float64}(centres[i]), R, inner, outer))
+    end
+    if all(l -> iszero(l.inner.rho) && iszero(l.outer.rho), layers)
+        return nothing
+    end
+    check_outer_reach(layers, cylinders.repeats.value)
+    stuck_possible = density > 0 || any(d -> !isnothing(d) && d > 0, value_as_vector(cylinders.density))
+    stuck_possible && @warn "The near-surface layer is not applied while a spin is stuck to a cylinder (surface density > 0)."
+    return layers
+end
+
+"""
+    check_outer_reach(layers, repeats)
+
+Errors if an outer layer reaches inside another cylinder or an image of one: layer_h_outer must not exceed the surface
+gap |c_i − c_j| − R_i − R_j to any neighbour (the wall rule h ≤ spacing). Centres are wrapped into the unit cell,
+so the nearest images are within one cell.
+"""
+function check_outer_reach(layers::Vector{Internal.CylinderLayer}, repeats)
+    shifts = isnothing(repeats) ? [SVector(0., 0.)] : [SVector(i * repeats[1], j * repeats[2]) for i in -1:1 for j in -1:1]
+    for (i, li) in enumerate(layers)
+        iszero(li.outer.rho) && continue
+        for (j, lj) in enumerate(layers), shift in shifts
+            (i == j && iszero(shift)) && continue
+            v = lj.centre + shift - li.centre
+            gap = sqrt(v[1]^2 + v[2]^2) - li.radius - lj.radius
+            li.outer.h > gap && error("Cylinder $i: layer_h_outer = $(li.outer.h) um exceeds the surface gap ($gap um) to cylinder $j, so the outer layer would reach inside that cylinder.")
+        end
+    end
 end
 
 function fix_type(spheres::Spheres, index::Int, original_index::Int; kwargs...)
@@ -180,6 +249,20 @@ end
 fix_type(bendy_cylinder::BendyCylinder, args...; kwargs...) = fix_type(Mesh(bendy_cylinder), args...; kwargs...)
 
 """
+    obstruction_shifts(user_obstructions)
+
+Position of every obstruction as applied by [`apply_properties`](@ref): for a repeating group wrapped into the unit
+cell [−repeats/2, repeats/2).
+"""
+function obstruction_shifts(user_obstructions::ObstructionGroup)
+    shifts = isglobal(user_obstructions.position) ? fill(user_obstructions.position.value, length(user_obstructions)) : user_obstructions.position.value
+    if hasproperty(user_obstructions, :repeats) && ~isnothing(user_obstructions.repeats.value)
+        shifts = [mod.(s .+ user_obstructions.repeats.value/2, user_obstructions.repeats.value) .- user_obstructions.repeats.value/2 for s in shifts]
+    end
+    return shifts
+end
+
+"""
     apply_properties(user_obstructions, internal_obstructions, index; surface, volume)
 
 Apply the generic obstruction properties defined in `user_obstruction` to `internal_obstructions`.
@@ -194,11 +277,7 @@ This function applies (if appropriate):
 function apply_properties(user_obstructions::ObstructionGroup, internal_obstructions::Vector{<:Internal.FixedObstruction}, index::Int, original_index::Int; surface=nothing, volume=nothing, apply_shift=true, layer=nothing, kwargs...)
     # apply shifts
     if apply_shift && hasproperty(user_obstructions, :position)
-        shifts = isglobal(user_obstructions.position) ? fill(user_obstructions.position.value, length(user_obstructions)) : user_obstructions.position.value
-        if hasproperty(user_obstructions, :repeats) && ~isnothing(user_obstructions.repeats.value)
-            shifts = [mod.(s .+ user_obstructions.repeats.value/2, user_obstructions.repeats.value) .- user_obstructions.repeats.value/2 for s in shifts]
-        end
-        internal_obstructions = Internal.Shift.(internal_obstructions, shifts)
+        internal_obstructions = Internal.Shift.(internal_obstructions, obstruction_shifts(user_obstructions))
     end
 
     fix_array(s::Symbol, other) = other

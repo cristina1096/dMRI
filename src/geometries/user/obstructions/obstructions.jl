@@ -45,6 +45,15 @@ for obstruction_type in (
             Field{Float64}(:susceptibility_iso, "Isotropic component of the susceptibility (in ppm um). It can be calculated by multiplying the isotropic susceptibility of the simulated tissue by the thickness.", -0.1),
             Field{Float64}(:susceptibility_aniso, "Anisotropic component of the susceptibility (in ppm um). It can be calculated by multiplying the anisotropic susceptibility of the simulated tissue by the thickness", -0.1),
             Field{Float64}(:lorentz_radius, "Only compute field explicitly for cylinders with this Lorentz radius.", 5.),
+            Field{Float64}(:layer_rho, "Near-surface layer: integrated relaxivity ρ (um/ms) per unit surface area, inside and outside the cylinder unless a side-specific value is set. Zero means no layer.", 0.),
+            Field{Float64}(:layer_h, "Near-surface layer: thickness h (um) inside and outside the cylinder, unless a side-specific value is set.", 0.),
+            Field{Float64}(:layer_rho_inner, "Near-surface layer: ρ (um/ms) inside the cylinder. Overrides `layer_rho`."),
+            Field{Float64}(:layer_rho_outer, "Near-surface layer: ρ (um/ms) outside the cylinder. Overrides `layer_rho`."),
+            Field{Float64}(:layer_h_inner, "Near-surface layer: h (um) inside the cylinder (at most the radius). Overrides `layer_h`."),
+            Field{Float64}(:layer_h_outer, "Near-surface layer: h (um) outside the cylinder (at most the surface gap to the nearest cylinder). Overrides `layer_h`."),
+            Field{String}(:layer_shape, "Near-surface layer: profile g inside and outside, unless a side-specific value is set. Only step is supported on cylinders so far.", "step"),
+            Field{String}(:layer_shape_inner, "Near-surface layer: profile inside the cylinder. Overrides `layer_shape`."),
+            Field{String}(:layer_shape_outer, "Near-surface layer: profile outside the cylinder. Overrides `layer_shape`."),
         ]),
     ObstructionType(
         :Annulus; plural=:Annuli, ndim=2, surfaces=[:inner_surface, :outer_surface], volumes=[:inner_volume, :outer_volume], fields=[
