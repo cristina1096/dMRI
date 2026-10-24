@@ -253,6 +253,35 @@ function layer_exponent(layers::Vector{WallLayer}, g::FixedObstructionGroup, sta
     return total
 end
 
+"""
+    image_centres(g, centre, lo, hi, reach)
+
+Axis positions (local 2D) of the images of a cylinder at `centre` in group `g` that lie within `reach` of the box
+[lo, hi] in each coordinate: lattice images for a repeating group, `centre` itself otherwise.
+"""
+function image_centres(g::FixedObstructionGroup, centre::SVector{2, Float64}, lo::SVector{2, Float64}, hi::SVector{2, Float64}, reach::Float64)
+    rep = repeating(g)
+    sx = rep ? g.repeats[1] : 0.0
+    sy = rep ? g.repeats[2] : 0.0
+    kx = rep ? (ceil(Int, (lo[1] - reach - centre[1]) / sx):floor(Int, (hi[1] + reach - centre[1]) / sx)) : (0:0)
+    ky = rep ? (ceil(Int, (lo[2] - reach - centre[2]) / sy):floor(Int, (hi[2] + reach - centre[2]) / sy)) : (0:0)
+    return (centre + SVector(i * sx, j * sy) for i in kx for j in ky)
+end
+
+function layer_exponent(layers::Vector{CylinderLayer}, g::FixedObstructionGroup, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64)
+    p0 = SVector{2, Float64}(rotate_from_global(g, start))
+    p1 = SVector{2, Float64}(rotate_from_global(g, dest))
+    lo = min.(p0, p1)
+    hi = max.(p0, p1)
+    total = 0.0
+    for layer in layers
+        for c in image_centres(g, layer.centre, lo, hi, layer.radius + layer.outer.h)
+            total += cylinder_exponent(layer, c, p0, p1, dt)
+        end
+    end
+    return total
+end
+
 function layer_exponent(geometry::FixedGeometry, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64)
     return sum(g -> layer_exponent(g, start, dest, dt), geometry; init=0.0)
 end
@@ -268,11 +297,39 @@ has_layer(geometry::FixedGeometry) = any(g -> !isnothing(g.layer), geometry)
 """
     max_layer_rate(geometry)
 
-Largest near-surface rate ΔR2(0) = (ρ/h)·g(0) (1/ms) over all layer sides with ρ > 0 in the geometry; 0 if there is no layer.
+Largest near-surface rate (1/ms) in the geometry: ΔR2(0) = (ρ/h)·g(0) over all wall layer sides with ρ > 0; for cylinders an upper bound on the summed rate where outer layers overlap (P3.2.6). 0 if there is no layer.
 """
 max_layer_rate(::Nothing) = 0.0
 max_layer_rate(layers::Vector{WallLayer}) = maximum((surface_rate(s) for l in layers for s in (l.positive, l.negative)); init=0.0)
-max_layer_rate(layers::Vector{CylinderLayer}) = maximum((cylinder_surface_rate(s, l.radius, inside) for l in layers for (s, inside) in ((l.inner, true), (l.outer, false))); init=0.0)
-max_layer_rate(geometry::FixedGeometry) = maximum((max_layer_rate(g.layer) for g in geometry); init=0.0)
+max_layer_rate(g::FixedObstructionGroup) = max_layer_rate(g.layer, g)
+max_layer_rate(::Nothing, ::FixedObstructionGroup) = 0.0
+max_layer_rate(layers::Vector{WallLayer}, ::FixedObstructionGroup) = max_layer_rate(layers)
+
+"""
+Upper bound on the summed ΔR2 for cylinders: for each cylinder, the larger of its inner surface rate and its outer
+surface rate plus the outer surface rates of every other cylinder (or image) whose outer shell intersects its outer
+shell, |c_i − c_j| < R_i + h_i + R_j + h_j. Exact when no outer shells overlap. Inner shells overlap nothing
+(validation: h_outer ≤ surface gap).
+"""
+function max_layer_rate(layers::Vector{CylinderLayer}, g::FixedObstructionGroup)
+    best = 0.0
+    for (i, li) in enumerate(layers)
+        best = max(best, cylinder_surface_rate(li.inner, li.radius, true))
+        own = cylinder_surface_rate(li.outer, li.radius, false)
+        iszero(own) && continue
+        total = own
+        for (j, lj) in enumerate(layers)
+            reach = li.radius + li.outer.h + lj.radius + lj.outer.h
+            for c in image_centres(g, lj.centre, li.centre, li.centre, reach)
+                (j == i && c == li.centre) && continue
+                norm(c - li.centre) < reach && (total += cylinder_surface_rate(lj.outer, lj.radius, false))
+            end
+        end
+        best = max(best, total)
+    end
+    return best
+end
+
+max_layer_rate(geometry::FixedGeometry) = maximum((max_layer_rate(g) for g in geometry); init=0.0)
 
 end

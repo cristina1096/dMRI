@@ -158,3 +158,94 @@ end
         @test back.layer_shape.value == "step"
     end
 end
+
+@testset "test_layer_cylinders.jl: layer exponent on cylinder groups" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(c) = mr.Simulation([]; geometry=c, verbose=false).geometry
+    V3(x, y, z=0.) = SVector{3, Float64}(x, y, z)
+    rin(ρ, h, R) = ρ / (h * (1 - h / (2R)))           # D3.1, written independently of the package
+    rout(ρ, h, R) = ρ / (h * (1 + h / (2R)))
+
+    "Brute-force summed rate at (x, y) over cylinders (centres, radii), images within ±2 cells if repeating."
+    function brute_rate(x, y, centres, radii, ρ, h_in, h_out; repeats=nothing)
+        cells = isnothing(repeats) ? [(0., 0.)] : [(i * repeats[1], j * repeats[2]) for i in -2:2 for j in -2:2]
+        total = 0.0
+        for (c, R) in zip(centres, radii), (ox, oy) in cells
+            r = hypot(x - c[1] - ox, y - c[2] - oy)
+            (R - h_in <= r <= R) && (total += rin(ρ, h_in, R))
+            (R <= r <= R + h_out) && (total += rout(ρ, h_out, R))
+        end
+        return total
+    end
+    function brute_exponent(p0, p1, dt, args...; kw...)
+        K = 20_000
+        return dt * sum(brute_rate((p0 + (k - 0.5) / K * (p1 - p0))[1:2]..., args...; kw...) for k in 1:K) / K
+    end
+    function max_error(g, centres, radii, ρ, h_in, h_out, box; repeats=nothing, n=200)
+        Random.seed!(77)
+        err = 0.0
+        for _ in 1:n
+            p0 = V3((box .* (2 .* rand(2) .- 1))..., rand())
+            p1 = V3((box .* (2 .* rand(2) .- 1))..., rand())
+            err = max(err, abs(Layers.layer_exponent(g, p0, p1, 1.0) - brute_exponent(p0, p1, 1.0, centres, radii, ρ, h_in, h_out; repeats=repeats)))
+        end
+        return err
+    end
+
+    @testset "single cylinder: stationary points (rate) and a radial piece" begin
+        g = geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h_inner=0.2, layer_h_outer=0.3))
+        @test Layers.layer_exponent(g, V3(0.9, 0.), V3(0.9, 0.), 1.0) ≈ rin(0.02, 0.2, 1.0)
+        @test Layers.layer_exponent(g, V3(1.2, 0.), V3(1.2, 0.), 1.0) ≈ rout(0.02, 0.3, 1.0)
+        @test Layers.layer_exponent(g, V3(0.5, 0.), V3(0.5, 0.), 1.0) == 0.0
+        @test Layers.layer_exponent(g, V3(1.5, 0.), V3(1.5, 0.), 1.0) == 0.0
+        # axial motion does not change r
+        @test Layers.layer_exponent(g, V3(0.9, 0., 0.), V3(0.9, 0., 5.), 2.0) ≈ 2 * rin(0.02, 0.2, 1.0)
+    end
+
+    @testset "Review Focus 3: rotated axis (cylinder along x)" begin
+        g = geom(mr.Cylinders(radius=1., rotation=:x, layer_rho_inner=0.02, layer_h_inner=0.2))
+        @test Layers.layer_exponent(g, V3(5., 0.9, 0.), V3(5., 0.9, 0.), 1.0) ≈ rin(0.02, 0.2, 1.0)
+        @test Layers.layer_exponent(g, V3(0., 0., 0.9), V3(0., 0., 0.9), 1.0) ≈ rin(0.02, 0.2, 1.0)
+        @test Layers.layer_exponent(g, V3(0.9, 0., 0.), V3(0.9, 0., 0.), 1.0) == 0.0     # on the axis
+        @test Layers.layer_exponent(g, V3(-3., 0.9, 0.), V3(3., 0.9, 0.), 1.0) ≈ rin(0.02, 0.2, 1.0)  # along the axis
+    end
+
+    @testset "two overlapping outer layers (non-repeating) vs brute force" begin
+        centres, radii = [(0., 0.), (2.2, 0.)], [1.0, 0.8]          # gap 0.4, outer h 0.3 → overlap 0.2 wide
+        g = geom(mr.Cylinders(radius=radii, position=[[0., 0.], [2.2, 0.]], layer_rho=0.03, layer_h_inner=0.2, layer_h_outer=0.3))
+        @test Layers.layer_exponent(g, V3(1.15, 0.), V3(1.15, 0.), 1.0) ≈ rout(0.03, 0.3, 1.0) + rout(0.03, 0.3, 0.8)
+        @test max_error(g, centres, radii, 0.03, 0.2, 0.3, (2.5, 1.5)) < 1e-4
+    end
+
+    @testset "four overlapping cylinders (non-repeating) vs brute force" begin
+        centres = [(1.2, 1.2), (-1.2, 1.2), (1.2, -1.2), (-1.2, -1.2)]
+        g = geom(mr.Cylinders(radius=1., position=[[c...] for c in centres], layer_rho=0.03, layer_h=0.3))
+        @test max_error(g, centres, fill(1.0, 4), 0.03, 0.3, 0.3, (2.5, 2.5)) < 1e-4
+    end
+
+    @testset "square array (images) vs brute force" begin
+        g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.03, layer_h_inner=0.2, layer_h_outer=0.3))
+        @test max_error(g, [(0., 0.)], [1.0], 0.03, 0.2, 0.3, (4.0, 4.0); repeats=(2.5, 2.5)) < 1e-4
+    end
+
+    @testset "Review Focus 4: two cylinders per cell, rectangular array vs brute force" begin
+        centres = [(0., 0.), (1.5, 1.25)]
+        g = geom(mr.Cylinders(radius=[0.6, 0.5], position=[[c...] for c in centres], repeats=[3.0, 2.5],
+            layer_rho=0.03, layer_h_inner=0.2, layer_h_outer=0.25))
+        @test max_error(g, centres, [0.6, 0.5], 0.03, 0.2, 0.25, (4.0, 4.0); repeats=(3.0, 2.5)) < 1e-4
+    end
+
+    @testset "timestep: max_layer_rate is the summed-rate bound" begin
+        # separated (gap 0.5 > 2h = 0.4): the largest single rate, inside
+        g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2))
+        @test Layers.max_layer_rate(g) ≈ rin(0.02, 0.2, 1.0)
+        # overlapping outer layers (2h = 0.6 > gap 0.5): own + 4 nearest neighbours (diagonals at 3.54 > 2.6 do not reach)
+        g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.3))
+        @test Layers.max_layer_rate(g) ≈ 5 * rout(0.1, 0.3, 1.0)
+        s = mr.Simulation([]; geometry=mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.3), diffusivity=3., verbose=false)
+        @test s.timestep.max_timestep ≈ 0.005 / (5 * rout(0.1, 0.3, 1.0))
+        # single cylinder
+        @test Layers.max_layer_rate(geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h_inner=0.2, layer_h_outer=0.1))) ≈ max(rin(0.02, 0.2, 1.0), rout(0.02, 0.1, 1.0))
+        @test Layers.max_layer_rate(geom(mr.Cylinders(radius=1.))) == 0.0
+    end
+end

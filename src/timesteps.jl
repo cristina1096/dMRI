@@ -25,7 +25,7 @@ At any time the timestep is guaranteed to be shorter than:
 3. timestep that would allow surface relaxation rate at single collision to be greater than `surface_relaxation`.
 4. timestep that would allow magnetisation transfer rate at single collision to be greater than `transfer_rate`.
 5. the minimum dwell time of the bound pool times `dwell_time`.
-6. `layer` / ΔR2(0)_max, where ΔR2(0)_max is the largest near-surface layer rate ρ/h in the geometry.
+6. `layer` / ΔR2_max, where ΔR2_max is the largest near-surface layer rate in the geometry (for cylinders with overlapping outer layers, an upper bound on their summed rate).
 7. (`gradient` /( D * \\gamma^2 * G^2))^(1//3), where \\gamma is the [`gyromagnetic_ratio`](@ref) and `G` is the current `gradient_strength`.
 """
 mutable struct TimeStep
