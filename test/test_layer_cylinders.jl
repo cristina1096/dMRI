@@ -249,3 +249,108 @@ end
         @test Layers.max_layer_rate(geom(mr.Cylinders(radius=1.))) == 0.0
     end
 end
+
+@testset "test_layer_cylinders.jl: layer applied during the simulation" begin
+    per_spin(snap) = [s.orientations[1].transverse for s in snap.spins]
+    inside_mask(snap; R=1.) = [hypot(s.position[1], s.position[2]) < R for s in snap.spins]
+    rin(ρ, h, R) = ρ / (h * (1 - h / (2R)))
+    rout(ρ, h, R) = ρ / (h * (1 + h / (2R)))
+    box = mr.BoundingBox([-1.5, -1.5, -1.], [1.5, 1.5, 1.])
+
+    @testset "radial step with a reflection, inside and outside" begin
+        cyl = mr.Cylinders(radius=1., layer_rho=0.02, layer_h_inner=0.2, layer_h_outer=0.3)
+        seq = build_sequence([1.2, :readout])
+        sim = mr.Simulation(seq; geometry=cyl, diffusivity=3., verbose=false)
+        part = first(p for p in mr.parts([seq], 0., mr.TimeStep(1.2, Inf)) if p.duration > 0)
+        # inside: 0.5 → 1.3 reflects at 1 and ends at 0.7; path 0.8 um in 1.2 ms; in [0.8, 1]: 0.2 + 0.2 um → 0.6 ms
+        spin = mr.Spin(position=[0.5, 0., 0.], transverse=1., longitudinal=0.)
+        mr.Evolve.draw_step!(spin, sim, part, [3.], [1.3, 0., 0.])
+        @test spin.position[1] ≈ 0.7 atol=1e-12
+        @test spin.orientations[1].transverse ≈ exp(-rin(0.02, 0.2, 1.) * 0.6) rtol=1e-12
+        # outside: 1.5 → 0.7 reflects at 1 and ends at 1.3; in [1, 1.3]: 0.3 + 0.3 um → 0.9 ms
+        spin = mr.Spin(position=[1.5, 0., 0.], transverse=1., longitudinal=0.)
+        mr.Evolve.draw_step!(spin, sim, part, [3.], [0.7, 0., 0.])
+        @test spin.position[1] ≈ 1.3 atol=1e-12
+        @test spin.orientations[1].transverse ≈ exp(-rout(0.02, 0.3, 1.) * 0.9) rtol=1e-12
+    end
+
+    @testset "ρ = 0: bit-identical to no layer (P3.2.5)" begin
+        function run(c)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=c, diffusivity=3., R2=1/80, verbose=false)
+            Random.seed!(7)
+            snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+            return mr.readout(snap, sim, [50.]; return_snapshot=true)[1]
+        end
+        a = run(mr.Cylinders(radius=1., repeats=[2.5, 2.5]))
+        b = run(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_h=0.3))
+        @test mr.position.(a) == mr.position.(b)
+        @test per_spin(a) == per_spin(b)
+    end
+
+    @testset "h_inner = R: every inside spin decays at exactly 2ρ/R; outside spins untouched" begin
+        cyl = mr.Cylinders(radius=1., layer_rho_inner=0.05, layer_h_inner=1.0)       # κ = 1/2 → ΔR2 = 0.1 /ms
+        sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=cyl, diffusivity=3., verbose=false)
+        Random.seed!(1)
+        snap = mr.Snapshot(2000, sim, box; transverse=1., longitudinal=0.)
+        mask = inside_mask(snap)
+        res = mr.readout(snap, sim, [10., 50.]; return_snapshot=true)
+        for (t, s) in zip((10., 50.), res)
+            m = per_spin(s)
+            @test all(isapprox.(m[mask], exp(-0.1 * t); rtol=1e-10))
+            @test all(m[.!mask] .== 1.0)
+        end
+    end
+
+    @testset "bulk R2 and the layer multiply exactly" begin
+        cyl = mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2)
+        function run(R2)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=cyl, diffusivity=3., R2=R2, verbose=false)
+            Random.seed!(3)
+            snap = mr.Snapshot(2000, sim, 500; transverse=1., longitudinal=0.)
+            return mr.readout(snap, sim, [50.]; return_snapshot=true)[1]
+        end
+        a = run(0.)
+        b = run(1/80)
+        @test mr.position.(a) == mr.position.(b)
+        @test all(isapprox.(per_spin(b), per_spin(a) .* exp(-50 / 80); rtol=1e-10))
+        @test minimum(per_spin(a)) < 1.0
+    end
+
+    @testset "side-specific: each side acts only in its own compartment (P3.4.7)" begin
+        function final(c)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=c, diffusivity=3., verbose=false)
+            Random.seed!(5)
+            snap = mr.Snapshot(2000, sim, box; transverse=1., longitudinal=0.)
+            mask = inside_mask(snap)
+            return (per_spin(mr.readout(snap, sim, [50.]; return_snapshot=true)[1]), mask)
+        end
+        (m, mask) = final(mr.Cylinders(radius=1., layer_rho_inner=0.02, layer_h_inner=0.2))
+        @test all(m[.!mask] .== 1.0)
+        @test minimum(m[mask]) < 1.0
+        (m, mask) = final(mr.Cylinders(radius=1., layer_rho_outer=0.02, layer_h_outer=0.2))
+        # reflection points land a roundoff distance outside r = R, inside the outer shell's boundary (measure zero)
+        @test all(1 .- m[mask] .<= 1e-12)
+        @test minimum(m[.!mask]) < 1.0
+    end
+
+    @testset "Review Focus 5: permeable cylinder with a layer runs, M⊥ finite and ≤ 1" begin
+        cyl = mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, permeability=1.)
+        sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=cyl, diffusivity=3., verbose=false)
+        Random.seed!(9)
+        snap = mr.Snapshot(1000, sim, box; transverse=1., longitudinal=0.)
+        m = per_spin(mr.readout(snap, sim, [20.]; return_snapshot=true)[1])
+        @test all(isfinite.(m))
+        @test all(0 .< m .<= 1.0)
+        @test minimum(m) < 1.0
+    end
+
+    @testset "finite RF pulse with a cylinder layer is rejected" begin
+        seq = mr.SequenceParts.SequenceWaveform(
+            (([], []), ([], []), ([], [])),
+            [(0., 9., [mr.SequenceParts.ConstantPulse(0.25 / 9, 0., 0.)])],
+            [], [10.], 10.,
+        )
+        sim = mr.Simulation(seq; geometry=mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2), verbose=false)
+        @test_throws Exception mr.readout(100, sim, [10.])
+    end
+end
