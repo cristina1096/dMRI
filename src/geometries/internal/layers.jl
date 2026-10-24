@@ -268,6 +268,8 @@ function image_centres(g::FixedObstructionGroup, centre::SVector{2, Float64}, lo
     return (centre + SVector(i * sx, j * sy) for i in kx for j in ky)
 end
 
+# Cost: every cylinder of the group is visited for every straight piece (≈ 1 ns per cylinder outside its reach), so the
+# layer's cost grows with the number of cylinders per unit cell; a cell list of layer indices is a planned optimisation.
 function layer_exponent(layers::Vector{CylinderLayer}, g::FixedObstructionGroup, start::SVector{3, Float64}, dest::SVector{3, Float64}, dt::Float64)
     p0 = SVector{2, Float64}(rotate_from_global(g, start))
     p1 = SVector{2, Float64}(rotate_from_global(g, dest))

@@ -179,7 +179,8 @@ function check_outer_reach(layers::Vector{Internal.CylinderLayer}, repeats)
             (i == j && iszero(shift)) && continue
             v = lj.centre + shift - li.centre
             gap = sqrt(v[1]^2 + v[2]^2) - li.radius - lj.radius
-            li.outer.h > gap && error("Cylinder $i: layer_h_outer = $(li.outer.h) um exceeds the surface gap ($gap um) to cylinder $j, so the outer layer would reach inside that cylinder.")
+            # tolerance: h_outer = gap is allowed even when the gap is not exact in binary (e.g. 1 − 0.8)
+            li.outer.h > gap + 1e-12 * max(1.0, abs(gap)) && error("Cylinder $i: layer_h_outer = $(li.outer.h) um exceeds the surface gap ($gap um) to cylinder $j, so the outer layer would reach inside that cylinder.")
         end
     end
 end

@@ -19,9 +19,9 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.1.3 | C-B3 density and occupancy within h | \|z_χ\| ≤ 3; occupancy \|z\| ≤ 2 | χ² **PASS** (z +0.33 / +0.78); occupancy **FAIL** by criterion (outside h = 0.1/0.2: z +2.36/+2.89, nested shells); follow-up vs τ: no trend; identity P3.4.3 confirms uniform density to 1e-4 |
 | P3.4.5 | Positions with the layer on = no layer | identical | **PASS** |
 | P3.1.4 | C-B4 conventional θ reference curves (5 configurations × 3 θ) | τ_a vs τ_a/4 within 2 SEM; bulk factorisation | 14/15 (+ 1 confirmed at τ_a/16, z +0.83); bulk 5.9e-14 → **reference set** |
-| P3.1.5 | C-B5 runtime | cost table | layer ×1.25–1.67 per spin-step |
+| P3.1.5 | C-B5 runtime | cost table | layer ×1.25–1.67 per spin-step (1 cylinder per cell); ×6.7 at 400 per cell (cost ∝ cylinders per cell) |
 | P3.1.6 | Conventional mapping θ√(D/π)(S/V) on curved surfaces | \|z\| ≤ 3 | **PASS** (18/18, max \|z\| 2.17); ratio 0.99976–1.00013 for √(Dτ)/R ≤ 0.35 |
-| P3.4.1 | Single-spin trace, square array, overlapping outer layers | every step ≤ 1e-6 | **PASS**: max 1.0e-7; 9808 reflections in a shell, 2978 overlap steps |
+| P3.4.1 | Single-spin trace, square array, overlapping outer layers | every step ≤ 1e-6 | **PASS**: max 1.0e-7; 9808 reflected steps with a layer exponent, 2978 overlap steps |
 | P3.2.5, P3.4.2, P3.4.4, P3.4.7 | V0b, uniform h = R, additivity, side-specific (full size) | exact / ≤ 1e-10 / leak ≤ 1e-9 | **PASS** (8/8) |
 | P3.4.3 | Mean-exponent identity E[−ln M] = ρ(S/V)t, step (single, square, overlap, rectangular) | \|z\| ≤ 3 | **PASS** (12/12, \|z\| ≤ 1.25; ≤ 6e-5 relative) |
 
@@ -308,7 +308,23 @@ Script [p3_1_5_runtime.jl](phase3/p3_1_5_runtime.jl) → [results/phase3/p3_1_5_
 | 1e-3 | 0.0370 | 0.0557 | 1.50 | 0.0393 | 0.0657 | 1.67 |
 | 1e-4 | 0.0350 | 0.0538 | 1.54 | 0.0380 | 0.0603 | 1.59 |
 
-**Conclusion.** The step layer costs ×1.25–1.67 per spin-step on cylinders, against ×1.2–1.4 on walls. The extra cost in arrays comes from the image loop over neighbouring cylinders, whose cost grows with the number of cylinders within reach. A reference run (10⁵ spins × 50 ms × 10 seeds at τ = 0.01) takes ≈ 5–7 min.
+**Many cylinders per cell** (final-review finding; script [p3_1_5b_runtime_many.jl](phase3/p3_1_5b_runtime_many.jl), `runtime_many.csv`).
+- Set-up: n × n cylinders (R = 0.7, spacing 2) per cell of side 2n, the same packing density for every n; layer ρ = 0.02, h = 0.1; 2000 spins × 1000 steps.
+- The layer exponent loops over every cylinder of the group on every straight piece, at ≈ 1 ns per cylinder even when none of its images is within reach. So the cost grows with the total number of cylinders per cell.
+
+| cylinders per cell | no layer (µs/spin-step) | layer | ratio |
+|---|---|---|---|
+| 1 | 0.119 | 0.123 | 1.0 |
+| 9 | 0.100 | 0.136 | 1.4 |
+| 100 | 0.100 | 0.271 | 2.7 |
+| 400 | 0.107 | 0.721 | 6.7 |
+
+The final reviewer measured ×17 at 400 cylinders per cell in another configuration (R = 0.7, h = 0.1, a 40 × 40 cell).
+
+**Conclusion.**
+- With one cylinder per cell, the step layer costs ×1.25–1.67 per spin-step on cylinders, against ×1.2–1.4 on walls. A reference run (10⁵ spins × 50 ms × 10 seeds at τ = 0.01) takes ≈ 5–7 min.
+- The cost grows with the total number of cylinders per cell (×6.7 at 400 here). Packings of hundreds of axons are therefore correct but slow.
+- A cell list of layer indices (shell bounding boxes R + h_out, like MCMR's hit grid) would restore a cost proportional to the cylinders within reach. It is deferred to the plan that introduces packings (ruling; tracker P3.6.4).
 
 ## Verification of the step layer on cylinders (P3.4.1, P3.4.3)
 
@@ -324,7 +340,7 @@ Script [p3_4_1_trace.jl](phase3/p3_4_1_trace.jl) → [results/phase3/p3_4_1_trac
 
 Parameters: ρ = 0.03, so ΔR₂ = 0.1176 (inside) and 0.0870 (outside); R₂,bulk = 1/80; τ = 0.01; 100 spins × 500 steps. Midpoint sampling error per boundary crossing ≤ ΔR₂·τ/(2K) ≈ 6e-8.
 
-**Result.** Max |M⊥,sim/M⊥,pred − 1| = 1.0e-7 (tolerance 1e-6). 9808 steps had a reflection inside a shell and 2978 steps passed through an overlap → **PASS**.
+**Result.** Max |M⊥,sim/M⊥,pred − 1| = 1.0e-7 (tolerance 1e-6) → **PASS**. 9808 steps had a reflection and a non-zero layer exponent; this counts reflected steps that touched a shell, not reflections located inside a shell. 2978 steps passed through an overlap of two outer shells, i.e. had a sample with summed rate 2·ΔR₂,out.
 
 **Conclusion.** The error is at the sampling resolution (≈ 2 boundary crossings × 6e-8). The exact shell fractions, κ, the image loop and the overlap sum agree with brute force on real reflected paths.
 

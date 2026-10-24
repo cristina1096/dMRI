@@ -393,7 +393,7 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 | P3.6.1 | ☐ | τ scans on cylinders (step; then other profiles) incl. small radius and thin layers | error vs ΔR₂(0)·τ and vs curvature (h/R, √(Dτ)/R) recorded | fig |
 | P3.6.2 | ☐ | Confirm or adjust c = 0.005; for comparison studies set τ from the error in the difference (lesson from Review C1) | constraint documented | code/record |
 | P3.6.3 | ☐ | Fix ε_R₂ (signal error vs ε) | ε chosen with margin | table |
-| P3.6.4 | ☐ | Runtime vs walls and vs C-B5 | table | table |
+| P3.6.4 | ☐ | Runtime vs walls and vs C-B5; cell list of layer indices so the cost scales with cylinders within reach, not per cell (final review 2026-10-24: ×6.7 at 400 per cell) | table | table |
 
 ## 3.7 Comparison with the conventional model on cylinders (proposal Milestone 6)
 

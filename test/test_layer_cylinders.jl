@@ -138,6 +138,8 @@ end
         @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="bogus"))
         # h_outer = gap exactly is allowed; a side with ρ = 0 is not checked against the gap
         @test geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.5))[1].layer !== nothing
+        # h_outer = gap where the gap is not exact in binary (1 − 0.8 = 0.19999999999999996) is still allowed
+        @test geom(mr.Cylinders(radius=0.4, repeats=[1., 1.], layer_rho_outer=0.1, layer_h_outer=0.2))[1].layer !== nothing
         @test geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho_inner=0.1, layer_h_inner=0.2, layer_h_outer=0.9))[1].layer !== nothing
     end
 
