@@ -1,0 +1,17 @@
+config,layer,tau,us_per_spin_step
+single,false,0.1,0.07375788689
+single,false,0.01,0.04417748451
+single,false,0.001,0.03703019619
+single,false,0.0001,0.03504929543
+single,true,0.1,0.09241068363
+single,true,0.01,0.06655387878
+single,true,0.001,0.05570108891
+single,true,0.0001,0.05384829044
+array,false,0.1,0.08241379261
+array,false,0.01,0.04947309494
+array,false,0.001,0.03932700157
+array,false,0.0001,0.03802258968
+array,true,0.1,0.1311873913
+array,true,0.01,0.08063471317
+array,true,0.001,0.06567571163
+array,true,0.0001,0.06026880741
