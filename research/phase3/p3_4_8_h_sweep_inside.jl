@@ -3,7 +3,8 @@
 # Quantities at readouts 0:5:50:
 #   S(50); Jensen gap J(50) = ln S(50) + ρ(2/R)·50 ≥ 0 (Phase 2 record, M3: S = e^(−E[X]) e^J);
 #   ΔS(50) = S − S_conv (conventional: Robin, same ρ); curvature c of ln S = a + bt + ct² (least squares);
-#   grid error = |S_N=2000 − S_N=4000|.
+#   grid error = |S_N=2000 − S_N=4000| (layer), |S_N=1000 − S_N=2000| (conventional; Robin on the face since the
+#   final review, I3 — the first version put the sink on the ring centre, a first-order error of ≈ 5e-7).
 # Monotonicity: the sign of S(50; h_{k+1}) − S(50; h_k) is recorded for every neighbouring pair; a step counts as resolved
 # when |difference| > 10 × grid error. h → 0 approaches the conventional model; h = R is uniform (J = 0).
 # Run: julia --project=research/baseline -t 8 research/phase3/p3_4_8_h_sweep_inside.jl
@@ -19,10 +20,12 @@ curv(ts, S) = (X = hcat(ones(length(ts)), ts, ts .^ 2); (X \ log.(S))[3])
 rows = NamedTuple[]
 steps = NamedTuple[]
 conv = Dict{Float64, Float64}()
+conv_grid = Dict{Float64, Float64}()
 for R in (0.5, 1.0, 2.0)
     E50 = RHO * (2 / R) * 50
     Sc = radial_signal(R=R, D=D_REF, times=TIMES_REF, surface=RHO)
     conv[R] = Sc[end]
+    conv_grid[R] = abs(Sc[end] - radial_signal(R=R, D=D_REF, times=[50.0], surface=RHO, N=1000)[1])   # Robin on the face (I3)
     prev = nothing
     for hr in HR
         h = hr * R
@@ -39,13 +42,13 @@ for R in (0.5, 1.0, 2.0)
         @printf("R = %.1f h/R = %.3f: S(50) %.6f  J %.3e  ΔS vs conv %+.2e  curvature %+.1e  grid %.1e\n",
             R, hr, row.S50, row.J50, row.dS50_vs_conv, row.curvature, row.grid_err)
     end
-    @printf("R = %.1f conventional: S(50) %.6f  J %.3e\n", R, Sc[end], log(Sc[end]) + E50)
+    @printf("R = %.1f conventional: S(50) %.9f  J %.4e  grid (N 1000 vs 2000) %.1e\n", R, Sc[end], log(Sc[end]) + E50, conv_grid[R])
 end
 write_csv(joinpath(OUT, "sweep.csv"), rows)
 write_csv(joinpath(OUT, "steps.csv"), steps)
 signs = unique(s.sign for s in steps if s.resolved)
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "rho" => RHO, "D" => D_REF,
-    "conventional_S50" => conv, "n_steps" => length(steps), "n_resolved" => count(s -> s.resolved, steps),
+    "conventional_S50" => conv, "conventional_grid_err" => conv_grid, "n_steps" => length(steps), "n_resolved" => count(s -> s.resolved, steps),
     "resolved_signs" => signs, "monotone" => length(signs) == 1))
 @printf("neighbour steps resolved: %d of %d; signs of resolved steps: %s\n", count(s -> s.resolved, steps), length(steps), signs)
 

@@ -57,3 +57,11 @@
         @test abs(a / b - 1) < 1e-4
     end
 end
+
+@testset "radial continuum: Robin condition on the face is second order (final review I3)" begin
+    R, D, ρ = 1.0, 3.0, 0.02
+    a = radial_signal(R=R, D=D, times=[50.0], surface=ρ, N=1000)[1]
+    b = radial_signal(R=R, D=D, times=[50.0], surface=ρ, N=2000)[1]
+    @test abs(a - b) < 2e-8                      # cell-centred sink: 4.5e-7
+    @test radial_rates(R=R, D=D, surface=ρ, N=1000)[1] ≈ exact_rate_conventional(R, D, ρ) rtol=1e-6
+end

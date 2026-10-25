@@ -1,0 +1,126 @@
+{
+  "max_abs_curvature": 1.9294942892218847e-7,
+  "max_abs_z": 1.911939509016924,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-26T01:19:18.005",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "42934e784f91b1453898918d3ce825abc278d06f",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_4_8c_outside_curvature.jl",
+    "src_modified": false
+  },
+  "rows": [
+    {
+      "s": 2.5,
+      "model": "conventional",
+      "curvature": -1.9294942892218847e-7,
+      "curvature_sem": 1.2290643062019538e-7,
+      "z": -1.5698888003544704
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.05",
+      "curvature": -1.1502358549222846e-7,
+      "curvature_sem": 1.560801021949641e-7,
+      "z": -0.736952269217182
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.1",
+      "curvature": -8.919779007929688e-8,
+      "curvature_sem": 1.467094360243496e-7,
+      "z": -0.6079894551874127
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.2",
+      "curvature": -1.2985424622931994e-7,
+      "curvature_sem": 1.1925078524139936e-7,
+      "z": -1.088917326342598
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.3",
+      "curvature": -9.601097850433534e-8,
+      "curvature_sem": 9.983605329424289e-8,
+      "z": -0.9616864382786241
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.4",
+      "curvature": -5.978191349757303e-8,
+      "curvature_sem": 6.915781220566101e-8,
+      "z": -0.8644274824627766
+    },
+    {
+      "s": 2.5,
+      "model": "step_h0.5",
+      "curvature": -2.5195199454461097e-8,
+      "curvature_sem": 5.148890273302333e-8,
+      "z": -0.48933261571141823
+    },
+    {
+      "s": 3.0,
+      "model": "conventional",
+      "curvature": 3.2679829587723673e-9,
+      "curvature_sem": 1.1454403390696058e-7,
+      "z": 0.02853036380250774
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.05",
+      "curvature": -3.094307661587861e-8,
+      "curvature_sem": 7.493146603989739e-8,
+      "z": -0.4129517044201819
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.1",
+      "curvature": 1.6590882106196843e-8,
+      "curvature_sem": 8.246825200706144e-8,
+      "z": 0.20117901983391415
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.2",
+      "curvature": 8.032726915490401e-8,
+      "curvature_sem": 6.396098166734483e-8,
+      "z": 1.2558792417020541
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.3",
+      "curvature": 1.0706965481232361e-7,
+      "curvature_sem": 6.13375119776331e-8,
+      "z": 1.7455819670574
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.5",
+      "curvature": 8.065993684618622e-8,
+      "curvature_sem": 6.307808846294369e-8,
+      "z": 1.2787314709698485
+    },
+    {
+      "s": 3.0,
+      "model": "step_h0.7",
+      "curvature": 7.465796257070833e-8,
+      "curvature_sem": 5.644444781522592e-8,
+      "z": 1.3226803602562536
+    },
+    {
+      "s": 3.0,
+      "model": "step_h1.0",
+      "curvature": 2.997150179781341e-8,
+      "curvature_sem": 1.5675967600682137e-8,
+      "z": 1.911939509016924
+    }
+  ]
+}

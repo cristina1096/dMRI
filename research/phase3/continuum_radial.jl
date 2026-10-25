@@ -5,7 +5,7 @@
 #     layer:        ∂_r m = 0 at r = R,  ΔR2(r) = (ρ/h)·g((R − r)/h)/κ,  κ = ∫g(u)(1 − u h/R) du   (D3.1; κ by quadrature),
 #     conventional: D ∂_r m = −ρ m at r = R (Robin), ρ = θ√(D/π) (P3.1.6).
 # Finite volumes: N rings of width dr = R/N, areas A_i = π(r_{i+1/2}² − r_{i−1/2}²), face conductances 2πD r_{i+1/2}/dr,
-# the Robin sink 2πRρ on the last ring; ΔR2 averaged over each ring (step: exact area overlap; other profiles:
+# the Robin sink on the outer face, 2πRρ/(1 + ρ dr/2D) (face value from the last ring, second order); ΔR2 averaged over each ring (step: exact area overlap; other profiles:
 # r-weighted sub-sampling). A ṁ = −(K + A V) m with y = √A m becomes ẏ = −M y, M = A^(−1/2)(K + A V)A^(−1/2) symmetric
 # tridiagonal = Σ λ_k u_k u_kᵀ, so S(t) = Σ_i A_i m_i / Σ A_i = Σ_k (u_kᵀ√A)² e^(−λ_k t) / Σ A_i.
 
@@ -54,7 +54,9 @@ function radial_operator(; R, D, layer=nothing, surface=0.0, N=2000, subsamples=
         K[i] += c[i]
         K[i + 1] += c[i]
     end
-    K[N] += 2π * R * surface
+    # Robin condition on the face r = R (final review I3): centre → face conductance 2πDR/(dr/2) in series with the
+    # surface sink 2πRρ, i.e. 2πRρ/(1 + ρ dr/(2D)); second order in dr (the sink on the ring centre was first order)
+    K[N] += 2π * R * surface / (1 + surface * dr / (2D))
     M = SymTridiagonal((K .+ A .* V) ./ A, -c ./ sqrt.(A[1:N - 1] .* A[2:N]))
     return (M, A)
 end
