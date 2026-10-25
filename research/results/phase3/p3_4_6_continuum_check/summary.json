@@ -1,0 +1,26 @@
+{
+  "identical_trajectories": true,
+  "nspins": 20000,
+  "pass": false,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-25T22:18:36.107",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "0b37b33d8614a5c5adaeeb2e8539848ddf312ab0",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_4_6_continuum_check.jl",
+    "src_modified": false
+  },
+  "rho": 0.02,
+  "taus": [
+    0.01,
+    0.0025
+  ],
+  "theta": 0.02046653415892977
+}

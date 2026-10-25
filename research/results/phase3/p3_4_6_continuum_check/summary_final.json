@@ -1,0 +1,68 @@
+{
+  "pass": false,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-10-25T22:56:51.220",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "0b37b33d8614a5c5adaeeb2e8539848ddf312ab0",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_4_6c_verdict.jl",
+    "src_modified": false
+  },
+  "verdict": {
+    "conventional": {
+      "dS50_cont": 0.0,
+      "dS50_richardson": 0.0,
+      "dS50_tau_b": 0.0,
+      "dS50_tau_c": 0.0,
+      "maxabs_zS": 0.8366110527,
+      "maxabs_zdS": 0.0,
+      "pass": true,
+      "tau": 0.000625
+    },
+    "step_h0.05": {
+      "dS50_cont": -5.745232702e-5,
+      "dS50_richardson": -4.586725475333334e-5,
+      "dS50_tau_b": 2.537556426e-5,
+      "dS50_tau_c": -2.805655e-5,
+      "maxabs_zS": 2.487733449,
+      "maxabs_zdS": 4.1420782,
+      "pass": false,
+      "tau": 0.000625
+    },
+    "step_h0.1": {
+      "dS50_cont": -0.0001108993849,
+      "dS50_richardson": -0.00010805110968000001,
+      "dS50_tau_b": -6.664852444e-5,
+      "dS50_tau_c": -9.770046337e-5,
+      "maxabs_zS": 1.950435273,
+      "maxabs_zdS": 1.801667104,
+      "pass": true,
+      "tau": 0.000625
+    },
+    "step_h0.2": {
+      "maxabs_zS": 1.168704715,
+      "maxabs_zdS": 1.017242006,
+      "pass": true,
+      "tau": 0.0025
+    },
+    "step_h0.5": {
+      "maxabs_zS": 0.9023904051,
+      "maxabs_zdS": 0.9244498278,
+      "pass": true,
+      "tau": 0.0025
+    },
+    "step_h1.0": {
+      "S50_rel_dev": 4.87677724869684e-8,
+      "maxabs_zdS": 0.7152706819,
+      "pass": true,
+      "tau": 0.0025
+    }
+  }
+}
