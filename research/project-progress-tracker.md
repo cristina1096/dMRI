@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 38 (+6 decisions) | 18 | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 18 | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -376,6 +376,7 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 | P3.4.5 | ☑ | Density and occupancy with the layer on (C-B3 repeated) | positions identical to no layer | record; (step) **PASS**: positions identical |
 | P3.4.6 | ☐ | Radial continuum benchmark (single cylinder, inside; finite-volume radial eigen-solver), unit-tested against an exact case | solver tests pass; Monte Carlo at converged τ within 3 SEM | table |
 | P3.4.7 | ☑ | Side-specific checks (inner vs outer layer) | each side affects only its region | record; (step) **PASS**: leak ≤ 1.2e-11 (roundoff) |
+| P3.4.8 | ☐ | Attenuation vs h on cylinders (each profile adopted; cylinder analogue of P2.3.4(b)/P2.3.5/P2.3.6), at fixed ρ (so ρ·S/V is the same at every h and only the distribution changes): single cylinder inside h = 0 → R, square array outside h = 0 → gap; checked against the radial continuum (P3.4.6) inside | S(t) with SEM per h; monotonicity (every step > 2 combined SEM, sign recorded, not assumed); curvature of ln S | fig + table |
 
 ## 3.5 Overlapping layers in arrays (proposal Milestone 5)
 
