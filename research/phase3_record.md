@@ -24,6 +24,8 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.1 | Single-spin trace, square array, overlapping outer layers | every step ≤ 1e-6 | **PASS**: max 1.0e-7; 9808 reflected steps with a layer exponent, 2978 overlap steps |
 | P3.2.5, P3.4.2, P3.4.4, P3.4.7 | V0b, uniform h = R, additivity, side-specific (full size) | exact / ≤ 1e-10 / leak ≤ 1e-9 | **PASS** (8/8) |
 | P3.4.3 | Mean-exponent identity E[−ln M] = ρ(S/V)t, step (single, square, overlap, rectangular) | \|z\| ≤ 3 | **PASS** (12/12, \|z\| ≤ 1.25; ≤ 6e-5 relative) |
+| P3.4.6 | Radial continuum benchmark (single cylinder, inside): solver vs exact Bessel eigenvalues; MC vs continuum at converged τ | solver tests pass; MC within 3 SEM | solver **PASS** (25 tests); MC 5/6 **PASS**; h = 0.05 paired ΔS **FAIL** (z 4.1 at τ = 6.25e-4, converging: Richardson −4.6e-5 vs −5.75e-5); C1 timestep bias on cylinders: thin-layer ΔS sign flips at τ = 1e-2 |
+| P3.4.8 | Attenuation vs h at fixed ρ (step): inside continuum (R = 0.5, 1, 2), outside paired MC (s = 2.5, 3.0) | monotonicity, sign recorded | S decreases monotonically with h everywhere (inside 27/27 steps; outside 13/13 negative, 10 beyond 3σ); conventional = h → 0 limit (highest S); J depends on h/R only inside; effects ≤ 0.33 % of S at ρ = 0.02 |
 
 ---
 
@@ -409,3 +411,162 @@ Overlapping outer layers add their integrals, and validation keeps them out of o
 - 12 of 12 pass with |z| ≤ 1.25. The runs share seeds, so the z values are correlated.
 - The agreement is ≤ 6e-5 relative, inside and outside, with and without overlap, for both τ. It holds even at R = 0.5, where κ = 0.8 differs most from 1.
 - This confirms the D3.1 normalisation and the overlap sum. It also confirms that the density near the surfaces is uniform at the 1e-4 level (see C-B3).
+
+## P3.4.6: radial continuum benchmark (single cylinder, inside)
+
+Plan [2026-10-25-radial-continuum-h-sweep.md](../docs/superpowers/plans/2026-10-25-radial-continuum-h-sweep.md).
+- Solver: [continuum_radial.jl](phase3/continuum_radial.jl); tests: [test_continuum_radial.jl](phase3/test/test_continuum_radial.jl).
+- Monte Carlo check: [p3_4_6_continuum_check.jl](phase3/p3_4_6_continuum_check.jl), [p3_4_6b_tau16.jl](phase3/p3_4_6b_tau16.jl), [p3_4_6c_verdict.jl](phase3/p3_4_6c_verdict.jl) → [results/phase3/p3_4_6_continuum_check/](results/phase3/p3_4_6_continuum_check/).
+
+**Design.**
+- **Why a continuum.** At fixed ρ every model has the same mean exponent, so the differences between models are of order 1e-4 in S. That is the size of the Monte Carlo timestep error (Review C1 on walls). An exact solution without Monte Carlo and without a timestep is therefore needed as the reference for differences.
+- **Why inside only.** Inside a single cylinder the problem is radially symmetric and one-dimensional. Outside, in an array, it is two-dimensional (2D solver optional, not built).
+
+**Method.**
+
+  ∂m/∂t = D (1/r) ∂_r(r ∂_r m) − [R₂,bulk + ΔR₂(r)] m,  0 ≤ r ≤ R,  m(r, 0) = 1,
+
+- **Layer:** ∂_r m(R) = 0, with ΔR₂(r) = (ρ/h)·g((R − r)/h)/κ and κ = ∫g(u)(1 − uh/R)du (D3.1). κ is computed by quadrature, independently of the package's 1 − h/2R.
+- **Conventional model:** D ∂_r m(R) = −ρ m(R) (Robin), with ρ = θ√(D/π) (valid on cylinders, P3.1.6).
+- **Discretisation:** finite volumes, N = 2000 rings of width dr.
+  - ring areas A_i = π(r_{i+1/2}² − r_{i−1/2}²);
+  - conductances 2πD r_{i+1/2}/dr;
+  - the Robin sink 2πRρ on the outer ring;
+  - the step profile averaged exactly over each ring (area overlap).
+- **Solution:** with y = √A·m the system is ẏ = −My, where M = A^(−1/2)(K + AV)A^(−1/2) is symmetric tridiagonal with eigenpairs (λ_k, u_k). Then
+
+  S(t) = Σ_k (u_kᵀ√A)² e^(−λ_k t) / Σ_i A_i.
+
+**Exact tests (25 assertions, all pass).**
+- Free and bulk decay.
+- h = R: the uniform rate 2ρ/R.
+- κ for step and linear profiles.
+- The initial slope −ρ(S/V) = −2ρ/R for both models.
+- **Lowest rate, conventional model:** λ₁ = Dk², with D k J₁(kR) = ρ J₀(kR). Agreement rtol 1e-3, the first-order error of the Robin cell.
+- **Lowest rate, step layer:** core m = J₀(kr), λ = Dk². Shell m = I₀(βr) + (I₁(βR)/K₁(βR))K₀(βr), with β = √((q − λ)/D) and q = ρ/(h(1 − h/2R)). The two are matched by continuity of m′/m at r = R − h. Agreement rtol 1e-5, including a strong case ρ = 0.5 (q ≈ 5 ms⁻¹).
+- The Jensen bound S ≥ e^(−ρ(S/V)t), including h = 1e-4, below the grid spacing.
+- Grid convergence: N = 1000 against 4000 within 1e-6 (layer) and 1e-4 (conventional).
+
+**Ruling.** The exact-case tolerance is 2e-6, not the planned 1e-12. The eigenvalue roundoff is ≈ ε‖M‖ ≈ ε·4DN²/R² ≈ 1e-8 ms⁻¹, so S is off by ≈ t·1e-8. The measured error is 4e-8 at t = 50.
+
+**Monte Carlo against the continuum.**
+- **Set-up:** R = 1, D = 3, ρ = 0.02, the conventional model and the step layer h = 0.05, 0.1, 0.2, 0.5, 1.0; seeds 1–10, 2·10⁴ spins in the box (π/4 inside).
+- **Pairing:** all models share τ, so their trajectories are identical (asserted), and ΔS = S_layer − S_conv is paired per seed.
+- **Timesteps:** τ_a = 1e-2, τ_b = 2.5e-3, and τ_c = 6.25e-4 for the conventional model and h = 0.05, 0.1.
+- **Criterion:** max over readouts |z| ≤ 3 for S and for ΔS, at the smallest τ run for each model.
+
+| model | ΔS(50) MC, τ = 1e-2 | τ = 2.5e-3 | τ = 6.25e-4 | continuum | max \|z\| (S / ΔS) at smallest τ | outcome |
+|---|---|---|---|---|---|---|
+| conventional | — | — | — | — | 0.84 / — | **PASS** |
+| step h = 0.05 | +1.95e-4 ± 1.8e-5 | +2.54e-5 ± 1.3e-5 | −2.81e-5 ± 7.1e-6 | −5.75e-5 | 2.49 / **4.14** | **FAIL** |
+| step h = 0.1 | +3.78e-5 ± 1.6e-5 | −6.66e-5 ± 9.8e-6 | −9.77e-5 ± 8.6e-6 | −1.109e-4 | 1.95 / 1.80 | **PASS** |
+| step h = 0.2 | −1.33e-4 ± 1.6e-5 | −1.88e-4 ± 1.6e-5 | — | −2.046e-4 | 1.17 / 1.02 | **PASS** |
+| step h = 0.5 | −3.87e-4 ± 1.8e-5 | −3.81e-4 ± 2.7e-5 | — | −3.870e-4 | 0.90 / 0.92 | **PASS** |
+| step h = 1.0 (uniform) | −4.54e-4 ± 1.9e-5 | −4.42e-4 ± 3.3e-5 | — | −4.508e-4 | S exact to 4.9e-8 / 0.72 | **PASS** |
+
+The h = 1.0 S comparison is exact rather than a z (ruling): every spin decays at exactly 0.1 ms⁻¹, so its SEM is ≈ 1e-17 and a z would only measure the continuum's roundoff.
+
+![MC vs continuum](results/phase3/p3_4_6_continuum_check/p3_4_6_continuum_check.png)
+
+**Conclusion.**
+- **The continuum is validated.** It reproduces the Monte Carlo S(t) of every model within 3 SEM at a converged τ. For h ≥ 0.1 it also reproduces the small paired difference ΔS.
+- **Review C1 recurs on cylinders.** At fixed ρ, the default τ = 1e-2 biases the thin-layer difference so much that its sign flips (h = 0.05: +1.95e-4 against −5.75e-5). For h ≤ 0.1 it still matters at τ = 2.5e-3.
+- **h = 0.05 still fails at τ = 6.25e-4** (z = 4.1), but it converges towards the continuum: the error from the continuum shrinks from 2.5e-4 to 8.3e-5 to 2.9e-5 for each fourfold reduction in τ (∝ τ^0.8). A linear-in-τ Richardson estimate from the last two passes gives −4.6e-5 (h = 0.05) and −1.081e-4 (h = 0.1, continuum −1.109e-4).
+- **Consequence.** Inside single cylinders, fixed-ρ differences use the continuum. Monte Carlo differences for h ≲ 0.1 need τ ≲ 1e-3 or an extrapolation in τ. This feeds P3.6.2: for comparison studies, set τ from the error in the difference, not in R.
+
+## P3.4.8: attenuation vs h at fixed ρ (step)
+
+**Design.**
+- **Why fixed ρ.** With ρ fixed, the mean exponent E[−ln M⊥] = ρ(S/V)t is the same for every h (P3.4.3). The h dependence of S is then entirely the Jensen term of Phase 2 (M3):
+
+  S(t) = e^(−ρ(S/V)t)·e^(J(t)),  J = ln E[e^(−X)] + E[X] ≥ 0,  J ≈ Var[X]/2.
+
+- **Limits.** The two ends of the sweep are known: h → 0 tends to the conventional surface model, and h = R inside is uniform (J = 0).
+- **Sign.** The direction of the change with h is recorded, not assumed.
+- **Range.** h ≥ 0.05 µm for Monte Carlo (user request 2026-10-25: thin layers force τ ∝ h). The continuum covers h/R = 0.005–1 at no extra cost.
+
+### Inside single cylinders (continuum)
+
+Script [p3_4_8_h_sweep_inside.jl](phase3/p3_4_8_h_sweep_inside.jl) → [results/phase3/p3_4_8_h_sweep_inside/](results/phase3/p3_4_8_h_sweep_inside/) (`sweep.csv`, `steps.csv`).
+- R = 0.5, 1, 2; D = 3; ρ = 0.02; t = 50 ms. E[X] = 0.02·(2/R)·50 = 4, 2, 1 for R = 0.5, 1, 2.
+- Curvature of ln S from a quadratic fit over 0:5:50.
+- Grid error: |S(N = 2000) − S(N = 4000)| ≤ 5e-8.
+
+| h/R | S(50), R = 1 | J(50), R = 0.5 / 1 / 2 | ΔS(50) vs conventional, R = 0.5 / 1 / 2 |
+|---|---|---|---|
+| 0.005 | 0.135781 | 3.287e-3 / 3.285e-3 / 3.278e-3 | −7.4e-7 / −5.5e-6 / −1.5e-5 |
+| 0.02 | 0.135763 | 3.156e-3 / 3.154e-3 / 3.148e-3 | −3.2e-6 / −2.3e-5 / −6.3e-5 |
+| 0.05 | 0.135729 | 2.904e-3 / 2.902e-3 / 2.897e-3 | −7.8e-6 / −5.8e-5 / −1.6e-4 |
+| 0.1 | 0.135675 | 2.510e-3 / 2.508e-3 / 2.504e-3 | −1.5e-5 / −1.1e-4 / −3.0e-4 |
+| 0.2 | 0.135581 | 1.818e-3 / 1.817e-3 / 1.815e-3 | −2.8e-5 / −2.1e-4 / −5.6e-4 |
+| 0.3 | 0.135505 | 1.251e-3 / 1.251e-3 / 1.250e-3 | −3.8e-5 / −2.8e-4 / −7.6e-4 |
+| 0.5 | 0.135399 | 4.71e-4 / 4.71e-4 / 4.71e-4 | −5.2e-5 / −3.9e-4 / −1.05e-3 |
+| 0.7 | 0.135349 | 9.8e-5 / 9.8e-5 / 9.8e-5 | −5.9e-5 / −4.4e-4 / −1.19e-3 |
+| 1.0 (uniform) | 0.135335 | ≈ 0 (−2e-7 … −7e-9, roundoff) | −6.1e-5 / −4.5e-4 / −1.22e-3 |
+| conventional | 0.135786 | 3.328e-3 / 3.325e-3 / 3.319e-3 | 0 |
+
+![h sweep inside](results/phase3/p3_4_8_h_sweep_inside/p3_4_8_h_sweep_inside.png)
+
+**Result.**
+- **Monotone.** All 27 neighbouring steps are resolved (more than 10× the grid error), and in every one S(50) falls as h grows. Every layer has S below the conventional model.
+- **Single-exponential.** The curvature of ln S is ≤ 2.6e-9 ms⁻² everywhere.
+
+**Conclusion.**
+- **Ordering.** At fixed ρ, spreading the relaxation deeper into the cylinder lowers the spin-to-spin variance of the exponent and so lowers S. In order: the conventional surface sink has the largest J and the highest S; the uniform layer (h = R) has J = 0 and the lowest S, e^(−2ρt/R). This is the same ordering as on walls.
+- **J depends on h/R only.** At the same ρ, t and D, J is the same function of h/R for R = 0.5, 1 and 2 (agreement within 0.3 %), although E[X] differs by a factor of 4. This is consistent with Var[X] ∝ (ρ²t/D)·f(h/R): the rate fluctuation of a spin scales as ρ/R and its correlation time as R²/D, so R cancels. Consequences:
+  - ΔS ≈ S·(J − J_conv) grows with R here only because S = e^(−2ρt/R) is larger for larger R;
+  - the relative difference ΔS/S, ≈ −3.3e-3 between the uniform layer and the conventional model, is the same for every R at the dimensionless ρ²t/D = 6.7e-3.
+- **Observability.** The largest difference is |ΔS(50)| = 1.2e-3 (R = 2, h = R), against 0.01 at SNR 200. Inside single cylinders at this ρ the h dependence is not observable from a single curve. Where it might become observable is P3.7.
+
+### Outside, square arrays (paired Monte Carlo)
+
+Scripts [p3_4_8_h_sweep_outside.jl](phase3/p3_4_8_h_sweep_outside.jl) and [p3_4_8b_outside_tau16.jl](phase3/p3_4_8b_outside_tau16.jl) → [results/phase3/p3_4_8_h_sweep_outside/](results/phase3/p3_4_8_h_sweep_outside/) (`sweep.csv`, `steps.csv`, `steps_tau16.csv`).
+
+**Method.**
+- **Geometry:** outer layer only, R = 1, ρ = 0.02, D = 3, in two arrays:
+  - s = 2.5 (gap 0.5): h = 0.05–0.5; layers overlap for h > 0.25;
+  - s = 3.0 (gap 1.0): h = 0.05–1.0; layers overlap for h > 0.5.
+- **Why Monte Carlo.** There is no continuum outside.
+- **Pairing.** All h and the conventional model of one array share τ, so their trajectories are identical (asserted). Neighbouring h are compared by paired per-seed differences d = S(50; h_{k+1}) − S(50; h_k).
+- **Timesteps:**
+  - τ_a = 1e-2 and τ_b = 2.5e-3: seeds 1–10, 2·10⁴ spins per seed;
+  - τ_c = 6.25e-4 for the conventional model and h ≤ 0.2: 10⁴ spins per seed.
+
+  The thin end was rerun at τ_c because P3.4.6 showed a Review C1 bias for h ≤ 0.1.
+- **Resolved step:** |z| > 3. The sign is recorded, not assumed.
+
+**Result.**
+- E[−ln M⊥] = ρ(S/V)t within noise for every h and τ: 2.0213 at s = 2.5 and 1.0725 at s = 3.0, a re-check of P3.4.3.
+- Each neighbour step below is reported at its converged τ: τ_c for the steps involving h ≤ 0.2 (their shift from τ_b is ≤ 2.1σ), τ_b otherwise (the τ_a → τ_b shift is ≤ 1.5σ for these thicker steps, except s = 2.5, 0.4 → 0.5: 2.6σ).
+
+| array | step | paired ΔS(50) ± SEM | z | τ |
+|---|---|---|---|---|
+| s = 2.5 | conventional → h 0.05 | −2.34e-5 ± 9.8e-6 | −2.4 | τ_c |
+| | 0.05 → 0.1 | −4.77e-5 ± 1.2e-5 | −3.9 | τ_c |
+| | 0.1 → 0.2 | −9.32e-5 ± 1.7e-5 | −5.4 | τ_c |
+| | 0.2 → 0.3 (overlap begins) | −4.69e-5 ± 8.9e-6 | −5.3 | τ_b |
+| | 0.3 → 0.4 | −2.75e-5 ± 4.5e-6 | −6.1 | τ_b |
+| | 0.4 → 0.5 (= gap) | −2.29e-5 ± 4.4e-6 | −5.2 | τ_b |
+| s = 3.0 | conventional → h 0.05 | −4.36e-5 ± 2.4e-5 | −1.8 | τ_c |
+| | 0.05 → 0.1 | −5.49e-5 ± 2.4e-5 | −2.3 | τ_c |
+| | 0.1 → 0.2 | −1.19e-4 ± 1.4e-5 | −8.5 | τ_c |
+| | 0.2 → 0.3 | −1.37e-4 ± 1.0e-5 | −13.3 | τ_b |
+| | 0.3 → 0.5 | −1.67e-4 ± 2.2e-5 | −7.8 | τ_b |
+| | 0.5 → 0.7 (overlap) | −8.24e-5 ± 1.4e-5 | −6.0 | τ_b |
+| | 0.7 → 1.0 (= gap) | −4.27e-5 ± 6.8e-6 | −6.3 | τ_b |
+
+Total difference from the conventional model at τ_b: S(50) − S_conv(50) = −2.57e-4 at s = 2.5, h = 0.5 (−0.19 % of S) and −6.52e-4 at s = 3.0, h = 1.0 (−0.19 %).
+
+![h sweep outside](results/phase3/p3_4_8_h_sweep_outside/p3_4_8_h_sweep_outside.png)
+
+**Conclusion.**
+- **Same ordering as inside.** Outside, S falls monotonically from the conventional model through every h. All 13 steps are negative; 10 are resolved beyond 3σ, and the three thin-end steps (conventional → 0.05, and 0.05 → 0.1 at s = 3.0) have z between −1.8 and −2.4. Overlap changes nothing qualitatively: the decrease simply continues more slowly once the layers overlap.
+- **The relative effect is smaller than inside.** −0.19 % of S at h = gap, against −0.33 % for the uniform layer inside. Outside, even h = gap leaves the cell corners far from every surface, so the rate never becomes uniform.
+- **Timestep.** At the default τ = 1e-2 the thin-end steps are biased, reversing the sign of conventional → 0.05: +1.03e-4 and +1.75e-4. They converge by τ_c = 6.25e-4.
+
+**Overall conclusion (P3.4.8).**
+- At fixed ρ on cylinders, inside and outside, S(t) decreases monotonically with h, between two limits:
+  - the conventional surface model, the h → 0 limit, has the largest J and the highest S;
+  - the most spread-out layer has the lowest S.
+- All the differences are ≤ 0.33 % of S at ρ = 0.02 (ρ²t/D = 6.7e-3), far below single-measurement noise.
+- Inside, J depends on h/R alone. The comparison over R, D and ρ, and the apparent T₂, belong to P3.7.
