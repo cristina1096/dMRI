@@ -1,4 +1,5 @@
-# P3.4.3: mean-exponent identity on cylinders. With ρ per unit surface area (D3.1) and a uniform stationary density,
+# P3.4.3: mean-exponent identity on cylinders; SHAPE = step (default), linear or exponential (for the exponential h is
+# the decay length; support R inside, the default cutoff = surface gap outside: 0.5 square, 0.4 rectangular). With ρ per unit surface area (D3.1) and a uniform stationary density,
 #     E[−ln M⊥(t)] = t·⟨ΔR2⟩_compartment = ρ·(S/V)·t
 # for any h and τ, including overlapping outer layers (the summed rate integrates to ρ per unit area of every surface
 # whose layer reaches the compartment; validation keeps outer layers out of other cylinders). Tests the κ normalisation,
@@ -10,15 +11,18 @@
 # Run: julia --project=research/baseline -t 8 research/phase3/p3_4_3_identity.jl
 
 include(joinpath(@__DIR__, "harness.jl"))
-const OUT = phase3_outdir("p3_4_3_identity")
+const SHAPE = get(ENV, "SHAPE", "step")
+const OUT = phase3_outdir(SHAPE == "step" ? "p3_4_3_identity" : "p3_4_3_identity_" * SHAPE)
+# single cylinders set layer_cutoff (an outer exponential without neighbours needs one; ignored by step and linear, and
+# the outer side does not reach the inside region measured here)
 const RHO, T = 0.02, 50.0
 configs = [
-    ("single_R1", Cylinders(radius=1.0, layer_rho=RHO, layer_h=0.2), 1.0, Inf, Inf, :inside),
-    ("single_R0.5", Cylinders(radius=0.5, layer_rho=RHO, layer_h=0.2), 0.5, Inf, Inf, :inside),
-    ("square_sep_in", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h=0.2), 1.0, 2.5, 2.5, :inside),
-    ("square_sep_out", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h=0.2), 1.0, 2.5, 2.5, :outside),
-    ("square_overlap_out", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h_inner=0.2, layer_h_outer=0.4), 1.0, 2.5, 2.5, :outside),
-    ("rect_overlap_x_out", Cylinders(radius=1.0, repeats=[2.4, 3.0], layer_rho=RHO, layer_h_inner=0.2, layer_h_outer=0.3), 1.0, 2.4, 3.0, :outside),
+    ("single_R1", Cylinders(radius=1.0, layer_rho=RHO, layer_h=0.2, layer_shape=SHAPE, layer_cutoff=1.0), 1.0, Inf, Inf, :inside),
+    ("single_R0.5", Cylinders(radius=0.5, layer_rho=RHO, layer_h=0.2, layer_shape=SHAPE, layer_cutoff=1.0), 0.5, Inf, Inf, :inside),
+    ("square_sep_in", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h=0.2, layer_shape=SHAPE), 1.0, 2.5, 2.5, :inside),
+    ("square_sep_out", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h=0.2, layer_shape=SHAPE), 1.0, 2.5, 2.5, :outside),
+    ("square_overlap_out", Cylinders(radius=1.0, repeats=[2.5, 2.5], layer_rho=RHO, layer_h_inner=0.2, layer_h_outer=0.4, layer_shape=SHAPE), 1.0, 2.5, 2.5, :outside),
+    ("rect_overlap_x_out", Cylinders(radius=1.0, repeats=[2.4, 3.0], layer_rho=RHO, layer_h_inner=0.2, layer_h_outer=0.3, layer_shape=SHAPE), 1.0, 2.4, 3.0, :outside),
 ]
 rows = NamedTuple[]
 for (name, g, R, sx, sy, region) in configs, τ in (1e-2, 4e-2)
