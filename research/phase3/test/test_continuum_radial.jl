@@ -9,7 +9,7 @@
         @test all(isapprox.(radial_signal(R=R, D=D, times=ts, R2_bulk=1 / 80), exp.(-ts ./ 80); rtol=tol))
     end
 
-    @testset "κ by quadrature (D3.1)" begin
+    @testset "κ (D3.1) vs closed forms" begin
         @test radial_kappa("step", 0.2, 1.0) ≈ 0.9 rtol=1e-8
         @test radial_kappa("step", 1.0, 1.0) ≈ 0.5 rtol=1e-8
         @test radial_kappa("linear", 0.3, 1.0) ≈ 1 - 0.1 rtol=1e-8      # c̄ = h/3
@@ -92,6 +92,24 @@ end
             a = radial_signal(R=R, D=D, times=[50.0], layer=(shape, ρ, h), N=1000)[1]
             b = radial_signal(R=R, D=D, times=[50.0], layer=(shape, ρ, h), N=2000)[1]
             @test abs(a - b) < 2e-8
+        end
+    end
+end
+
+@testset "radial continuum: ring_integral vs fine quadrature inside the support (Group 2 review I1)" begin
+    # conservation and the initial slope are satisfied by construction (κ comes from the same ring_integral), so the
+    # distribution of V across rings is tested here directly against an independent midpoint rule of g((R − r)/h) r
+    R = 1.0
+    Random.seed!(3)
+    for (shape, h) in (("linear", 0.3), ("exponential", 0.2), ("exponential", 1.5))
+        c = radial_support(shape, h, R) / h
+        L = radial_support(shape, h, R)
+        for _ in 1:30
+            lo, hi = sort(R .- L .* rand(2))
+            n = 200_000
+            dr = (hi - lo) / n
+            q = sum(radial_g(shape, (R - (lo + (k - 0.5) * dr)) / h, c) * (lo + (k - 0.5) * dr) for k in 1:n) * dr
+            @test ring_integral(shape, h, R, lo, hi) ≈ q rtol=1e-9
         end
     end
 end

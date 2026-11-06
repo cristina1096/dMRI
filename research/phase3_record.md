@@ -29,7 +29,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.3.1–P3.3.3 | Linear and exponential on cylinders: quadrature between exact roots vs linear closed form, wall formulas, brute force; supports (D3.5), validation, simulation | package tests | **PASS**; step results bit-identical to before |
 | P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear vs closed form ≤ 9e-11; exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.2 (linear), ×2.5 (exponential) vs step; no allocation |
 | P3.4.1, P3.4.3 (linear, exponential) | Single-spin trace; mean-exponent identity | trace ≤ 1e-6; \|z\| ≤ 3 | **PASS**: trace 6.7e-12 (linear), 2.4e-8 (exponential); identity 12/12 each (\|z\| ≤ 1.27) |
-| P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| underestimated 10–40 % at τ = 1e-2 (C1) |
+| P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| low by 4–38 % at τ = 1e-2 and still 2.5–12 % low (same sign, not resolved) at τ = 2.5e-3 (C1) |
 
 ---
 
@@ -680,8 +680,9 @@ The ring rate is V_i = (ρ/(hκ))·2π·∫/A_i, with κ = ∫_{R−L}^R g·r dr
 
 **Ruling.** κ was first computed by a midpoint rule over u ∈ [0, c]. That failed for thin exponential layers, where c = R/h = 10⁴ and a step of 0.1 in u gives an error of ≈ 1e-4. κ now comes from the exact ring integral. The κ tests against the closed forms (step 1 − h/2R, linear 1 − h/3R, exponential 1 − c̄/R) remain the independent check.
 
-**Tests (62/62 in the research suite):**
-- ∫ΔR₂ dA = 2πRρ for linear and exponential, including h = 1e-4 (below the grid spacing). The tolerance is 1e-8 because the test extracts V as a difference of diagonals ≈ D/dr².
+**Tests (156/156 in the research suite after the Group 2 review):**
+- **ring_integral against an independent fine midpoint rule** of g((R − r)/h)·r on 90 random sub-intervals inside the support (linear h = 0.3; exponential h = 0.2 and 1.5), rtol 1e-9. This test was added after the Group 2 review: since κ comes from the same ring integral, ∫ΔR₂ dA = 2πRρ and the initial slope −2ρ/R hold by construction for any antiderivative. A deliberately wrong exponential antiderivative passed them and failed this test (60 failures).
+- ∫ΔR₂ dA = 2πRρ for linear and exponential, including h = 1e-4 (below the grid spacing). This is by construction now, so it only guards the ring summation. The tolerance is 1e-8 because the test extracts V as a difference of diagonals ≈ D/dr².
 - κ of the exponential with support R.
 - The initial slope −2ρ/R and the Jensen bound.
 - Grid convergence: N = 1000 against 2000 within 2e-8.
@@ -701,16 +702,25 @@ Scripts [p3_4_1_trace.jl](phase3/p3_4_1_trace.jl) and [p3_4_3_identity.jl](phase
 - **Trace:** each step's M⊥ is predicted from the simulator's reflected path. The exponent of each piece is τ·ℓ_j/Σℓ times the mean of the brute-force summed rate over 10⁴ points.
 - **Identity:** E[−ln M⊥] = ρ(S/V)t, which is exact for any profile because ρ is per unit surface area (D3.1) and every shell integrates to 2πRρ.
 
-| profile | trace: max \|M⊥,sim/M⊥,pred − 1\| | steps with a reflection inside a shell / through an overlap | identity: rows passing, max \|z\| |
+| profile | trace: max \|M⊥,sim/M⊥,pred − 1\| | reflected steps with a layer exponent / steps through an overlap (gates, see note) | identity: rows passing, max \|z\| |
 |---|---|---|---|
 | step (P3.4.1/3, for reference) | 1.0e-7 | 9808 / 2978 | 12/12, 1.25 |
 | linear | 6.7e-12 | 9808 / 2946 | 12/12, 1.17 |
 | exponential | 2.4e-8 | 9808 / 12599 | 12/12, 1.27 |
 
+**Note on the count columns.** Both counts are gates (> 0), not comparable statistics.
+- "Reflected steps with a layer exponent" counts every reflecting step with a non-zero exponent: 9808 for every shape. For the exponential (support R) this is every reflection.
+- The overlap count for linear and exponential samples every 100th point. Linear and step share paths and supports, so its 2946 against step's 2978 is a detector difference.
+
 **Conclusion.**
-- **Trace.** Both profiles agree with brute force on real reflected paths; the tolerance is 1e-6. The linear error, 7e-12, is far below the step's 1e-7 because the linear profile has no jump, so midpoint sampling is nearly exact. The exponential error, 2e-8, comes from sampling the steep part near the surface.
+- **Trace.** Both profiles agree with brute force on real reflected paths; the tolerance is 1e-6.
+  - **Linear, 7e-12:** far below the step's 1e-7, because the linear profile has no jump, so midpoint sampling is nearly exact.
+  - **Exponential, 2.4e-8:** comes from the jump at the outer truncation r = R + 0.5 (≈ 7e-6 relative per crossing at 10⁴ samples). That edge coincides with a neighbour's surface only along the axes; elsewhere spins cross it. Smooth near-surface pieces sample to ≈ 3e-10.
 - **Overlap.** The exponential passes through overlapping outer layers in 4× more steps than the others, because its default support reaches the neighbouring surfaces.
-- **Identity.** It holds for both profiles in every configuration, inside and outside, separated and overlapping, at both τ. This confirms the κ normalisation, the supports and the quadrature path end to end.
+- **Identity.** It holds for both profiles in every configuration, inside and outside, at both τ.
+  - For linear, the outside rows include separated (h = 0.2 < gap/2) and overlapping layers.
+  - For the exponential every outside row overlaps, since its default support is the full gap. The row named "square_sep_out" is therefore not separated for the exponential.
+  - This confirms the κ normalisation, the supports and the quadrature path end to end.
 
 ### P3.4.6 for linear and exponential: Monte Carlo against the continuum (inside)
 
@@ -737,5 +747,12 @@ Script [p3_4_6d_profiles.jl](phase3/p3_4_6d_profiles.jl) → [results/phase3/p3_
 
 **Conclusion.**
 - **The continuum is validated for linear and exponential** inside a cylinder, for S and for the small difference from the conventional model. It stands in for Monte Carlo inside single cylinders for every profile.
-- **The Review C1 timestep effect recurs.** At the default τ = 1e-2, |ΔS| is underestimated by 10–40 %, most for the profiles concentrated near the surface (linear h = 0.3 and exponential h = 0.1: −1.4e-4 and −1.3e-4 against ≈ −2.1e-4). By τ = 2.5e-3 the bias is within the noise.
-- **Same centroid, similar ΔS.** At the same centroid the linear and exponential layers have nearly the same ΔS (c̄ = 0.1: −2.11e-4 and −2.08e-4; c̄ = 0.2: −3.43e-4 and −3.16e-4). This anticipates the centroid comparison of P3.4.8 (Group 3).
+- **The Review C1 timestep effect recurs.**
+  - **At the default τ = 1e-2:** |ΔS| is underestimated by 32 % (linear h = 0.3), 4 % (linear h = 0.6, not significant, z 1.9), 38 % (exponential h = 0.1) and 10 % (exponential h = 0.2). S itself also fails there for every model, including the conventional one (max |z| 2.05–5.37).
+  - **At τ = 2.5e-3:** the criterion passes, but every layer's |ΔS| is still below the continuum, by 9 %, 2.5 %, 12 % and 4 % (z 1.27, 0.37, 2.09, 0.65; all the same sign). The shrinkage from τ_a is roughly proportional to τ.
+  - **What this means.** The residual bias is not resolved at τ = 2.5e-3, consistent with the step profile at h = 0.05 still failing at 6.25e-4 (P3.4.6). Monte Carlo differences of surface-concentrated profiles at τ = 2.5e-3 should be taken as ≈ 10 % low. The continuum is the reference inside.
+- **Centroid comparison.** The two profiles have similar ΔS at similar centroids, but this is only an indication:
+  - c̄ ≈ 0.1: −2.11e-4 (linear) and −2.08e-4 (exponential);
+  - c̄ ≈ 0.2: −3.43e-4 and −3.16e-4, 8 % apart. The exponential h = 0.2 with support R has c̄ = 0.193, not 0.2.
+
+  It rests on two continuum points per profile; the systematic comparison is P3.4.8 (Group 3).
