@@ -65,3 +65,33 @@ end
     @test abs(a - b) < 2e-8                      # cell-centred sink: 4.5e-7
     @test radial_rates(R=R, D=D, surface=ρ, N=1000)[1] ≈ exact_rate_conventional(R, D, ρ) rtol=1e-6
 end
+
+@testset "radial continuum: linear and exponential (exact ring averages)" begin
+    R, D, ρ = 1.0, 3.0, 0.02
+    @testset "∫ΔR2 dA = 2πRρ for every profile, including h below the grid spacing" begin
+        for (shape, h) in (("linear", 1e-4), ("linear", 0.3), ("exponential", 1e-4), ("exponential", 0.2), ("exponential", 3.0))
+            (M, A) = radial_operator(R=R, D=D, layer=(shape, ρ, h), N=1000)
+            (M0, _) = radial_operator(R=R, D=D, N=1000)
+            V = (M.dv .- M0.dv)            # diagonal difference = V (the stiffness part is identical)
+            @test sum(A .* V) ≈ 2π * R * ρ rtol=1e-8      # V from a difference of diagonals ≈ D/dr² ≈ 3e6: cancellation ≈ 1e-10 per ring
+        end
+    end
+    @testset "κ for the exponential with support R" begin
+        c = R / 0.2
+        @test radial_kappa("exponential", 0.2, R) ≈ 1 - 0.2 * (1 - (c + 1) * exp(-c)) / (1 - exp(-c)) / R rtol=1e-8
+    end
+    @testset "initial slope −2ρ/R and Jensen bound" begin
+        for (shape, h) in (("linear", 0.3), ("exponential", 0.2))
+            δ = 1e-6
+            @test (radial_signal(R=R, D=D, times=[δ], layer=(shape, ρ, h))[1] - 1) / δ ≈ -2ρ / R rtol=1e-3
+            @test radial_signal(R=R, D=D, times=[50.0], layer=(shape, ρ, h))[1] >= exp(-2ρ / R * 50) * (1 - 1e-9)
+        end
+    end
+    @testset "grid convergence" begin
+        for (shape, h) in (("linear", 0.3), ("exponential", 0.2))
+            a = radial_signal(R=R, D=D, times=[50.0], layer=(shape, ρ, h), N=1000)[1]
+            b = radial_signal(R=R, D=D, times=[50.0], layer=(shape, ρ, h), N=2000)[1]
+            @test abs(a - b) < 2e-8
+        end
+    end
+end

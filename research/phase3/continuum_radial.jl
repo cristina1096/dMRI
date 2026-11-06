@@ -12,18 +12,49 @@
 using LinearAlgebra
 import SpecialFunctions: besselj0, besselj1, besseli, besselk
 
-"Normalised profile g(u), ∫g = 1 on [0, 1] (written independently of the package)."
-function radial_g(shape::AbstractString, u::Real)
+"Normalised profile g(u) on its support (written independently of the package); c = support/h (exponential only)."
+function radial_g(shape::AbstractString, u::Real, c::Real=Inf)
     shape == "step" && return 0 <= u <= 1 ? 1.0 : 0.0
     shape == "linear" && return 0 <= u <= 1 ? 2 * (1 - u) : 0.0
+    shape == "exponential" && return 0 <= u <= c ? exp(-u) / -expm1(-c) : 0.0
     error("radial_g: profile $shape is not supported")
 end
 
-"κ = ∫g(u)(1 − u h/R) du inside a cylinder (D3.1), by midpoint quadrature."
-radial_kappa(shape, h, R; n=100_000) = sum(radial_g(shape, (k - 0.5) / n) * (1 - (k - 0.5) / n * h / R) for k in 1:n) / n
+"Support of the inner layer (um): h for step and linear, R for the exponential (D3.5)."
+radial_support(shape, h, R) = shape == "exponential" ? R : h
+
+"""
+    radial_kappa(shape, h, R)
+
+κ = ∫g(u)(1 − u h/R) du over the support (inside, D3.1), from the exact ring integral of the whole support:
+∫_{R−L}^R g((R − r)/h) r dr = h R κ. (A midpoint rule over u ∈ [0, c] failed for thin exponential layers, c = R/h ≫ 1.)
+"""
+radial_kappa(shape, h, R) = ring_integral(shape, h, R, R - radial_support(shape, h, R), R) / (h * R)
+
+"""
+    ring_integral(shape, h, R, lo, hi)
+
+∫_lo^hi g((R − r)/h) r dr exactly (antiderivatives in r), clipped to the support [R − L, R].
+step: r²/2; linear: 2[(1 − R/h) r²/2 + r³/(3h)]; exponential: h e^((r − R)/h)(r − h)/(1 − e^(−c)).
+"""
+function ring_integral(shape, h, R, lo, hi)
+    L = radial_support(shape, h, R)
+    a, b = max(lo, R - L), min(hi, R)
+    b <= a && return 0.0
+    if shape == "step"
+        return (b^2 - a^2) / 2
+    elseif shape == "linear"
+        F(r) = 2 * ((1 - R / h) * r^2 / 2 + r^3 / (3h))
+        return F(b) - F(a)
+    else
+        c = L / h
+        G(r) = h * exp((r - R) / h) * (r - h)
+        return (G(b) - G(a)) / -expm1(-c)
+    end
+end
 
 "Symmetric operator M (1/ms) and ring areas A for the radial problem (see the file header)."
-function radial_operator(; R, D, layer=nothing, surface=0.0, N=2000, subsamples=64)
+function radial_operator(; R, D, layer=nothing, surface=0.0, N=2000)
     dr = R / N
     redge = collect(0:N) .* dr
     A = [π * (redge[i + 1]^2 - redge[i]^2) for i in 1:N]
@@ -31,21 +62,8 @@ function radial_operator(; R, D, layer=nothing, surface=0.0, N=2000, subsamples=
     if !isnothing(layer)
         (shape, ρ, h) = layer
         κ = radial_kappa(shape, h, R)
-        ra = max(R - h, 0.0)
         for i in 1:N
-            if shape == "step"
-                lo, hi = max(redge[i], ra), redge[i + 1]
-                V[i] = hi > lo ? ρ / (h * κ) * π * (hi^2 - lo^2) / A[i] : 0.0
-            else
-                s = 0.0
-                w = 0.0
-                for j in 1:subsamples
-                    r = redge[i] + (j - 0.5) / subsamples * dr
-                    s += r * radial_g(shape, (R - r) / h)
-                    w += r
-                end
-                V[i] = ρ / (h * κ) * s / w
-            end
+            V[i] = ρ / (h * κ) * 2π * ring_integral(shape, h, R, redge[i], redge[i + 1]) / A[i]
         end
     end
     c = [2π * D * redge[i + 1] / dr for i in 1:N - 1]
