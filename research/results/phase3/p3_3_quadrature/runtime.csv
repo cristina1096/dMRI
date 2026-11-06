@@ -1,0 +1,6 @@
+shape,tol,us_per_spin_step
+step,1e-10,0.0814522028
+linear,1e-10,0.1259351015
+linear,1e-06,0.1236624002
+exponential,1e-10,0.2293776989
+exponential,1e-06,0.2365765095

@@ -1,0 +1,167 @@
+{
+  "default_tol": 1.0e-10,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-11-06T21:57:31.006",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "09bc1bf159eddc2f96bc4f373229e89abedb4219",
+    "julia": "1.12.7",
+    "julia_threads": 8,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_3_quadrature.jl",
+    "src_modified": false
+  },
+  "runtime": [
+    {
+      "shape": "step",
+      "tol": 1.0e-10,
+      "us_per_spin_step": 0.08145220279693603
+    },
+    {
+      "shape": "linear",
+      "tol": 1.0e-10,
+      "us_per_spin_step": 0.12593510150909423
+    },
+    {
+      "shape": "linear",
+      "tol": 1.0e-6,
+      "us_per_spin_step": 0.1236624002456665
+    },
+    {
+      "shape": "exponential",
+      "tol": 1.0e-10,
+      "us_per_spin_step": 0.22937769889831544
+    },
+    {
+      "shape": "exponential",
+      "tol": 1.0e-6,
+      "us_per_spin_step": 0.236576509475708
+    }
+  ],
+  "tolerance": [
+    {
+      "case": "linear_in",
+      "tol": 0.0001,
+      "max_abs_error": 6.106226635438361e-16,
+      "ns_per_piece": 1452.59165
+    },
+    {
+      "case": "linear_in",
+      "tol": 1.0e-6,
+      "max_abs_error": 6.106226635438361e-16,
+      "ns_per_piece": 581.2583
+    },
+    {
+      "case": "linear_in",
+      "tol": 1.0e-8,
+      "max_abs_error": 6.106226635438361e-16,
+      "ns_per_piece": 378.0875
+    },
+    {
+      "case": "linear_in",
+      "tol": 1.0e-10,
+      "max_abs_error": 6.106226635438361e-16,
+      "ns_per_piece": 605.7771
+    },
+    {
+      "case": "linear_in",
+      "tol": 1.0e-12,
+      "max_abs_error": 6.106226635438361e-16,
+      "ns_per_piece": 395.8854
+    },
+    {
+      "case": "linear_out",
+      "tol": 0.0001,
+      "max_abs_error": 6.661338147750939e-16,
+      "ns_per_piece": 490.94375
+    },
+    {
+      "case": "linear_out",
+      "tol": 1.0e-6,
+      "max_abs_error": 6.661338147750939e-16,
+      "ns_per_piece": 383.8
+    },
+    {
+      "case": "linear_out",
+      "tol": 1.0e-8,
+      "max_abs_error": 6.661338147750939e-16,
+      "ns_per_piece": 485.30625
+    },
+    {
+      "case": "linear_out",
+      "tol": 1.0e-10,
+      "max_abs_error": 6.661338147750939e-16,
+      "ns_per_piece": 482.125
+    },
+    {
+      "case": "linear_out",
+      "tol": 1.0e-12,
+      "max_abs_error": 6.661338147750939e-16,
+      "ns_per_piece": 441.94795
+    },
+    {
+      "case": "exp_in",
+      "tol": 0.0001,
+      "max_abs_error": 2.3341874016979958e-7,
+      "ns_per_piece": 778.71875
+    },
+    {
+      "case": "exp_in",
+      "tol": 1.0e-6,
+      "max_abs_error": 2.3341874016979958e-7,
+      "ns_per_piece": 779.50835
+    },
+    {
+      "case": "exp_in",
+      "tol": 1.0e-8,
+      "max_abs_error": 2.110063060389855e-8,
+      "ns_per_piece": 1079.8896
+    },
+    {
+      "case": "exp_in",
+      "tol": 1.0e-10,
+      "max_abs_error": 3.2282891637702704e-11,
+      "ns_per_piece": 1534.1875
+    },
+    {
+      "case": "exp_in",
+      "tol": 1.0e-12,
+      "max_abs_error": 8.529149608804687e-13,
+      "ns_per_piece": 2065.58125
+    },
+    {
+      "case": "exp_out",
+      "tol": 0.0001,
+      "max_abs_error": 2.1649348980190553e-14,
+      "ns_per_piece": 821.44375
+    },
+    {
+      "case": "exp_out",
+      "tol": 1.0e-6,
+      "max_abs_error": 2.1649348980190553e-14,
+      "ns_per_piece": 748.0729
+    },
+    {
+      "case": "exp_out",
+      "tol": 1.0e-8,
+      "max_abs_error": 2.1649348980190553e-14,
+      "ns_per_piece": 819.3917
+    },
+    {
+      "case": "exp_out",
+      "tol": 1.0e-10,
+      "max_abs_error": 2.1649348980190553e-14,
+      "ns_per_piece": 795.01665
+    },
+    {
+      "case": "exp_out",
+      "tol": 1.0e-12,
+      "max_abs_error": 3.885780586188048e-16,
+      "ns_per_piece": 975.12915
+    }
+  ]
+}
