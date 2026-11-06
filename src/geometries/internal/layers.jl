@@ -10,7 +10,7 @@ Each side of a wall has its own (ρ, h).
 module Layers
 
 import StaticArrays: SVector
-import LinearAlgebra: norm
+import LinearAlgebra: norm, eigen, SymTridiagonal
 import ..FixedObstructionGroups: FixedObstructionGroup, FixedGeometry, repeating, rotate_from_global
 
 "Profiles implemented in `profile_g`."
@@ -140,11 +140,14 @@ end
 """
     centroid(side)
 
-Profile centroid c̄ = h∫u g(u) du (um). Only the step profile (c̄ = h/2) is supported on cylinders so far (D3.2).
+Profile centroid c̄ = h∫u g(u) du (um): step h/2, linear h/3, exponential with support L = c·h
+h(1 − (c + 1)e^(−c))/(1 − e^(−c)).
 """
 function centroid(side::LayerSide)
     side.shape == :step && return side.h / 2
-    error("Layer profile $(side.shape) is not supported on cylinders yet (step only).")
+    side.shape == :linear && return side.h / 3
+    c = side.cutoff / side.h
+    return side.h * (1 - (c + 1) * exp(-c)) / -expm1(-c)
 end
 
 """
@@ -153,6 +156,42 @@ end
 Curvature normalisation κ = ∫g(u)(1 ∓ u·h/R) du = 1 ∓ c̄/R (D3.1): − inside the cylinder, + outside.
 """
 kappa(side::LayerSide, radius::Float64, inside::Bool) = 1 + (inside ? -1 : 1) * centroid(side) / radius
+
+"n-point Gauss–Legendre nodes and weights on [−1, 1] (Golub–Welsch)."
+function gauss_legendre(n::Int)
+    β = [k / sqrt(4k^2 - 1) for k in 1:n - 1]
+    F = eigen(SymTridiagonal(zeros(n), β))
+    return (SVector{n}(F.values), SVector{n}(2 .* F.vectors[1, :] .^ 2))
+end
+const (GL_X, GL_W) = gauss_legendre(8)
+
+"Absolute tolerance of `quad_adaptive` on ∫₀¹ g ds along a piece (dimensionless); fixed by the P3.6.3 study."
+const LAYER_QUAD_TOL = Ref(1e-10)
+
+"8-point Gauss–Legendre estimate of ∫_a^b f."
+function gl8(f, a::Float64, b::Float64)
+    m = (a + b) / 2
+    w = (b - a) / 2
+    s = 0.0
+    for k in 1:8
+        s += GL_W[k] * f(m + w * GL_X[k])
+    end
+    return s * w
+end
+
+"""
+    quad_adaptive(f, a, b, tol)
+
+∫_a^b f by 8-point Gauss–Legendre with bisection: accept the two-halves estimate when it agrees with the
+whole-interval estimate within tol·(b − a); depth ≤ 30.
+"""
+function quad_adaptive(f, a::Float64, b::Float64, tol::Float64, depth::Int=0)
+    m = (a + b) / 2
+    whole = gl8(f, a, b)
+    halves = gl8(f, a, m) + gl8(f, m, b)
+    (abs(whole - halves) <= tol * (b - a) || depth >= 30) && return halves
+    return quad_adaptive(f, a, m, tol, depth + 1) + quad_adaptive(f, m, b, tol, depth + 1)
+end
 
 """
     cylinder_surface_rate(side, radius, inside)
@@ -163,21 +202,28 @@ cylinder_surface_rate(side::LayerSide, radius::Float64, inside::Bool) =
     iszero(side.rho) ? 0.0 : surface_rate(side) / kappa(side, radius, inside)
 
 """
-    disk_length(a, b, q, X)
+    disk_interval(a, b, q, X)
 
-Length of {s ∈ [0, 1] : a s² + b s + q ≤ X} for a ≥ 0. The squared distance from a cylinder axis along a straight
-piece is this convex quadratic, so the set is one interval; its ends are the roots, computed with the
-cancellation-free form t = −(b + sign(b)√disc)/2, roots t/a and (q − X)/t.
+{s ∈ [0, 1] : a s² + b s + q ≤ X} = [lo, hi] for a > 0 (empty when hi ≤ lo). Roots by the cancellation-free form
+t = −(b + sign(b)√disc)/2, roots t/a and (q − X)/t.
 """
-function disk_length(a::Float64, b::Float64, q::Float64, X::Float64)
-    if iszero(a)
-        return q <= X ? 1.0 : 0.0
-    end
+function disk_interval(a::Float64, b::Float64, q::Float64, X::Float64)
     disc = b * b - 4 * a * (q - X)
-    disc <= 0 && return 0.0
+    disc <= 0 && return (0.0, 0.0)
     t = -(b + copysign(sqrt(disc), b)) / 2
     (s1, s2) = minmax(t / a, (q - X) / t)
-    return max(0.0, min(1.0, s2) - max(0.0, s1))
+    return (max(0.0, s1), min(1.0, s2))
+end
+
+"""
+    disk_length(a, b, q, X)
+
+Length of {s ∈ [0, 1] : a s² + b s + q ≤ X} for a ≥ 0 (see [`disk_interval`](@ref)).
+"""
+function disk_length(a::Float64, b::Float64, q::Float64, X::Float64)
+    iszero(a) && return q <= X ? 1.0 : 0.0
+    (lo, hi) = disk_interval(a, b, q, X)
+    return max(0.0, hi - lo)
 end
 
 """
@@ -197,6 +243,50 @@ function shell_fraction(p0::SVector{2, Float64}, p1::SVector{2, Float64}, centre
     end
     inner = r_lo > 0 ? disk_length(a, b, q, r_lo^2) : 0.0
     return max(0.0, disk_length(a, b, q, r_hi^2) - inner)
+end
+
+"""
+    shell_profile_integral(side, R, inside, centre, p0, p1)
+
+∫₀¹ g(d(s)/h) ds over the part of the straight piece p0 → p1 (local 2D) inside the side's support, with
+d = R − r inside (support R − L ≤ r ≤ R) and d = r − R outside (R ≤ r ≤ R + L), L = side.cutoff. The support is split
+at the exact shell roots and at the closest approach s* = −b/2a, so r(s) = √(a s² + b s + q) is smooth and monotone on
+each part, which is integrated by `quad_adaptive` to `LAYER_QUAD_TOL[]` (D3.3).
+"""
+function shell_profile_integral(side::LayerSide, R::Float64, inside::Bool, centre::SVector{2, Float64},
+                                p0::SVector{2, Float64}, p1::SVector{2, Float64})
+    h = side.h
+    c = side.cutoff / h
+    umax = side.shape == :exponential ? c : 1.0
+    u = p0 - centre
+    Δ = p1 - p0
+    a = Δ[1] * Δ[1] + Δ[2] * Δ[2]
+    b = 2 * (u[1] * Δ[1] + u[2] * Δ[2])
+    q = u[1] * u[1] + u[2] * u[2]
+    r_lo = inside ? max(R - side.cutoff, 0.0) : R
+    r_hi = inside ? R : R + side.cutoff
+    gd(r) = profile_g(side.shape, clamp((inside ? R - r : r - R) / h, 0.0, umax), c)
+    if iszero(a)
+        r = sqrt(q)
+        return (r_lo <= r <= r_hi) ? gd(r) : 0.0
+    end
+    (h0, h1) = disk_interval(a, b, q, r_hi^2)
+    h1 <= h0 && return 0.0
+    (l0, l1) = r_lo > 0 ? disk_interval(a, b, q, r_lo^2) : (0.0, 0.0)
+    f(s) = gd(sqrt(max(a * s * s + b * s + q, 0.0)))
+    sstar = -b / (2a)
+    tol = LAYER_QUAD_TOL[]
+    total = 0.0
+    parts = l1 > l0 ? ((h0, l0), (l1, h1)) : ((h0, h1), (0.0, 0.0))
+    for (x0, x1) in parts
+        x1 > x0 || continue
+        if x0 < sstar < x1
+            total += quad_adaptive(f, x0, sstar, tol) + quad_adaptive(f, sstar, x1, tol)
+        else
+            total += quad_adaptive(f, x0, x1, tol)
+        end
+    end
+    return total
 end
 
 """

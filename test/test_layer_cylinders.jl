@@ -11,7 +11,7 @@
         @test Layers.cylinder_surface_rate(side, 1.0, true) ≈ 0.02 / (0.2 * 0.9)
         @test Layers.cylinder_surface_rate(side, 1.0, false) ≈ 0.02 / (0.2 * 1.1)
         @test Layers.cylinder_surface_rate(Layers.LayerSide(0.0, 0.0), 1.0, true) == 0.0
-        @test_throws ErrorException Layers.centroid(Layers.LayerSide(0.02, 0.2, :linear))
+        @test Layers.centroid(Layers.LayerSide(0.02, 0.3, :linear)) ≈ 0.1          # linear now supported (plan 2026-11-06)
     end
 
     @testset "disk_length" begin
@@ -354,5 +354,107 @@ end
         )
         sim = mr.Simulation(seq; geometry=mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2), verbose=false)
         @test_throws Exception mr.readout(100, sim, [10.])
+    end
+end
+
+@testset "test_layer_cylinders.jl: non-step profiles along a piece (P3.3)" begin
+    Layers = mr.Geometries.Internal.Layers
+    P(x, y) = SVector{2, Float64}(x, y)
+    O = P(0., 0.)
+    expside(h, L) = Layers.LayerSide(0.02, h, :exponential, L)
+
+    @testset "centroid and κ for all profiles (D3.1)" begin
+        @test Layers.centroid(Layers.LayerSide(0.02, 0.3, :linear)) ≈ 0.1
+        c = 2.0                                           # support 0.4, h = 0.2
+        @test Layers.centroid(expside(0.2, 0.4)) ≈ 0.2 * (1 - (c + 1) * exp(-c)) / (1 - exp(-c))
+        n = 200_000                                       # κ by midpoint quadrature, exponential outside, R = 1
+        κq = sum(exp(-(k - 0.5) / n * c) / (1 - exp(-c)) * (1 + (k - 0.5) / n * 0.4 / 1.0) for k in 1:n) / n * c
+        @test Layers.kappa(expside(0.2, 0.4), 1.0, false) ≈ κq rtol=1e-8
+    end
+
+    @testset "quad_adaptive on polynomials, a kink and a jump-free exponential" begin
+        @test Layers.quad_adaptive(s -> s^7, 0.0, 1.0, 1e-12) ≈ 1 / 8 rtol=1e-12
+        @test Layers.quad_adaptive(s -> exp(-3s), 0.2, 0.9, 1e-12) ≈ (exp(-0.6) - exp(-2.7)) / 3 rtol=1e-12
+        @test Layers.quad_adaptive(s -> sqrt(abs(s - 0.3)), 0.0, 0.3, 1e-10) ≈ 2 / 3 * 0.3^1.5 rtol=1e-8
+    end
+
+    @testset "disk_interval and disk_length (refactor keeps disk_length)" begin
+        @test Layers.disk_interval(1.0, 0.0, 0.0, 0.25) == (0.0, 0.5)
+        @test Layers.disk_length(1.0, 0.0, 0.0, 0.25) ≈ 0.5
+        (lo, hi) = Layers.disk_interval(1.0, 0.0, 2.0, 1.0)
+        @test hi <= lo
+    end
+
+    "∫₀¹ √(a s² + b s + q) ds in closed form (independent of the package; a > 0)."
+    function sqrtquad(a, b, q, s0, s1)
+        F(s) = (Q = a * s^2 + b * s + q; (2a * s + b) * sqrt(Q) / (4a) + (4a * q - b^2) / (8a^1.5) * log(abs(2sqrt(a) * sqrt(Q) + 2a * s + b)))
+        return F(s1) - F(s0)
+    end
+
+    @testset "linear profile vs closed form (P3.3.2)" begin
+        # inside, h = 0.3, support [0.7, 1]: g = 2(1 − (R − r)/h) is linear in r, so ∫g ds = ∫(2 − 2(R − r)/h) ds over the
+        # shell parts, with ∫ r ds from the √(quadratic) closed form on each part.
+        side = Layers.LayerSide(0.02, 0.3, :linear)
+        R, h = 1.0, 0.3
+        for (p0, p1) in ((P(-2., 0.5), P(2., 0.5)), (P(-0.9, -0.2), P(0.95, 0.4)), (P(0.75, 0.), P(0.95, 0.3)))
+            Δ = p1 - p0; a = Δ ⋅ Δ; b = 2(p0 ⋅ Δ); q = p0 ⋅ p0
+            (h0, h1) = Layers.disk_interval(a, b, q, R^2)
+            (l0, l1) = Layers.disk_interval(a, b, q, (R - h)^2)
+            parts = l1 > l0 ? [(h0, l0), (l1, h1)] : [(h0, h1)]
+            closed = sum((x1 - x0) * (2 - 2R / h) + 2 / h * sqrtquad(a, b, q, x0, x1) for (x0, x1) in parts if x1 > x0; init=0.0)
+            @test Layers.shell_profile_integral(side, R, true, O, p0, p1) ≈ closed atol=1e-10
+        end
+    end
+
+    @testset "wall regression: linear d(s) reproduces side_exponent (P3.3.3)" begin
+        # along a radial piece r(s) is linear in s, so d(s) is exactly linear, as on a wall
+        R = 2.0
+        for shape in (:linear, :exponential)
+            side = shape == :linear ? Layers.LayerSide(0.02, 0.3, :linear) : Layers.LayerSide(0.02, 0.3, :exponential, 2.0)
+            d0, d1 = 0.05, 0.8
+            p0, p1 = P(R - d0, 0.), P(R - d1, 0.)          # radial, inside: d = R − r, exactly linear in s
+            wall = Layers.side_exponent(side, d0, d1, 1.0) / (side.rho / side.h)
+            @test Layers.shell_profile_integral(side, R, true, O, p0, p1) ≈ wall rtol=1e-9
+        end
+    end
+
+    @testset "brute force, inside and outside, linear and exponential (P3.3.1)" begin
+        Random.seed!(11)
+        K = 200_000
+        g(shape, u, c) = Layers.profile_g(shape, u, c)
+        maxerr = 0.0
+        for _ in 1:300, (shape, inside, L, h) in ((:linear, true, 0.3, 0.3), (:linear, false, 0.4, 0.4),
+                                                    (:exponential, true, 1.0, 0.2), (:exponential, false, 0.5, 0.15))
+            side = shape == :linear ? Layers.LayerSide(0.02, h, :linear) : Layers.LayerSide(0.02, h, :exponential, L)
+            p0 = P((3 .* rand(2) .- 1.5)...); p1 = P((3 .* rand(2) .- 1.5)...)
+            dist(r) = inside ? 1.0 - r : r - 1.0
+            brute = sum(k -> (r = norm(p0 + (k - 0.5) / K * (p1 - p0)); d = dist(r); 0 <= d <= L ? g(shape, d / h, L / h) : 0.0), 1:K) / K
+            maxerr = max(maxerr, abs(Layers.shell_profile_integral(side, 1.0, inside, O, p0, p1) - brute))
+        end
+        @test maxerr < 2e-4            # exponential truncation jump: ≤ g(c)·(crossings)/(2K) + smooth part O(K⁻²)
+    end
+
+    @testset "Review Focus 1: piece through the axis (inner exponential reaches r = 0)" begin
+        side = Layers.LayerSide(0.02, 0.2, :exponential, 1.0)
+        # radial through the centre, from (−1, 0) to (1, 0): ds = dx/2, d = 1 − |x|, so
+        # ∫₀¹ g(d/h) ds = ∫₀¹ g(d/h) dd = h ∫₀^c g(u) du = h (g normalised over its support)
+        expected = 0.2
+        @test Layers.shell_profile_integral(side, 1.0, true, O, P(-1., 0.), P(1., 0.)) ≈ expected rtol=1e-9
+        @test isfinite(Layers.shell_profile_integral(side, 1.0, true, O, P(-1., 1e-14), P(1., 1e-14)))
+    end
+
+    @testset "Review Focus 2: tangent and grazing pieces" begin
+        lin = Layers.LayerSide(0.02, 0.2, :linear)
+        @test Layers.shell_profile_integral(lin, 1.0, true, O, P(-2., 1.0), P(2., 1.0)) == 0.0          # tangent to r = R
+        v = Layers.shell_profile_integral(lin, 1.0, true, O, P(-2., 0.8), P(2., 0.8))                    # tangent to r = R − h
+        @test isfinite(v) && v > 0
+        ex = Layers.LayerSide(0.02, 0.1, :exponential, 0.3)
+        @test isfinite(Layers.shell_profile_integral(ex, 1.0, false, O, P(-2., 1.3), P(2., 1.3)))        # tangent to the support edge
+    end
+
+    @testset "stationary points" begin
+        lin = Layers.LayerSide(0.02, 0.2, :linear)
+        @test Layers.shell_profile_integral(lin, 1.0, true, O, P(0.9, 0.), P(0.9, 0.)) ≈ Layers.profile_g(:linear, 0.5)
+        @test Layers.shell_profile_integral(lin, 1.0, true, O, P(0.5, 0.), P(0.5, 0.)) == 0.0
     end
 end
