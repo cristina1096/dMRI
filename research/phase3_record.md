@@ -28,6 +28,8 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.8 | Attenuation vs h at fixed ρ (step): inside continuum (R = 0.5, 1, 2), outside paired MC (s = 2.5, 3.0) | monotonicity, sign recorded; curvature of ln S | S decreases with h: inside 27/27 steps resolved; outside 10/13 steps beyond 3σ (all layer steps from h = 0.1 on), conventional → 0.05 not resolved (z −2.4, −1.8; residual τ bias); J ≈ f(h/R) inside (0.3 %); effects ≤ 0.33 % of S at ρ = 0.02 |
 | P3.3.1–P3.3.3 | Linear and exponential on cylinders: quadrature between exact roots vs linear closed form, wall formulas, brute force; supports (D3.5), validation, simulation | package tests | **PASS**; step results bit-identical to before |
 | P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear vs closed form ≤ 9e-11; exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.2 (linear), ×2.5 (exponential) vs step; no allocation |
+| P3.4.1, P3.4.3 (linear, exponential) | Single-spin trace; mean-exponent identity | trace ≤ 1e-6; \|z\| ≤ 3 | **PASS**: trace 6.7e-12 (linear), 2.4e-8 (exponential); identity 12/12 each (\|z\| ≤ 1.27) |
+| P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| underestimated 10–40 % at τ = 1e-2 (C1) |
 
 ---
 
@@ -660,3 +662,80 @@ The values below were measured after the allocation fix (Group 1 review); the fi
   - That test is not seeded and uses no geometry, so the layer code is never entered.
   - It passed 3/3 times when run on its own, and in every earlier full run on this branch.
   - A second full run passed 3553/3553, including that test.
+
+## Verification of linear and exponential on cylinders (Group 2: P3.4.1, P3.4.3, P3.4.6 per profile)
+
+### Radial continuum for all profiles (exact ring averages)
+
+Solver [continuum_radial.jl](phase3/continuum_radial.jl); tests [test_continuum_radial.jl](phase3/test/test_continuum_radial.jl).
+
+**Design.** The first version averaged non-step profiles over each ring by sub-sampling. Layers thinner than a ring then lost part of their integral, ∫ΔR₂ dA = 0.996·2πRρ at h = 1e-4 (a deferred minor of the P3.4.6 review). Every profile has an elementary antiderivative of g((R − r)/h)·r, so the ring averages can be exact.
+
+**Method.** The ring integral ∫_lo^hi g((R − r)/h)·r dr is clipped to the support [R − L, R]:
+- step: r²/2;
+- linear: 2[(1 − R/h)r²/2 + r³/(3h)];
+- exponential: h·e^((r − R)/h)(r − h)/(1 − e^(−c)), with c = L/h and support L = R inside (D3.5).
+
+The ring rate is V_i = (ρ/(hκ))·2π·∫/A_i, with κ = ∫_{R−L}^R g·r dr/(hR) from the same exact integral.
+
+**Ruling.** κ was first computed by a midpoint rule over u ∈ [0, c]. That failed for thin exponential layers, where c = R/h = 10⁴ and a step of 0.1 in u gives an error of ≈ 1e-4. κ now comes from the exact ring integral. The κ tests against the closed forms (step 1 − h/2R, linear 1 − h/3R, exponential 1 − c̄/R) remain the independent check.
+
+**Tests (62/62 in the research suite):**
+- ∫ΔR₂ dA = 2πRρ for linear and exponential, including h = 1e-4 (below the grid spacing). The tolerance is 1e-8 because the test extracts V as a difference of diagonals ≈ D/dr².
+- κ of the exponential with support R.
+- The initial slope −2ρ/R and the Jensen bound.
+- Grid convergence: N = 1000 against 2000 within 2e-8.
+- The step results are unchanged, including the exact Bessel eigenvalue tests.
+
+### Harness for any profile
+
+[harness.jl](phase3/harness.jl): `g_profile`, `side_prefactor` (ρ/h)/κ with κ by quadrature, and `brute_rate_profile` (summed rate over 5 × 5 images). All are written independently of the package.
+
+### P3.4.1 and P3.4.3 for linear and exponential
+
+Scripts [p3_4_1_trace.jl](phase3/p3_4_1_trace.jl) and [p3_4_3_identity.jl](phase3/p3_4_3_identity.jl) with `SHAPE` → `results/phase3/p3_4_1_trace_<shape>/`, `results/phase3/p3_4_3_identity_<shape>/`. Configurations are as for the step profile:
+- **trace:** square array s = 2.5, R = 1, h = 0.3, ρ = 0.03. For the exponential, h is the decay length, the support is R inside and the default cutoff 0.5 (the gap) outside;
+- **identity:** ρ = 0.02, t = 50 ms, τ = 1e-2 and 4e-2. For the exponential the outer cutoff is the gap: 0.5 in the square array, 0.4 in the rectangular one. Single cylinders set `layer_cutoff = 1.0` for their irrelevant outer side (ruling).
+
+**Method.**
+- **Trace:** each step's M⊥ is predicted from the simulator's reflected path. The exponent of each piece is τ·ℓ_j/Σℓ times the mean of the brute-force summed rate over 10⁴ points.
+- **Identity:** E[−ln M⊥] = ρ(S/V)t, which is exact for any profile because ρ is per unit surface area (D3.1) and every shell integrates to 2πRρ.
+
+| profile | trace: max \|M⊥,sim/M⊥,pred − 1\| | steps with a reflection inside a shell / through an overlap | identity: rows passing, max \|z\| |
+|---|---|---|---|
+| step (P3.4.1/3, for reference) | 1.0e-7 | 9808 / 2978 | 12/12, 1.25 |
+| linear | 6.7e-12 | 9808 / 2946 | 12/12, 1.17 |
+| exponential | 2.4e-8 | 9808 / 12599 | 12/12, 1.27 |
+
+**Conclusion.**
+- **Trace.** Both profiles agree with brute force on real reflected paths; the tolerance is 1e-6. The linear error, 7e-12, is far below the step's 1e-7 because the linear profile has no jump, so midpoint sampling is nearly exact. The exponential error, 2e-8, comes from sampling the steep part near the surface.
+- **Overlap.** The exponential passes through overlapping outer layers in 4× more steps than the others, because its default support reaches the neighbouring surfaces.
+- **Identity.** It holds for both profiles in every configuration, inside and outside, separated and overlapping, at both τ. This confirms the κ normalisation, the supports and the quadrature path end to end.
+
+### P3.4.6 for linear and exponential: Monte Carlo against the continuum (inside)
+
+Script [p3_4_6d_profiles.jl](phase3/p3_4_6d_profiles.jl) → [results/phase3/p3_4_6d_profiles/](results/phase3/p3_4_6d_profiles/).
+
+**Design.** The comparison is the same as for the step profile (P3.4.6): single cylinder R = 1, D = 3, ρ = 0.02, with the conventional model at the same ρ.
+- **Layers:** linear h = 0.3 and 0.6 (centroids 0.1 and 0.2); exponential h = 0.1 and 0.2 (support R; centroids ≈ 0.1 and 0.2).
+- **No thin layers** (user, 2026-10-25): the largest surface rate, 0.23 ms⁻¹, allows τ_a = 1e-2.
+- **Pairing:** all models share τ (trajectories identical, checked), and ΔS = S_layer − S_conv is paired per seed.
+- **Timesteps:** τ_a = 1e-2 and τ_b = 2.5e-3; seeds 1–10, 2·10⁴ spins in the box.
+- **Criterion:** at τ_b, max over readouts |z| ≤ 3 for S and for ΔS.
+
+**Result.**
+
+| model | S(50) MC at τ_b ± SEM | continuum | max \|z\| S | ΔS(50) MC τ_a | ΔS(50) MC τ_b | ΔS continuum | max \|z\| ΔS at τ_b |
+|---|---|---|---|---|---|---|---|
+| conventional | 0.135777 ± 3.3e-5 | 0.135787 | 0.73 | — | — | — | — |
+| linear h = 0.3 | 0.135585 ± 2.2e-5 | 0.135576 | 1.02 | −1.43e-4 ± 1.5e-5 | −1.92e-4 ± 1.5e-5 | −2.11e-4 | 1.27 |
+| linear h = 0.6 | 0.135443 ± 1.3e-5 | 0.135444 | 0.83 | −3.28e-4 ± 1.6e-5 | −3.34e-4 ± 2.3e-5 | −3.43e-4 | 0.81 |
+| exponential h = 0.1 | 0.135593 ± 2.5e-5 | 0.135578 | 0.90 | −1.28e-4 ± 1.5e-5 | −1.84e-4 ± 1.2e-5 | −2.08e-4 | 2.09 |
+| exponential h = 0.2 | 0.135473 ± 1.7e-5 | 0.135470 | 0.93 | −2.85e-4 ± 1.5e-5 | −3.04e-4 ± 1.9e-5 | −3.16e-4 | 0.79 |
+
+→ **PASS** at τ_b for every model.
+
+**Conclusion.**
+- **The continuum is validated for linear and exponential** inside a cylinder, for S and for the small difference from the conventional model. It stands in for Monte Carlo inside single cylinders for every profile.
+- **The Review C1 timestep effect recurs.** At the default τ = 1e-2, |ΔS| is underestimated by 10–40 %, most for the profiles concentrated near the surface (linear h = 0.3 and exponential h = 0.1: −1.4e-4 and −1.3e-4 against ≈ −2.1e-4). By τ = 2.5e-3 the bias is within the noise.
+- **Same centroid, similar ΔS.** At the same centroid the linear and exponential layers have nearly the same ΔS (c̄ = 0.1: −2.11e-4 and −2.08e-4; c̄ = 0.2: −3.43e-4 and −3.16e-4). This anticipates the centroid comparison of P3.4.8 (Group 3).
