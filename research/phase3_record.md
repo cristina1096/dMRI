@@ -27,7 +27,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.6 | Radial continuum benchmark (single cylinder, inside): solver vs exact Bessel eigenvalues; MC vs continuum at converged τ | solver tests pass; MC within 3 SEM | solver **PASS** (25 tests); MC 5/6 **PASS**; h = 0.05 paired ΔS **FAIL** (z 4.1 at τ = 6.25e-4, converging: Richardson −4.6e-5 vs −5.75e-5); C1 timestep bias on cylinders: thin-layer ΔS sign flips at τ = 1e-2 |
 | P3.4.8 | Attenuation vs h at fixed ρ (step): inside continuum (R = 0.5, 1, 2), outside paired MC (s = 2.5, 3.0) | monotonicity, sign recorded; curvature of ln S | S decreases with h: inside 27/27 steps resolved; outside 10/13 steps beyond 3σ (all layer steps from h = 0.1 on), conventional → 0.05 not resolved (z −2.4, −1.8; residual τ bias); J ≈ f(h/R) inside (0.3 %); effects ≤ 0.33 % of S at ρ = 0.02 |
 | P3.3.1–P3.3.3 | Linear and exponential on cylinders: quadrature between exact roots vs linear closed form, wall formulas, brute force; supports (D3.5), validation, simulation | package tests | **PASS**; step results bit-identical to before |
-| P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear exact (≤ 7e-16); exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.5 (linear), ×2.8 (exponential) vs step |
+| P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear vs closed form ≤ 9e-11; exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.2 (linear), ×2.5 (exponential) vs step; no allocation |
 
 ---
 
@@ -630,25 +630,29 @@ with:
 - Accuracy: 2·10⁴ random pieces, compared with a tolerance-1e-14 reference.
 - Runtime: square array s = 2.5, ρ = 0.02, h = 0.2 on both sides, τ = 1e-2, 10⁴ spins × 1000 steps.
 
-| case | max error at tol = 1e-4 / 1e-6 / 1e-8 / 1e-10 / 1e-12 | ns per piece at 1e-10 |
+Accuracy is measured against the same algorithm at tol 1e-14 (self-convergence). The linear profile is also checked against its independent closed form ([p3_3b_linear_closed_form.jl](phase3/p3_3b_linear_closed_form.jl), 2·10⁴ pieces): max error 8.2e-14 for h = 0.3 and 9.3e-11 for h = R, where pieces pass through the axis and the shell reaches r = 0.
+
+The values below were measured after the allocation fix (Group 1 review); the first version allocated 200–400 B per piece and was ≈ 1.2–2× slower. Times are single-shot wall times on a shared machine (±20 %).
+
+| case | max error vs tol-1e-14 reference at tol = 1e-4 / 1e-6 / 1e-8 / 1e-10 / 1e-12 | ns per piece at 1e-6 / 1e-10 |
 |---|---|---|
-| linear, inside (h = 0.3) | ≤ 6.1e-16 at every tolerance | 606 |
-| linear, outside | ≤ 6.7e-16 at every tolerance | 482 |
-| exponential, inside (h = 0.2, support R) | 2.3e-7 / 2.3e-7 / 2.1e-8 / 3.2e-11 / 8.5e-13 | 1534 |
-| exponential, outside (h = 0.15, support 0.5) | ≤ 2.2e-14 / … / 3.9e-16 | 795 |
+| linear, inside (h = 0.3) | ≤ 6.1e-16 at every tolerance | 243 / 240 |
+| linear, outside | ≤ 6.7e-16 at every tolerance | 244 / 244 |
+| exponential, inside (h = 0.2, support R) | 2.3e-7 / 2.3e-7 / 2.1e-8 / 3.2e-11 / 8.5e-13 | 613 / 1206 |
+| exponential, outside (h = 0.15, support 0.5) | ≤ 2.2e-14 / … / 3.9e-16 | 580 / 622 |
 
 | profile | µs per spin-step (tol 1e-10) | at tol 1e-6 | relative to step |
 |---|---|---|---|
-| step | 0.082 | — | 1 |
-| linear | 0.126 | 0.124 | ×1.5 |
-| exponential | 0.229 | 0.237 | ×2.8 |
+| step | 0.089 | — | 1 |
+| linear | 0.106 | 0.107 | ×1.2 |
+| exponential | 0.221 | 0.222 | ×2.5 |
 
 **Conclusion.**
-- **Linear is exact to roundoff at any tolerance.** Its integrand, a linear function of √(quadratic), is so smooth on each part that 8-point Gauss–Legendre is already exact to machine precision.
+- **Linear is converged at the first level.** Its integrand, a linear function of √(quadratic), is so smooth on each part that 8-point Gauss–Legendre needs no bisection. The result agrees with the independent closed form to 8e-14, or 9e-11 for pieces through the axis when h = R.
 - **The exponential's error is controlled by the tolerance.** At the default 1e-10 the worst error, 3.2e-11, occurs for inner pieces through the steep part near the surface. Pieces outside are exact to roundoff.
 - **What 1e-10 means for the signal.** The error of a piece's exponent is ≤ (ρ/h)/κ·dt·3.2e-11, i.e. ≲ 1e-10 of the per-step exponent ΔR₂(0)·τ. That is far below the timestep error of R (≈ 1e-3) and the Monte Carlo noise.
-- **No reason to relax it.** A looser tolerance saves no measurable runtime: the cost is dominated by the fixed 3 × 8 evaluations per part. So 1e-10 stays (P3.6.3).
-- **Cost.** The non-step profiles cost ×1.5 (linear) and ×2.8 (exponential) per spin-step relative to step in this array, on top of the step layer's own ×1.6 over no layer (C-B5).
+- **No reason to relax it.** In the simulation a looser tolerance saves no measurable runtime (0.221 against 0.222 µs per spin-step). Diffusion-length pieces are short and converge at the first level, so the cost is dominated by the fixed 3 × 8 evaluations per part. Only long random pieces through the steep inner exponential get cheaper at 1e-6 (1206 → 613 ns), and such pieces are rare in the simulation. So 1e-10 stays (P3.6.3).
+- **Cost.** The non-step profiles cost ×1.2 (linear) and ×2.5 (exponential) per spin-step relative to step in this array, on top of the step layer's own ×1.6 over no layer (C-B5). After the fix the quadrature path allocates nothing (tested).
 
 **Rulings (Group 1).**
 - Two old assertions from the step-only stage ("linear must be rejected", "centroid(:linear) throws") were replaced by the new behaviour.

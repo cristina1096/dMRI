@@ -49,7 +49,7 @@ for obstruction_type in (
             Field{Float64}(:layer_h, "Near-surface layer: thickness h (um) inside and outside the cylinder, unless a side-specific value is set.", 0.),
             Field{Float64}(:layer_rho_inner, "Near-surface layer: ρ (um/ms) inside the cylinder. Overrides `layer_rho`."),
             Field{Float64}(:layer_rho_outer, "Near-surface layer: ρ (um/ms) outside the cylinder. Overrides `layer_rho`."),
-            Field{Float64}(:layer_h_inner, "Near-surface layer: h (um) inside the cylinder (at most the radius). Overrides `layer_h`."),
+            Field{Float64}(:layer_h_inner, "Near-surface layer: h (um) inside the cylinder; for step and linear at most the radius (for the exponential h is the decay length and the support reaches the axis). Overrides `layer_h`."),
             Field{Float64}(:layer_h_outer, "Near-surface layer: h (um) outside the cylinder (at most the surface gap to the nearest cylinder). Overrides `layer_h`."),
             Field{String}(:layer_shape, "Near-surface layer: profile g inside and outside, unless a side-specific value is set. One of step, linear, exponential.", "step"),
             Field{String}(:layer_shape_inner, "Near-surface layer: profile inside the cylinder. Overrides `layer_shape`."),

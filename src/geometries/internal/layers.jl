@@ -3,9 +3,10 @@ Near-surface transverse relaxation layer (proposal Eqs. 5–10):
 
     R2_total(d) = R2_bulk + ΔR2(d),    ΔR2(d) = (ρ/h)·g(d/h)
 
-Implemented: planar walls (all profiles below) and cylinders (step profile only); profiles step g(u) = 1 (0 ≤ u ≤ 1), linear g(u) = 2(1 − u) (0 ≤ u ≤ 1) and
+Implemented: planar walls and cylinders (all profiles below; on cylinders ρ is per unit surface area and the profile is
+normalised by κ, D3.1); profiles step g(u) = 1 (0 ≤ u ≤ 1), linear g(u) = 2(1 − u) (0 ≤ u ≤ 1) and
 exponential g(u) = e^(−u)/(1 − e^(−c)) (0 ≤ u ≤ c = cutoff/h, truncated and renormalised); no finite RF pulses.
-Each side of a wall has its own (ρ, h).
+Each side of a wall or cylinder has its own (ρ, h, profile).
 """
 module Layers
 
@@ -127,7 +128,8 @@ end
     CylinderLayer(centre, radius, inner, outer)
 
 Near-surface layers of one cylinder of radius `radius` (um) with its axis at `centre` (local 2D coordinates of its
-group, um): `inner` inside the cylinder (0 ≤ d = R − r ≤ h), `outer` outside it (0 ≤ d = r − R ≤ h).
+group, um): `inner` inside the cylinder (d = R − r), `outer` outside it (d = r − R), each on 0 ≤ d ≤ its support L
+(`side.cutoff`: h for step and linear; R inside and `layer_cutoff` outside for the exponential, D3.5).
 ρ is per unit surface area (D3.1): ΔR2(d) = (ρ/h)·g(d/h)/κ with κ = 1 ∓ c̄/R (− inside, + outside).
 """
 struct CylinderLayer
@@ -163,13 +165,16 @@ function gauss_legendre(n::Int)
     F = eigen(SymTridiagonal(zeros(n), β))
     return (SVector{n}(F.values), SVector{n}(2 .* F.vectors[1, :] .^ 2))
 end
-const (GL_X, GL_W) = gauss_legendre(8)
+# separate consts (a destructuring `const (a, b) = …` left the globals type-unstable: 200–400 B per call, Group 1 review)
+const GL_RULE = gauss_legendre(8)
+const GL_X = GL_RULE[1]
+const GL_W = GL_RULE[2]
 
 "Absolute tolerance of `quad_adaptive` on ∫₀¹ g ds along a piece (dimensionless); fixed by the P3.6.3 study."
 const LAYER_QUAD_TOL = Ref(1e-10)
 
 "8-point Gauss–Legendre estimate of ∫_a^b f."
-function gl8(f, a::Float64, b::Float64)
+function gl8(f::F, a::Float64, b::Float64) where {F}
     m = (a + b) / 2
     w = (b - a) / 2
     s = 0.0
@@ -185,7 +190,7 @@ end
 ∫_a^b f by 8-point Gauss–Legendre with bisection: accept the two-halves estimate when it agrees with the
 whole-interval estimate within tol·(b − a); depth ≤ 30.
 """
-function quad_adaptive(f, a::Float64, b::Float64, tol::Float64, depth::Int=0)
+function quad_adaptive(f::F, a::Float64, b::Float64, tol::Float64, depth::Int=0) where {F}
     m = (a + b) / 2
     whole = gl8(f, a, b)
     halves = gl8(f, a, m) + gl8(f, m, b)

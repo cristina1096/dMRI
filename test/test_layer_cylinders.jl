@@ -592,3 +592,17 @@ end
         @test back.layer_shape.value == "exponential"
     end
 end
+
+# measured through functions that receive everything as arguments: a closure over the non-const `Layers` binding inside a
+# @testset allocates by itself (dynamic dispatch), which is not what is being tested
+measure_spi(spi, side, O, A, B) = (spi(side, 1.0, true, O, A, B); @allocated spi(side, 1.0, true, O, A, B))
+measure_quad(quad, g) = (quad(g, 0.0, 1.0, 1e-10); @allocated quad(g, 0.0, 1.0, 1e-10))
+quad_test_integrand(s) = exp(-s)
+
+@testset "test_layer_cylinders.jl: the quadrature path does not allocate (Group 1 review I1)" begin
+    Layers = mr.Geometries.Internal.Layers
+    side = Layers.LayerSide(0.02, 0.2, :exponential, 1.0)
+    O, A, B = SVector(0., 0.), SVector(0.95, 0.1), SVector(0.6, -0.3)
+    @test measure_spi(Layers.shell_profile_integral, side, O, A, B) == 0
+    @test measure_quad(Layers.quad_adaptive, quad_test_integrand) == 0
+end
