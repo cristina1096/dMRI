@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 17 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 22 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -360,10 +360,10 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.3.1 | ☐ | Quadrature path (adaptive, tolerance ε_R₂) for any profile along a straight piece through the shell | agrees with brute force at small ε; error vs ε measured | tests + table |
-| P3.3.2 | ☐ | Closed form for the linear profile (integral of √(quadratic)) as an independent check | agrees with quadrature to ε | tests |
-| P3.3.3 | ☐ | Walls regression: the quadrature path reproduces the wall closed forms | ≤ ε | tests |
-| P3.3.4 | ☐ | Cost of the quadrature vs ε (sub-intervals per step, runtime) | table | table |
+| P3.3.1 | ☑ | Quadrature path (adaptive, tolerance ε_R₂) for any profile along a straight piece through the shell | agrees with brute force at small ε; error vs ε measured | tests + table; **PASS**: adaptive Gauss–Legendre between exact roots; brute force < 2e-4 (sampling bound); through-axis and tangent cases |
+| P3.3.2 | ☑ | Closed form for the linear profile (integral of √(quadratic)) as an independent check | agrees with quadrature to ε | tests; **PASS**: linear closed form ∫√(quadratic) within 1e-10 |
+| P3.3.3 | ☑ | Walls regression: the quadrature path reproduces the wall closed forms | ≤ ε | tests; **PASS**: radial pieces reproduce the wall closed forms (rtol 1e-9) |
+| P3.3.4 | ☑ | Cost of the quadrature vs ε (sub-intervals per step, runtime) | table | table; **Done**: linear 0.126, exponential 0.229 vs step 0.082 µs/spin-step; tol 1e-6 saves nothing |
 
 ## 3.4 Verification on cylinders (each profile adopted)
 
@@ -393,7 +393,7 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 |---|---|---|---|---|
 | P3.6.1 | ☐ | τ scans on cylinders (step; then other profiles) incl. small radius and thin layers | error vs ΔR₂(0)·τ and vs curvature (h/R, √(Dτ)/R) recorded | fig |
 | P3.6.2 | ☐ | Confirm or adjust c = 0.005; for comparison studies set τ from the error in the difference (lesson from Review C1) | constraint documented | code/record |
-| P3.6.3 | ☐ | Fix ε_R₂ (signal error vs ε) | ε chosen with margin | table |
+| P3.6.3 | ☑ | Fix ε_R₂ (signal error vs ε) | ε chosen with margin | table; **Done**: LAYER_QUAD_TOL = 1e-10 kept (exponential max error 3.2e-11, linear exact) |
 | P3.6.4 | ☐ | Runtime vs walls and vs C-B5; cell list of layer indices so the cost scales with cylinders within reach, not per cell (final review 2026-10-24: ×6.7 at 400 per cell) | table | table |
 
 ## 3.7 Comparison with the conventional model on cylinders (proposal Milestone 6)

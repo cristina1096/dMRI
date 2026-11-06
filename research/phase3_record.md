@@ -26,6 +26,8 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.3 | Mean-exponent identity E[−ln M] = ρ(S/V)t, step (single, square, overlap, rectangular) | \|z\| ≤ 3 | **PASS** (12/12, \|z\| ≤ 1.25; ≤ 6e-5 relative) |
 | P3.4.6 | Radial continuum benchmark (single cylinder, inside): solver vs exact Bessel eigenvalues; MC vs continuum at converged τ | solver tests pass; MC within 3 SEM | solver **PASS** (25 tests); MC 5/6 **PASS**; h = 0.05 paired ΔS **FAIL** (z 4.1 at τ = 6.25e-4, converging: Richardson −4.6e-5 vs −5.75e-5); C1 timestep bias on cylinders: thin-layer ΔS sign flips at τ = 1e-2 |
 | P3.4.8 | Attenuation vs h at fixed ρ (step): inside continuum (R = 0.5, 1, 2), outside paired MC (s = 2.5, 3.0) | monotonicity, sign recorded; curvature of ln S | S decreases with h: inside 27/27 steps resolved; outside 10/13 steps beyond 3σ (all layer steps from h = 0.1 on), conventional → 0.05 not resolved (z −2.4, −1.8; residual τ bias); J ≈ f(h/R) inside (0.3 %); effects ≤ 0.33 % of S at ρ = 0.02 |
+| P3.3.1–P3.3.3 | Linear and exponential on cylinders: quadrature between exact roots vs linear closed form, wall formulas, brute force; supports (D3.5), validation, simulation | package tests | **PASS**; step results bit-identical to before |
+| P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear exact (≤ 7e-16); exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.5 (linear), ×2.8 (exponential) vs step |
 
 ---
 
@@ -587,3 +589,70 @@ Total difference from the conventional model at τ_b: S(50) − S_conv(50) = −
   - the most spread-out layer has the lowest S.
 - All the differences are ≤ 0.33 % of S at ρ = 0.02 (ρ²t/D = 6.7e-3), far below single-measurement noise.
 - Inside, J depends on h/R almost alone (to 0.3 %, at fixed ρ, t and D). The comparison over R, D and ρ, and the apparent T₂, belong to P3.7.
+
+## Linear and exponential profiles on cylinders (P3.3.1–P3.3.4, D3.3, D3.5; P3.6.3)
+
+Plan [2026-11-06-cylinders-linear-exponential.md](../docs/superpowers/plans/2026-11-06-cylinders-linear-exponential.md), Group 1 (package core). Code: [layers.jl](../src/geometries/internal/layers.jl) (`quad_adaptive`, `disk_interval`, `shell_profile_integral`, `cylinder_side_exponent`) and [fix.jl](../src/geometries/user/fix.jl) (`cylinder_layers`, `surface_gaps`). Tests: [test_layer_cylinders.jl](../test/test_layer_cylinders.jl).
+
+**Design.**
+- **No closed form along a piece.** For the step profile, the exponent of a piece follows exactly from the time spent in the shell. For non-step profiles, d(s) = R ∓ √(as² + bs + q) is not linear in s, so g(d(s)/h) has no closed form for the exponential profile. The linear profile does have one, but writing a closed form per profile does not scale.
+- **D3.3 (decided):** one numerical path for all non-step profiles, with the linear closed form as an independent test. The step profile keeps its exact closed form.
+- **Why Gauss–Legendre.** The support of a piece is cut at the exact shell roots (from the step code's quadratic) and at the closest approach to the axis, s* = −b/2a. On each part r(s) is smooth and monotone. Gauss–Legendre therefore converges very fast and needs no special handling of the kink at r = 0, which only the inner exponential reaches.
+- **Exponential support (D3.5).**
+  - Inside, the exponential reaches the axis (support R, c = R/h).
+  - Outside, its support is the new field `layer_cutoff`. The default is the smallest surface gap to any neighbouring cylinder or image, the wall analogue (cutoff = spacing).
+  - A cylinder with no neighbours and an outer exponential must set `layer_cutoff`; validation errors otherwise.
+- **Support, not h.** Image reach, the outer-reach validation and the timestep bound all use the support L: h for step and linear, the cutoff for the exponential. An exponential with a short decay length but a long support is therefore summed wherever it reaches.
+
+**Method.** For one side of a cylinder, over a straight piece of duration dt,
+
+  E = (ρ/h)/κ · dt · ∫₀¹ g(d(s)/h) ds,  d(s) = R − r(s) inside,  r(s) − R outside,  r(s)² = as² + bs + q,
+
+with:
+- κ = 1 ∓ c̄/R, where c̄ = h/2 (step), h/3 (linear), h(1 − (c + 1)e^(−c))/(1 − e^(−c)) (exponential, c = L/h);
+- the integral over the support taken as the sum of its parts {s : r_lo ≤ r(s) ≤ r_hi}, bounded by the roots of r(s)² = r_lo² and r(s)² = r_hi², each further split at s*;
+- each part integrated by 8-point Gauss–Legendre, the nodes computed with Golub–Welsch (no new dependency), halving until the whole-interval and two-halves estimates agree within LAYER_QUAD_TOL·(length). The default LAYER_QUAD_TOL is 1e-10.
+
+**Verification (package tests, all pass; full suite without plots 3553/3553).**
+- **Linear against its closed form:** ∫g ds = ∫(2 − 2(R − r)/h) ds, with ∫√(as² + bs + q) ds = (2as + b)√Q/(4a) + (4aq − b²)/(8a^(3/2))·ln|2√a√Q + 2as + b|. Agreement within 1e-10 on chords, pieces through the core, and pieces inside the shell.
+- **Wall regression:** along a radial piece, d(s) is exactly linear, so the cylinder integral must equal the wall closed form (`side_exponent`) for linear and exponential. Agreement within rtol 1e-9.
+- **Brute force:** 300 random pieces × 4 cases (linear and exponential, inside and outside), 2·10⁵ samples each; max error < 2e-4, the sampling bound.
+- **Through the axis:** the inner exponential reaches r = 0, and a radial piece through it gives exactly h, since ∫₀¹ g ds = h∫g du.
+- **Tangent and grazing pieces:** tangent to r = R, to r = R − h, and to the exponential's support edge. All finite and correct.
+- **Simulation:** a hand-computed radial step with a reflection, inside, for linear (κ = 1 − h/3R) and exponential (∫g dt from e^(−d/h) on each straight piece), to rtol 1e-9 and 1e-8.
+- **Layer exponent against an independent brute-force summed rate:** square array with overlapping outer layers, both profiles.
+- **Support-based reach:** an outer exponential with h = 0.05 and support 0.5 contributes at 0.4 from the surface. The timestep bound counts the 4 neighbours whose supports intersect.
+- **Side-specific and bulk:** both hold for the new profiles.
+- **Validation:** shapes, default and explicit cutoff, cutoff larger than the gap, an isolated cylinder without a cutoff, h_inner > R for linear. JSON and CLI round trips.
+- **Step results bit-identical:** in the reference run (square array, 1000 spins, 20 ms) the summed M⊥ is 447.8892123934866 both at the base commit (3bcd2c6) and after this plan.
+
+**Tolerance and cost (P3.3.4, P3.6.3).** Script [p3_3_quadrature.jl](phase3/p3_3_quadrature.jl) → [results/phase3/p3_3_quadrature/](results/phase3/p3_3_quadrature/).
+- Accuracy: 2·10⁴ random pieces, compared with a tolerance-1e-14 reference.
+- Runtime: square array s = 2.5, ρ = 0.02, h = 0.2 on both sides, τ = 1e-2, 10⁴ spins × 1000 steps.
+
+| case | max error at tol = 1e-4 / 1e-6 / 1e-8 / 1e-10 / 1e-12 | ns per piece at 1e-10 |
+|---|---|---|
+| linear, inside (h = 0.3) | ≤ 6.1e-16 at every tolerance | 606 |
+| linear, outside | ≤ 6.7e-16 at every tolerance | 482 |
+| exponential, inside (h = 0.2, support R) | 2.3e-7 / 2.3e-7 / 2.1e-8 / 3.2e-11 / 8.5e-13 | 1534 |
+| exponential, outside (h = 0.15, support 0.5) | ≤ 2.2e-14 / … / 3.9e-16 | 795 |
+
+| profile | µs per spin-step (tol 1e-10) | at tol 1e-6 | relative to step |
+|---|---|---|---|
+| step | 0.082 | — | 1 |
+| linear | 0.126 | 0.124 | ×1.5 |
+| exponential | 0.229 | 0.237 | ×2.8 |
+
+**Conclusion.**
+- **Linear is exact to roundoff at any tolerance.** Its integrand, a linear function of √(quadratic), is so smooth on each part that 8-point Gauss–Legendre is already exact to machine precision.
+- **The exponential's error is controlled by the tolerance.** At the default 1e-10 the worst error, 3.2e-11, occurs for inner pieces through the steep part near the surface. Pieces outside are exact to roundoff.
+- **What 1e-10 means for the signal.** The error of a piece's exponent is ≤ (ρ/h)/κ·dt·3.2e-11, i.e. ≲ 1e-10 of the per-step exponent ΔR₂(0)·τ. That is far below the timestep error of R (≈ 1e-3) and the Monte Carlo noise.
+- **No reason to relax it.** A looser tolerance saves no measurable runtime: the cost is dominated by the fixed 3 × 8 evaluations per part. So 1e-10 stays (P3.6.3).
+- **Cost.** The non-step profiles cost ×1.5 (linear) and ×2.8 (exponential) per spin-step relative to step in this array, on top of the step layer's own ×1.6 over no layer (C-B5).
+
+**Rulings (Group 1).**
+- Two old assertions from the step-only stage ("linear must be rejected", "centroid(:linear) throws") were replaced by the new behaviour.
+- **Unrelated test failure.** One full test-suite run had a single failure in `test_known_sequences.jl`, "PGSE in realistic scanner with free diffusion": 37677.5 against 36787.9 ± 2 %.
+  - That test is not seeded and uses no geometry, so the layer code is never entered.
+  - It passed 3/3 times when run on its own, and in every earlier full run on this branch.
+  - A second full run passed 3553/3553, including that test.
