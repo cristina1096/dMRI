@@ -38,3 +38,17 @@ end
         times=[0.0, 1.0], seeds=1:1, nspins=4000)
     @test abs(o.nregion[1] / 4000 - (1 - π / S_REF^2)) < 5 * sqrt(0.5 * 0.5 / 4000)
 end
+
+@testset "harness: brute_rate_profile" begin
+    pin = side_prefactor(0.02, "linear", 0.3, 0.3, 1.0, true)
+    @test pin ≈ 0.02 / (0.3 * (1 - 0.1)) rtol=1e-8
+    inner = (shape="linear", h=0.3, L=0.3, pre=pin)
+    @test brute_rate_profile(0.85, 0.0; R=1.0, s=Inf, inner=inner, outer=nothing) ≈ pin * 2 * (1 - 0.15 / 0.3)
+    pout = side_prefactor(0.02, "exponential", 0.1, 0.5, 1.0, false)
+    outer = (shape="exponential", h=0.1, L=0.5, pre=pout)
+    v = brute_rate_profile(1.25, 0.0; R=1.0, s=2.5, inner=nothing, outer=outer)       # 0.25 from both neighbours
+    @test v ≈ 2 * pout * exp(-2.5) / (1 - exp(-5)) rtol=1e-12
+    # the step case agrees with the old brute_rate
+    pst = side_prefactor(0.02, "step", 0.2, 0.2, 1.0, true)
+    @test pst ≈ rate_inside(0.02, 0.2, 1.0) rtol=1e-8
+end

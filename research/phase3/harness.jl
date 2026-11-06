@@ -106,3 +106,38 @@ function run_cylinders(geometry; region::Symbol, R=R_REF, sx=Inf, sy=Inf, boundi
         neglog_mean=vec(mean(L, dims=1)), neglog_sem=sd(L) ./ sqrt(n), times=times,
         tau=sim.timestep.max_timestep, runtime=runtime, nregion=nregion, masks=masks, finals=finals, sim=sim)
 end
+"Normalised profile g(u), c = support/h (independent of the package)."
+g_profile(shape, u, c) = shape == "step" ? (0 <= u <= 1 ? 1.0 : 0.0) :
+                         shape == "linear" ? (0 <= u <= 1 ? 2 * (1 - u) : 0.0) :
+                         (0 <= u <= c ? exp(-u) / -expm1(-c) : 0.0)
+
+"(ρ/h)/κ with κ = ∫g(u)(1 ∓ u h/R) du over the support L by midpoint quadrature (D3.1; − inside, + outside)."
+function side_prefactor(ρ, shape, h, L, R, inside; n=200_000)
+    c = L / h
+    κ = sum(g_profile(shape, (k - 0.5) / n * c, c) * (1 + (inside ? -1 : 1) * (k - 0.5) / n * c * h / R) for k in 1:n) / n * c
+    return ρ / (h * κ)
+end
+
+"""
+    brute_rate_profile(x, y; R, s, inner, outer)
+
+Summed ΔR2 at (x, y) for a square array of spacing `s` (one cylinder per cell at the origin; `s = Inf` for a single
+cylinder) from the 5 × 5 nearest images; `inner`/`outer` = (shape, h, L, pre) or `nothing`. Independent of the package.
+"""
+function brute_rate_profile(x, y; R, s, inner, outer)
+    cells = isfinite(s) ? (-2:2) : (0:0)
+    sp = isfinite(s) ? s : 0.0
+    cx = isfinite(s) ? round(x / s) * s : 0.0
+    cy = isfinite(s) ? round(y / s) * s : 0.0
+    total = 0.0
+    for i in cells, j in cells
+        r = hypot(x - cx - i * sp, y - cy - j * sp)
+        if !isnothing(inner) && 0 <= R - r <= inner.L
+            total += inner.pre * g_profile(inner.shape, (R - r) / inner.h, inner.L / inner.h)
+        end
+        if !isnothing(outer) && 0 <= r - R <= outer.L
+            total += outer.pre * g_profile(outer.shape, (r - R) / outer.h, outer.L / outer.h)
+        end
+    end
+    return total
+end
