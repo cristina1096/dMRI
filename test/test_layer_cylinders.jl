@@ -134,7 +134,7 @@ end
         @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.1, layer_h_inner=1.5))  # h_inner > R
         @test_throws ErrorException geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.6))  # h_outer > gap 0.5
         @test_throws ErrorException geom(mr.Cylinders(radius=1., position=[[0., 0.], [2.4, 0.]], layer_rho=0.1, layer_h=0.5))  # h 0.5 > gap 0.4
-        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="linear"))   # step only
+        @test geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="linear"))[1].layer[1].inner.shape == :linear   # supported since plan 2026-11-06
         @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.1, layer_h=0.2, layer_shape="bogus"))
         # h_outer = gap exactly is allowed; a side with ρ = 0 is not checked against the gap
         @test geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.1, layer_h=0.5))[1].layer !== nothing
@@ -456,5 +456,139 @@ end
         lin = Layers.LayerSide(0.02, 0.2, :linear)
         @test Layers.shell_profile_integral(lin, 1.0, true, O, P(0.9, 0.), P(0.9, 0.)) ≈ Layers.profile_g(:linear, 0.5)
         @test Layers.shell_profile_integral(lin, 1.0, true, O, P(0.5, 0.), P(0.5, 0.)) == 0.0
+    end
+end
+
+@testset "test_layer_cylinders.jl: linear and exponential on cylinders (D3.5)" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(c) = mr.Simulation([]; geometry=c, verbose=false).geometry
+    V3(x, y, z=0.) = SVector{3, Float64}(x, y, z)
+    per_spin(snap) = [s.orientations[1].transverse for s in snap.spins]
+
+    @testset "resolution: shapes and supports" begin
+        l = geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.3, layer_shape="linear"))[1].layer[1]
+        @test (l.inner.shape, l.inner.cutoff, l.outer.shape, l.outer.cutoff) == (:linear, 0.3, :linear, 0.3)
+        l = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_shape="exponential"))[1].layer[1]
+        @test l.inner.cutoff == 1.0                      # inside: support to the axis (D3.5)
+        @test l.outer.cutoff ≈ 0.5                       # outside: default = smallest surface gap
+        l = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=0.3))[1].layer[1]
+        @test l.outer.cutoff == 0.3
+        @test l.inner.cutoff == 1.0                      # layer_cutoff does not change the inner support
+    end
+
+    @testset "validation" begin
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, layer_shape="exponential"))   # Review Focus 3
+        @test geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=2.))[1].layer !== nothing
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2,
+            layer_shape="exponential", layer_cutoff=0.6))                                                                       # > gap
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=1.5, layer_shape="linear"))          # h_inner > R
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=-1.))
+        # inert outer side (ρ = 0) needs no cutoff
+        @test geom(mr.Cylinders(radius=1., layer_rho_inner=0.02, layer_h_inner=0.2, layer_shape="exponential"))[1].layer !== nothing
+        @test_throws ErrorException geom(mr.Cylinders(radius=1., layer_rho=0.02, layer_h=0.2, layer_shape="bogus"))
+    end
+
+    @testset "Review Focus 4: step results bit-identical" begin
+        function run(c)
+            sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=c, diffusivity=3., verbose=false)
+            Random.seed!(21)
+            snap = mr.Snapshot(1000, sim, 500; transverse=1., longitudinal=0.)
+            return mr.readout(snap, sim, [20.]; return_snapshot=true)[1]
+        end
+        a = run(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2))
+        b = run(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_shape="step"))
+        @test per_spin(a) == per_spin(b)
+        # reference values recorded before this plan (Task 2 Step 2 writes them; see the brief)
+        @test sum(per_spin(a)) == 447.8892123934866
+    end
+
+    @testset "radial step with a reflection: linear and exponential, hand-computed" begin
+        seq = build_sequence([1.2, :readout])
+        part(sim) = first(p for p in mr.parts([seq], 0., mr.TimeStep(1.2, Inf)) if p.duration > 0)
+        n = 200_000
+        κq(gfun, umax, h, R) = sum(gfun((k - 0.5) / n * umax) * (1 - (k - 0.5) / n * umax * h / R) for k in 1:n) / n * umax
+        # linear inside h = 0.2: radial path 0.5 → 1 → 0.7 (1.5 ms/um); in the shell 0.4 um → 0.6 ms; mean g over a radial
+        # traverse of the whole shell is 1, so E = (ρ/(hκ))·0.6 with κ = 1 − h/(3R)
+        sim = mr.Simulation(seq; geometry=mr.Cylinders(radius=1., layer_rho_inner=0.02, layer_h_inner=0.2, layer_shape="linear"),
+            diffusivity=3., verbose=false)
+        spin = mr.Spin(position=[0.5, 0., 0.], transverse=1., longitudinal=0.)
+        mr.Evolve.draw_step!(spin, sim, part(sim), [3.], [1.3, 0., 0.])
+        κ = κq(u -> 2(1 - u), 1.0, 0.2, 1.0)
+        @test spin.orientations[1].transverse ≈ exp(-0.02 / (0.2 * κ) * 0.6) rtol=1e-9
+        # exponential inside h = 0.2 (support R = 1, c = 5): d runs 0.5 → 0 then 0 → 0.3, dt = 1.5 dd, so
+        # ∫g dt = 1.5 h [(1 − e^(−2.5)) + (1 − e^(−1.5))]/(1 − e^(−5))
+        sim = mr.Simulation(seq; geometry=mr.Cylinders(radius=1., layer_rho_inner=0.02, layer_h_inner=0.2, layer_shape="exponential"),
+            diffusivity=3., verbose=false)
+        spin = mr.Spin(position=[0.5, 0., 0.], transverse=1., longitudinal=0.)
+        mr.Evolve.draw_step!(spin, sim, part(sim), [3.], [1.3, 0., 0.])
+        κ = κq(u -> exp(-u) / (1 - exp(-5)), 5.0, 0.2, 1.0)
+        I = 1.5 * 0.2 * ((1 - exp(-2.5)) + (1 - exp(-1.5))) / (1 - exp(-5))
+        @test spin.orientations[1].transverse ≈ exp(-0.02 / (0.2 * κ) * I) rtol=1e-8
+    end
+
+    @testset "Review Focus 5: reach and timestep use the support" begin
+        g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho_outer=0.02, layer_h_outer=0.05, layer_shape="exponential"))
+        # point on the diagonal at r = 1.4 (0.4 from this surface: beyond h = 0.05, inside the support 0.5); its distances to
+        # the neighbouring surfaces are ≥ 0.80, outside their supports, so only this cylinder contributes
+        c = 0.5 / 0.05
+        κ = Layers.kappa(Layers.LayerSide(0.02, 0.05, :exponential, 0.5), 1.0, false)
+        p = V3(1.4 / sqrt(2), 1.4 / sqrt(2))
+        @test Layers.layer_exponent(g, p, p, 1.0) ≈ 0.02 / (0.05 * κ) * exp(-0.4 / 0.05) / (1 - exp(-c)) rtol=1e-10
+        # overlap bound counts the 4 neighbours whose outer support (R + 0.5) intersects: 2(R + 0.5) = 3 > 2.5
+        @test Layers.max_layer_rate(g) ≈ 5 * Layers.cylinder_surface_rate(Layers.LayerSide(0.02, 0.05, :exponential, 0.5), 1.0, false)
+    end
+
+    @testset "layer exponent vs brute force, linear and exponential, square array with overlap" begin
+        for (shape, kw) in ((:linear, (layer_h_inner=0.3, layer_h_outer=0.4)), (:exponential, (layer_h_inner=0.2, layer_h_outer=0.15)))
+            g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.03, layer_shape=String(shape); kw...))
+            l = g[1].layer[1]
+            pre_in = l.inner.rho / l.inner.h / Layers.kappa(l.inner, 1.0, true)
+            pre_out = l.outer.rho / l.outer.h / Layers.kappa(l.outer, 1.0, false)
+            function rate(x, y)
+                t = 0.0
+                for i in -2:2, j in -2:2
+                    r = hypot(x - i * 2.5, y - j * 2.5)
+                    d = 1.0 - r
+                    0 <= d <= l.inner.cutoff && (t += pre_in * Layers.profile_g(shape, d / l.inner.h, l.inner.cutoff / l.inner.h))
+                    d = r - 1.0
+                    0 <= d <= l.outer.cutoff && (t += pre_out * Layers.profile_g(shape, d / l.outer.h, l.outer.cutoff / l.outer.h))
+                end
+                return t
+            end
+            Random.seed!(5)
+            K = 20_000
+            err = 0.0
+            for _ in 1:100
+                p0 = V3((2.5 .* (2 .* rand(2) .- 1))..., 0.); p1 = V3((2.5 .* (2 .* rand(2) .- 1))..., 0.)
+                brute = sum(k -> rate((p0 + (k - 0.5) / K * (p1 - p0))[1:2]...), 1:K) / K
+                err = max(err, abs(Layers.layer_exponent(g, p0, p1, 1.0) - brute))
+            end
+            @test err < 2e-5                     # truncation jumps ≤ 0.007/(2K) per crossing, smooth parts O(K⁻²)
+        end
+    end
+
+    @testset "simulation: side-specific and additivity hold for linear and exponential" begin
+        for shape in ("linear", "exponential")
+            c = mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_shape=shape)
+            function run(R2)
+                sim = mr.Simulation([mr.SequenceParts.empty_sequence()]; geometry=c, diffusivity=3., R2=R2, verbose=false)
+                Random.seed!(3)
+                snap = mr.Snapshot(1000, sim, 500; transverse=1., longitudinal=0.)
+                return mr.readout(snap, sim, [20.]; return_snapshot=true)[1]
+            end
+            a = run(0.); b = run(1 / 80)
+            @test mr.position.(a) == mr.position.(b)
+            @test all(isapprox.(per_spin(b), per_spin(a) .* exp(-20 / 80); rtol=1e-10))
+            @test minimum(per_spin(a)) < 1.0
+        end
+    end
+
+    @testset "JSON round trip keeps layer_cutoff and shape" begin
+        c = mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho=0.02, layer_h=0.2, layer_shape="exponential", layer_cutoff=0.4)
+        io = IOBuffer()
+        mr.write_geometry(io, c)
+        back = mr.read_geometry_json(String(take!(io)))
+        @test back.layer_cutoff.value == 0.4
+        @test back.layer_shape.value == "exponential"
     end
 end

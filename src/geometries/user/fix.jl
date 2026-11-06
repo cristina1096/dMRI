@@ -121,7 +121,8 @@ end
 
 Resolves the near-surface layer parameters of every cylinder into `Internal.CylinderLayer` objects (D3.1–D3.4):
 `inner` is the layer inside the cylinder, `outer` the one outside. Side-specific fields (`layer_rho_inner`, ...)
-override the both-sides fields. Only the step profile is supported on cylinders so far.
+override the both-sides fields. Step, linear and exponential profiles are supported (D3.2); the exponential's support
+is R inside and `layer_cutoff` (default: the smallest surface gap to a neighbouring cylinder) outside (D3.5).
 
 Returns `nothing` if no cylinder has a layer, so that simulations without a layer run the unmodified code.
 """
@@ -136,23 +137,33 @@ function cylinder_layers(cylinders::Cylinders; density=0.)
         specific = getproperty(cylinders, Symbol("layer_shape_" * side))[i]
         shape = isnothing(specific) ? cylinders.layer_shape[i] : specific
         shape = isnothing(shape) ? "step" : shape
-        shape == "step" || error("Cylinder $i, $side side: only layer_shape = \"step\" is supported on cylinders so far, got \"$shape\".")
-        return :step
+        Symbol(shape) in Internal.Layers.SHAPES || error("Cylinder $i, $side side: layer_shape must be one of $(join(string.(Internal.Layers.SHAPES), ", ")), got \"$shape\".")
+        return Symbol(shape)
     end
-    radii = value_as_vector(cylinders.radius)
+    radii_given = value_as_vector(cylinders.radius)
+    radii = [Float64(isglobal(cylinders.radius) ? cylinders.radius.value : radii_given[i]) for i in 1:length(cylinders)]
     centres = obstruction_shifts(cylinders)
+    gaps = surface_gaps(centres, radii, cylinders.repeats.value)
     layers = Internal.CylinderLayer[]
     for i in 1:length(cylinders)
-        R = Float64(isglobal(cylinders.radius) ? cylinders.radius.value : radii[i])
+        R = radii[i]
         (inner, outer) = map(("inner", "outer")) do side
             rho = resolve("rho", side, i)
             h = resolve("h", side, i)
             rho < 0 && error("Cylinder $i, $side side: layer_rho must be >= 0, got $rho.")
             h < 0 && error("Cylinder $i, $side side: layer_h must be >= 0, got $h.")
             rho > 0 && iszero(h) && error("Cylinder $i, $side side: layer_h must be > 0 when layer_rho > 0.")
-            Internal.LayerSide(rho, h, resolve_shape(side, i))
+            shape = resolve_shape(side, i)
+            shape == :exponential || return Internal.LayerSide(rho, h, shape)
+            iszero(rho) && return Internal.LayerSide(rho, h, shape, h)                  # inert side: no support needed
+            side == "inner" && return Internal.LayerSide(rho, h, shape, R)              # D3.5: inside, support to the axis
+            given = cylinders.layer_cutoff[i]
+            L = isnothing(given) ? gaps[i] : Float64(given)
+            isfinite(L) || error("Cylinder $i, outer side: an exponential layer on a cylinder without neighbours needs `layer_cutoff`.")
+            L > 0 || error("Cylinder $i, outer side: layer_cutoff must be > 0, got $L.")
+            Internal.LayerSide(rho, h, shape, L)
         end
-        inner.rho > 0 && inner.h > R && error("Cylinder $i: layer_h_inner = $(inner.h) um exceeds the radius ($R um).")
+        inner.rho > 0 && inner.shape != :exponential && inner.h > R && error("Cylinder $i: layer_h_inner = $(inner.h) um exceeds the radius ($R um).")
         push!(layers, Internal.CylinderLayer(SVector{2, Float64}(centres[i]), R, inner, outer))
     end
     if all(l -> iszero(l.inner.rho) && iszero(l.outer.rho), layers)
@@ -165,10 +176,28 @@ function cylinder_layers(cylinders::Cylinders; density=0.)
 end
 
 """
+    surface_gaps(centres, radii, repeats)
+
+Smallest surface gap |c_i − c_j| − R_i − R_j from each cylinder to any other cylinder or image (centres wrapped into
+the cell, images within ±1 cell); Inf without a neighbour.
+"""
+function surface_gaps(centres, radii, repeats)
+    shifts = isnothing(repeats) ? [SVector(0., 0.)] : [SVector(i * repeats[1], j * repeats[2]) for i in -1:1 for j in -1:1]
+    n = length(centres)
+    gaps = fill(Inf, n)
+    for i in 1:n, j in 1:n, shift in shifts
+        (i == j && iszero(shift)) && continue
+        v = SVector{2, Float64}(centres[j]) + shift - SVector{2, Float64}(centres[i])
+        gaps[i] = min(gaps[i], sqrt(v[1]^2 + v[2]^2) - radii[i] - radii[j])
+    end
+    return gaps
+end
+
+"""
     check_outer_reach(layers, repeats)
 
-Errors if an outer layer reaches inside another cylinder or an image of one: layer_h_outer must not exceed the surface
-gap |c_i − c_j| − R_i − R_j to any neighbour (the wall rule h ≤ spacing). Centres are wrapped into the unit cell,
+Errors if an outer layer reaches inside another cylinder or an image of one: the outer support (layer_h_outer; the
+cutoff for the exponential) must not exceed the surface gap |c_i − c_j| − R_i − R_j to any neighbour (the wall rule h ≤ spacing). Centres are wrapped into the unit cell,
 so the nearest images are within one cell.
 """
 function check_outer_reach(layers::Vector{Internal.CylinderLayer}, repeats)
@@ -180,7 +209,7 @@ function check_outer_reach(layers::Vector{Internal.CylinderLayer}, repeats)
             v = lj.centre + shift - li.centre
             gap = sqrt(v[1]^2 + v[2]^2) - li.radius - lj.radius
             # tolerance: h_outer = gap is allowed even when the gap is not exact in binary (e.g. 1 − 0.8)
-            li.outer.h > gap + 1e-12 * max(1.0, abs(gap)) && error("Cylinder $i: layer_h_outer = $(li.outer.h) um exceeds the surface gap ($gap um) to cylinder $j, so the outer layer would reach inside that cylinder.")
+            li.outer.cutoff > gap + 1e-12 * max(1.0, abs(gap)) && error("Cylinder $i: the outer layer's support ($(li.outer.cutoff) um; layer_h_outer, or layer_cutoff for the exponential) exceeds the surface gap ($gap um) to cylinder $j, so the outer layer would reach inside that cylinder.")
         end
     end
 end

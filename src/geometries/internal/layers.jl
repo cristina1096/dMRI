@@ -290,22 +290,25 @@ function shell_profile_integral(side::LayerSide, R::Float64, inside::Bool, centr
 end
 
 """
-    cylinder_exponent(layer, centre, p0, p1, dt)
+    cylinder_side_exponent(side, R, inside, centre, p0, p1, dt)
 
-∫ΔR2 dt of both layers of one cylinder (axis at `centre`, local 2D) over the straight piece p0 → p1 of duration `dt`
-(ms). Step profile: ΔR2(0)·dt·(fraction of the piece inside the shell), exact.
+∫ΔR2 dt of one side of a cylinder over the straight piece p0 → p1 (local 2D, axis at `centre`) of duration `dt` (ms):
+(ρ/h)/κ · dt · ∫₀¹ g(d(s)/h) ds. Step: exact shell fraction (g = 1); linear and exponential: `shell_profile_integral`.
 """
-function cylinder_exponent(layer::CylinderLayer, centre::SVector{2, Float64}, p0::SVector{2, Float64}, p1::SVector{2, Float64}, dt::Float64)
-    R = layer.radius
-    total = 0.0
-    if !iszero(layer.inner.rho)
-        total += cylinder_surface_rate(layer.inner, R, true) * dt * shell_fraction(p0, p1, centre, R - layer.inner.h, R)
+function cylinder_side_exponent(side::LayerSide, R::Float64, inside::Bool, centre::SVector{2, Float64},
+                                p0::SVector{2, Float64}, p1::SVector{2, Float64}, dt::Float64)
+    iszero(side.rho) && return 0.0
+    if side.shape == :step
+        (r_lo, r_hi) = inside ? (R - side.h, R) : (R, R + side.h)
+        return cylinder_surface_rate(side, R, inside) * dt * shell_fraction(p0, p1, centre, r_lo, r_hi)
     end
-    if !iszero(layer.outer.rho)
-        total += cylinder_surface_rate(layer.outer, R, false) * dt * shell_fraction(p0, p1, centre, R, R + layer.outer.h)
-    end
-    return total
+    return side.rho / side.h / kappa(side, R, inside) * dt * shell_profile_integral(side, R, inside, centre, p0, p1)
 end
+
+"∫ΔR2 dt of both layers of one cylinder (axis at `centre`) over the straight piece p0 → p1 of duration `dt` (ms)."
+cylinder_exponent(layer::CylinderLayer, centre::SVector{2, Float64}, p0::SVector{2, Float64}, p1::SVector{2, Float64}, dt::Float64) =
+    cylinder_side_exponent(layer.inner, layer.radius, true, centre, p0, p1, dt) +
+    cylinder_side_exponent(layer.outer, layer.radius, false, centre, p0, p1, dt)
 
 """
     layer_exponent(group/geometry, start, dest, dt)
@@ -367,7 +370,7 @@ function layer_exponent(layers::Vector{CylinderLayer}, g::FixedObstructionGroup,
     hi = max.(p0, p1)
     total = 0.0
     for layer in layers
-        for c in image_centres(g, layer.centre, lo, hi, layer.radius + layer.outer.h)
+        for c in image_centres(g, layer.centre, lo, hi, layer.radius + layer.outer.cutoff)
             total += cylinder_exponent(layer, c, p0, p1, dt)
         end
     end
@@ -400,8 +403,8 @@ max_layer_rate(layers::Vector{WallLayer}, ::FixedObstructionGroup) = max_layer_r
 """
 Upper bound on the summed ΔR2 for cylinders: for each cylinder, the larger of its inner surface rate and its outer
 surface rate plus the outer surface rates of every other cylinder (or image) whose outer shell intersects its outer
-shell, |c_i − c_j| < R_i + h_i + R_j + h_j. Exact when no outer shells overlap. Inner shells overlap nothing
-(validation: h_outer ≤ surface gap).
+shell, |c_i − c_j| < R_i + L_i + R_j + L_j (L = outer support: h for step and linear, the cutoff for the exponential). Exact when no outer shells overlap. Inner shells overlap nothing
+(validation: outer support ≤ surface gap).
 """
 function max_layer_rate(layers::Vector{CylinderLayer}, g::FixedObstructionGroup)
     best = 0.0
@@ -411,7 +414,7 @@ function max_layer_rate(layers::Vector{CylinderLayer}, g::FixedObstructionGroup)
         iszero(own) && continue
         total = own
         for (j, lj) in enumerate(layers)
-            reach = li.radius + li.outer.h + lj.radius + lj.outer.h
+            reach = li.radius + li.outer.cutoff + lj.radius + lj.outer.cutoff
             for c in image_centres(g, lj.centre, li.centre, li.centre, reach)
                 (j == i && c == li.centre) && continue
                 norm(c - li.centre) < reach && (total += cylinder_surface_rate(lj.outer, lj.radius, false))

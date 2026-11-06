@@ -51,9 +51,10 @@ for obstruction_type in (
             Field{Float64}(:layer_rho_outer, "Near-surface layer: ρ (um/ms) outside the cylinder. Overrides `layer_rho`."),
             Field{Float64}(:layer_h_inner, "Near-surface layer: h (um) inside the cylinder (at most the radius). Overrides `layer_h`."),
             Field{Float64}(:layer_h_outer, "Near-surface layer: h (um) outside the cylinder (at most the surface gap to the nearest cylinder). Overrides `layer_h`."),
-            Field{String}(:layer_shape, "Near-surface layer: profile g inside and outside, unless a side-specific value is set. Only step is supported on cylinders so far.", "step"),
+            Field{String}(:layer_shape, "Near-surface layer: profile g inside and outside, unless a side-specific value is set. One of step, linear, exponential.", "step"),
             Field{String}(:layer_shape_inner, "Near-surface layer: profile inside the cylinder. Overrides `layer_shape`."),
             Field{String}(:layer_shape_outer, "Near-surface layer: profile outside the cylinder. Overrides `layer_shape`."),
+            Field{Float64}(:layer_cutoff, "Near-surface layer: support (um) of the exponential profile outside the cylinder, measured from the surface; g is truncated there and renormalised. Default: the smallest surface gap to a neighbouring cylinder. Inside, the exponential always reaches the axis (support = radius). Ignored by step and linear."),
         ]),
     ObstructionType(
         :Annulus; plural=:Annuli, ndim=2, surfaces=[:inner_surface, :outer_surface], volumes=[:inner_volume, :outer_volume], fields=[
