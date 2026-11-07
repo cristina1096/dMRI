@@ -22,7 +22,10 @@ Sconv = num(only(r for r in sw if r["model"] == "conventional"), "S50")
 step = Dict(parse(Float64, replace(r["model"], "step_h" => "")) => num(r, "S50") - Sconv for r in sw if r["model"] != "conventional")
 st16 = filter(r -> num(r, "s") == 3.0, readrows(joinpath(res("p3_4_8_h_sweep_outside"), "steps_tau16.csv")))
 acc = 0.0
+prev = "conventional"
 for r in st16                                                     # conventional → 0.05 → 0.1 → 0.2, in order
+    r["from"] == prev || error("steps_tau16.csv rows out of order: expected from = $prev, got $(r["from"])")
+    global prev = r["to"]
     global acc += num(r, "d_tau_c")
     step[parse(Float64, replace(r["to"], "step_h" => ""))] = acc
 end
@@ -48,13 +51,24 @@ end
 rows = NamedTuple[]
 for cb in (0.05, 0.1, 0.15, 0.2, 0.3)
     v = Dict(s => interp(data[s], cb) for s in ("step", "linear", "exponential"))
-    ok = [s for s in keys(v) if !isnan(v[s])]
-    spread = maximum((abs(v[a] - v[b]) / max(abs(v[a]), abs(v[b])) for a in ok for b in ok if a < b); init=0.0)
+    any(isnan, values(v)) && error("c̄ = $cb lies outside the sampled range of a profile: $v")
+    ks = collect(keys(v))
+    spread = maximum(abs(v[a] - v[b]) / max(abs(v[a]), abs(v[b])) for a in ks for b in ks if a < b)
     push!(rows, (centroid=cb, dS_step=v["step"], dS_linear=v["linear"], dS_exponential=v["exponential"], spread=spread))
     @printf("c̄ = %.2f: step %+.3e linear %+.3e exponential %+.3e, spread %.3f\n", cb, v["step"], v["linear"], v["exponential"], spread)
 end
 write_csv(joinpath(OUT, "centroid_outside.csv"), rows)
-write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "points" => Dict(k => collect.(v) for (k, v) in data), "rows" => rows))
+# same-h comparison (h sampled by all three profiles), for contrast with the same-centroid spread
+hrows = NamedTuple[]
+cenf = Dict("step" => h -> h / 2, "linear" => h -> h / 3, "exponential" => h -> cexp(h))
+for h in (0.1, 0.2, 0.3, 0.5, 1.0)
+    v = Dict(s => only(y for (x, y) in data[s] if isapprox(x, cenf[s](h); rtol=1e-9)) for s in ("step", "linear", "exponential"))
+    sp = maximum(abs(v[a] - v[b]) / max(abs(v[a]), abs(v[b])) for a in keys(v) for b in keys(v) if a < b)
+    push!(hrows, (h=h, dS_step=v["step"], dS_linear=v["linear"], dS_exponential=v["exponential"], spread=sp))
+    @printf("h = %.1f: step %+.3e linear %+.3e exponential %+.3e, spread %.3f\n", h, v["step"], v["linear"], v["exponential"], sp)
+end
+write_csv(joinpath(OUT, "same_h_outside.csv"), hrows)
+write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "points" => Dict(k => collect.(v) for (k, v) in data), "rows" => rows, "same_h" => hrows))
 fig = Figure(size=(600, 420))
 ax = Axis(fig[1, 1], xlabel="centroid c̄ (µm)", ylabel="ΔS(50) = S − S_conv", title="outside, square array s = 3.0, R = 1, ρ = 0.02")
 for (s, col) in zip(("step", "linear", "exponential"), (:steelblue, :darkorange, :seagreen))
