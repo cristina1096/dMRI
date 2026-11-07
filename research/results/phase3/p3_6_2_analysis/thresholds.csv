@@ -1,0 +1,38 @@
+series,measure,level,variable,value,status,z_first_above,k_rule
+exponential h=0.1 R=1.0,e_dS,0.1,step_over_h,0.9296510902,crossed,2.091764035,0.8642511495
+exponential h=0.1 R=1.0,e_dS,0.05,step_over_h,0.7666292859,crossed,2.702763767,0.5877204619
+exponential h=0.1 R=1.0,e_dS,0.02,step_over_h,0.6458420552,crossed,2.702763767,0.4171119603
+exponential h=0.2 R=1.0,e_dS,0.1,step_over_h,1.224744871,below_range,NaN,NaN
+exponential h=0.2 R=1.0,e_dS,0.05,step_over_h,0.7352838712,crossed,2.071064857,0.5406423712
+exponential h=0.2 R=1.0,e_dS,0.02,step_over_h,NaN,above_range,0.6564193622,NaN
+linear h=0.3 R=1.0,e_dS,0.1,step_over_h,0.4386156795,crossed,4.608507551,0.1923837143
+linear h=0.3 R=1.0,e_dS,0.05,step_over_h,0.2767590894,crossed,1.791029893,0.07659559356
+linear h=0.3 R=1.0,e_dS,0.02,step_over_h,0.247299606,crossed,1.791029893,0.06115709515
+linear h=0.6 R=1.0,e_dS,0.1,step_over_h,0.4082482905,below_range,NaN,NaN
+linear h=0.6 R=1.0,e_dS,0.05,step_over_h,0.4082482905,below_range,NaN,NaN
+linear h=0.6 R=1.0,e_dS,0.02,step_over_h,NaN,above_range,0.3737226595,NaN
+step h=0.05 R=0.5,e_dS,0.1,step_over_h,NaN,above_range,5.567301827,NaN
+step h=0.05 R=0.5,e_dS,0.05,step_over_h,NaN,above_range,5.567301827,NaN
+step h=0.05 R=0.5,e_dS,0.02,step_over_h,NaN,above_range,5.567301827,NaN
+step h=0.05 R=1.0,e_dS,0.1,step_over_h,NaN,above_range,1.583439627,NaN
+step h=0.05 R=1.0,e_dS,0.05,step_over_h,NaN,above_range,1.583439627,NaN
+step h=0.05 R=1.0,e_dS,0.02,step_over_h,NaN,above_range,1.583439627,NaN
+step h=0.1 R=1.0,e_dS,0.1,step_over_h,NaN,above_range,1.584978201,NaN
+step h=0.1 R=1.0,e_dS,0.05,step_over_h,NaN,above_range,1.584978201,NaN
+step h=0.1 R=1.0,e_dS,0.02,step_over_h,NaN,above_range,1.584978201,NaN
+step h=0.2 R=1.0,e_dS,0.1,step_over_h,0.6450284786,crossed,5.535720754,0.4160617382
+step h=0.2 R=1.0,e_dS,0.05,step_over_h,0.4172768446,crossed,1.622614706,0.174119965
+step h=0.2 R=1.0,e_dS,0.02,step_over_h,0.3734218449,crossed,1.622614706,0.1394438743
+step h=0.5 R=1.0,e_dS,0.1,step_over_h,0.4898979486,below_range,NaN,NaN
+step h=0.5 R=1.0,e_dS,0.05,step_over_h,0.4898979486,below_range,NaN,NaN
+step h=0.5 R=1.0,e_dS,0.02,step_over_h,0.4898979486,below_range,NaN,NaN
+step h=1.0 R=1.0,e_dS,0.1,step_over_h,0.2449489743,below_range,NaN,NaN
+step h=1.0 R=1.0,e_dS,0.05,step_over_h,0.2449489743,below_range,NaN,NaN
+step h=1.0 R=1.0,e_dS,0.02,step_over_h,NaN,above_range,0.2881926784,NaN
+step h=0.2 R=2.0,e_dS,0.1,step_over_h,0.7210706808,crossed,3.841632523,0.5199429268
+step h=0.2 R=2.0,e_dS,0.05,step_over_h,NaN,above_range,0.5825251601,NaN
+step h=0.2 R=2.0,e_dS,0.02,step_over_h,NaN,above_range,0.5825251601,NaN
+rate ΔR2(0) = 0.5,e_R,0.01,rate0_tau,0.04784688995,below_range,NaN,NaN
+rate ΔR2(0) = 0.5,e_R,0.001,rate0_tau,0.004806732892,crossed,5.649012009,NaN
+rate ΔR2(0) = 2.0,e_R,0.01,rate0_tau,0.04784688995,below_range,NaN,NaN
+rate ΔR2(0) = 2.0,e_R,0.001,rate0_tau,0.006221988749,crossed,17.88651895,NaN

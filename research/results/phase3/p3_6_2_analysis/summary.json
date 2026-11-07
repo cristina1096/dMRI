@@ -1,0 +1,26 @@
+{
+  "files": [
+    "errors.csv",
+    "fits.csv",
+    "thresholds.csv",
+    "p3_6_2_errors.png"
+  ],
+  "n_duplicates_bit_identical": 5,
+  "n_raw": 63,
+  "n_unique": 58,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-11-08T04:51:40.013",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "e4a2c57f2540f5f12485cb54ef3de98543e46dfe",
+    "julia": "1.12.7",
+    "julia_threads": 4,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_6_2_analysis.jl",
+    "src_modified": false
+  }
+}

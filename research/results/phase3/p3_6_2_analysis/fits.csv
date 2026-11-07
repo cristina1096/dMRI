@@ -1,0 +1,49 @@
+measure,series,variable,nsig,n_points,a,p,se_p
+e_R,rate ΔR2(0) = 0.5,rate0_tau,2,3,0.1649830378,0.9528297213,0.02638545165
+e_R,rate ΔR2(0) = 0.5,rate0_tau,3,3,0.1649830378,0.9528297213,0.02638545165
+e_R,rate ΔR2(0) = 2.0,rate0_tau,2,3,0.3043147429,1.122635919,0.07093524118
+e_R,rate ΔR2(0) = 2.0,rate0_tau,3,2,0.1717024235,0.9529777443,NaN
+e_dS,exponential h=0.1 R=1.0,step_over_h,2,3,0.1048107791,1.388471652,0.2776879361
+e_dS,exponential h=0.1 R=1.0,rate0_tau,2,3,25.26871328,0.6942358261,0.138843968
+e_dS,exponential h=0.1 R=1.0,step_over_h,3,1,NaN,NaN,NaN
+e_dS,exponential h=0.1 R=1.0,rate0_tau,3,1,NaN,NaN,NaN
+e_dS,exponential h=0.2 R=1.0,step_over_h,2,1,NaN,NaN,NaN
+e_dS,exponential h=0.2 R=1.0,rate0_tau,2,1,NaN,NaN,NaN
+e_dS,exponential h=0.2 R=1.0,step_over_h,3,0,NaN,NaN,NaN
+e_dS,exponential h=0.2 R=1.0,rate0_tau,3,0,NaN,NaN,NaN
+e_dS,linear h=0.3 R=1.0,step_over_h,2,1,NaN,NaN,NaN
+e_dS,linear h=0.3 R=1.0,rate0_tau,2,1,NaN,NaN,NaN
+e_dS,linear h=0.3 R=1.0,step_over_h,3,1,NaN,NaN,NaN
+e_dS,linear h=0.3 R=1.0,rate0_tau,3,1,NaN,NaN,NaN
+e_dS,linear h=0.6 R=1.0,step_over_h,2,0,NaN,NaN,NaN
+e_dS,linear h=0.6 R=1.0,rate0_tau,2,0,NaN,NaN,NaN
+e_dS,linear h=0.6 R=1.0,step_over_h,3,0,NaN,NaN,NaN
+e_dS,linear h=0.6 R=1.0,rate0_tau,3,0,NaN,NaN,NaN
+e_dS,step h=0.05 R=0.5,step_over_h,2,3,0.3356524762,1.564208971,0.1583887513
+e_dS,step h=0.05 R=0.5,rate0_tau,2,3,290.6540823,0.7821044855,0.07919437566
+e_dS,step h=0.05 R=0.5,step_over_h,3,3,0.3356524762,1.564208971,0.1583887513
+e_dS,step h=0.05 R=0.5,rate0_tau,3,3,290.6540823,0.7821044855,0.07919437566
+e_dS,step h=0.05 R=1.0,step_over_h,2,5,0.4113780914,1.455038946,0.1059709415
+e_dS,step h=0.05 R=1.0,rate0_tau,2,5,226.4229313,0.7275194728,0.05298547077
+e_dS,step h=0.05 R=1.0,step_over_h,3,5,0.4113780914,1.455038946,0.1059709415
+e_dS,step h=0.05 R=1.0,rate0_tau,3,5,226.4229313,0.7275194728,0.05298547077
+e_dS,step h=0.1 R=1.0,step_over_h,2,4,0.3195841233,1.564588428,0.1020888937
+e_dS,step h=0.1 R=1.0,rate0_tau,2,4,161.1722762,0.7822942138,0.05104444686
+e_dS,step h=0.1 R=1.0,step_over_h,3,4,0.3195841233,1.564588428,0.1020888937
+e_dS,step h=0.1 R=1.0,rate0_tau,3,4,161.1722762,0.7822942138,0.05104444686
+e_dS,step h=0.2 R=1.0,step_over_h,2,2,0.3137231923,0.5437242346,NaN
+e_dS,step h=0.2 R=1.0,rate0_tau,2,2,2.22620827,0.2718621173,NaN
+e_dS,step h=0.2 R=1.0,step_over_h,3,2,0.3137231923,0.5437242346,NaN
+e_dS,step h=0.2 R=1.0,rate0_tau,3,2,2.22620827,0.2718621173,NaN
+e_dS,step h=0.5 R=1.0,step_over_h,2,0,NaN,NaN,NaN
+e_dS,step h=0.5 R=1.0,rate0_tau,2,0,NaN,NaN,NaN
+e_dS,step h=0.5 R=1.0,step_over_h,3,0,NaN,NaN,NaN
+e_dS,step h=0.5 R=1.0,rate0_tau,3,0,NaN,NaN,NaN
+e_dS,step h=1.0 R=1.0,step_over_h,2,0,NaN,NaN,NaN
+e_dS,step h=1.0 R=1.0,rate0_tau,2,0,NaN,NaN,NaN
+e_dS,step h=1.0 R=1.0,step_over_h,3,0,NaN,NaN,NaN
+e_dS,step h=1.0 R=1.0,rate0_tau,3,0,NaN,NaN,NaN
+e_dS,step h=0.2 R=2.0,step_over_h,2,1,NaN,NaN,NaN
+e_dS,step h=0.2 R=2.0,rate0_tau,2,1,NaN,NaN,NaN
+e_dS,step h=0.2 R=2.0,step_over_h,3,1,NaN,NaN,NaN
+e_dS,step h=0.2 R=2.0,rate0_tau,3,1,NaN,NaN,NaN
