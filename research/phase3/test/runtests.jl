@@ -1,6 +1,7 @@
 using Test
 include(joinpath(@__DIR__, "..", "harness.jl"))
 include(joinpath(@__DIR__, "..", "continuum_radial.jl"))
+include(joinpath(@__DIR__, "..", "analysis.jl"))
 
 @testset "Phase 3 research code" begin
     for f in sort(filter(f -> startswith(f, "test_") && endswith(f, ".jl"), readdir(@__DIR__)))
