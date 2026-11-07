@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 22 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 24 (+4 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -391,10 +391,10 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.6.1 | ☐ | τ scans on cylinders (step; then other profiles) incl. small radius and thin layers | error vs ΔR₂(0)·τ and vs curvature (h/R, √(Dτ)/R) recorded | fig |
-| P3.6.2 | ☐ | Confirm or adjust c = 0.005; for comparison studies set τ from the error in the difference (lesson from Review C1) | constraint documented | code/record |
+| P3.6.1 | ☑ | τ scans on cylinders (step; then other profiles) incl. small radius and thin layers | error vs ΔR₂(0)·τ and vs curvature (h/R, √(Dτ)/R) recorded | fig; **Done**: rate error ∝ ΔR₂(0)τ (c = 0.005 → ≈ 0.1 %); difference error controlled by √(2Dτ)/h (p ≈ 1.5), 10 % at √(2Dτ)/c̄ ≈ 1.3 (step, linear) / 0.9 (exponential); no curvature effect resolved |
+| P3.6.2 | ◐ | Confirm or adjust c = 0.005; for comparison studies set τ from the error in the difference (lesson from Review C1) | constraint documented | code/record; options documented (record P3.6.2): c = 0.005 for rates; τ ≤ 0.135 c̄² for fixed-ρ comparisons; optional package option; continuum where possible — user decision pending |
 | P3.6.3 | ☑ | Fix ε_R₂ (signal error vs ε) | ε chosen with margin | table; **Done**: LAYER_QUAD_TOL = 1e-10 kept (exponential max error 3.2e-11; linear vs closed form ≤ 9e-11) |
-| P3.6.4 | ☐ | Runtime vs walls and vs C-B5; cell list of layer indices so the cost scales with cylinders within reach, not per cell (final review 2026-10-24: ×6.7 at 400 per cell) | table | table |
+| P3.6.4 | ☑ | Runtime vs walls and vs C-B5; cell list of layer indices so the cost scales with cylinders within reach, not per cell (final review 2026-10-24: ×6.7 at 400 per cell) | table | table; **Done** (table; cell list still open) |
 
 ## 3.7 Comparison with the conventional model on cylinders (proposal Milestone 6)
 
