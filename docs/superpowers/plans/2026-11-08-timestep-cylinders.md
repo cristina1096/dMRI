@@ -291,6 +291,18 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   Use `fit_power` on points with |e| > 2σ_e (σ_e from the MC SEM); report the exponent ± SE (Review Focus 4).
 - **Thresholds:** for |e_ΔS| = 10 %, 5 % and 2 %, `threshold_at` gives the largest √(2Dτ)/h, converted to a rule τ ≤ k·h²/(2D) with k = threshold². The same for e_R at 1 % and 0.1 % in terms of ΔR₂(0)τ, to compare with c = 0.005.
 
+**Amendments after the Group A review (2026-11-08; binding for this task).** Each item overrides the Method above where they differ.
+1. **Filter.** Use the 2σ_e filter only, with σ_e = SEM(ΔS)/|ΔS_cont|. Drop the 5·SEM small-denominator rule: it removes the best-measured thin rows and is redundant with the filter. Report the sensitivity (2σ against 3σ).
+2. **Thresholds.** Use `threshold_status`, applied per series to filtered points only, and report the status. A `:below_range` or `:above_range` result is a bound, not a threshold. Only the 10 % ΔS level is resolved by the data. 5 % and 2 % are reported as not resolved (no row with |e_ΔS| < 10 % is significant at 2·10⁴ spins × 10 seeds).
+3. **Exponents.** Report per h and per profile, with the selection range and ± SE. For n = 2, se is NaN, reported as "2 points"; n = 1 is not fitted. The log-log curve is curved, so do not report one pooled law.
+4. **Conventional S error.** It is resolved at one point only (R = 0.5, τ = 1e-2). Report it, do not fit it.
+5. **Radius scan.** h = 0.1R keeps h/R fixed, so √(2Dτ)/h ∝ √(Dτ)/R. It tests scaling at fixed h/R, not curvature. Curvature is judged only from the R = 1 thin series (h/R = 0.05, 0.1, 0.2).
+6. **Deduplication.** Rows that are bit-identical runs (the same model, τ, R and S_mc across P3.4.6, P3.4.6d, P3.4.6b, thin and profiles) count once.
+7. **Reuse check.** The conventional S_mc must be bit-identical across sources at shared τ (1e-2, 2.5e-3, 6.25e-4, 1.25e-3). Error otherwise. This replaces the summary-field check, since the older summaries lack seeds and ρ.
+8. **Rate scan.** Use τ_eff = (T/10)/ceil((T/10)/τ) instead of the nominal τ. The largest τ of each series runs at 0.957τ. Its `identical_trajectories` is n/a (no conventional model).
+9. **Fits.** Exclude conventional rows (`rate0_tau` = 0, `step_over_h` = NaN) before `fit_power`.
+10. **Caveats to state.** Rows at different τ share seeds and initial positions (nearly but not strictly independent). The largest rate-scan τ (0.1 ms, √(Dτ)/R = 0.55) includes a reflection error.
+
 - [ ] **Step 1: Write the script** (uses `analysis.jl`, `continuum_radial.jl`, `harness.jl`).
 
   It reads the CSVs above and builds one `errors.csv` with columns `source, scan, model, shape, h, R, rho, T, tau, rate0_tau, step_over_h, step_over_R, e_R, e_dS, e_dS_sigma, used_in_fit`. It writes:
