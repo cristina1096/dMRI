@@ -1,5 +1,5 @@
 # P3.6.1: Monte Carlo timestep scan inside a single cylinder against the exact radial continuum.
-# SCAN = thin | profiles | radius | rate (table in the plan). For every (configuration, τ): all models share τ, so
+# SCAN = thin | profiles | radius | rate (table in the plan) | confirm (P3.6.2 rule at c̄ = 0.05, run with NSPINS=100000). For every (configuration, τ): all models share τ, so
 # trajectories are identical (checked) and ΔS = S_layer − S_conv is paired per seed. Recorded per model and τ:
 #   S(T) MC ± SEM, continuum, z; ΔS(T) MC ± paired SEM, continuum, z; R = −ln S(T)/T MC and continuum;
 #   ΔR2(0)τ, √(2Dτ)/h, √(Dτ)/R. T = 50 ms, except the `rate` scan (T = 2R/(2ρ), so E[−ln M] = 2).
@@ -28,6 +28,11 @@ function configs(scan)
         return [("R1", 1.0, 0.02, 50.0, m([("conventional", 0.0), ("linear", 0.3), ("exponential", 0.1)]), [1.25e-3, 6.25e-4])]
     elseif scan == "radius"
         return [("R$(R)", R, 0.02, 50.0, m([("conventional", 0.0), ("step", 0.1R)]), [1e-2, 2.5e-3, 6.25e-4]) for R in (0.5, 2.0)]
+    elseif scan == "confirm"
+        # P3.6.2 confirmation (user request 2026-11-08): the proposed rule √(2Dτ) ≤ 0.9 c̄ (τ ≤ 0.135 c̄² at D = 3) was measured
+        # at c̄ = 0.1 only; test it at c̄ = 0.05 (step h = 0.1) at its operating point τ = 0.135·0.05² = 3.375e-4, with
+        # NSPINS = 1e5 (σ(e_ΔS) ≈ 0.036 instead of ≈ 0.08 at 2e4)
+        return [("R1_c0.05_rule", 1.0, 0.02, 50.0, m([("conventional", 0.0), ("step", 0.1)]), [0.135 * 0.05^2])]
     elseif scan == "rate"
         out = []
         for r0 in (0.5, 2.0)
