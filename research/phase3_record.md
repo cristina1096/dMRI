@@ -31,7 +31,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.1, P3.4.3 (linear, exponential) | Single-spin trace; mean-exponent identity | trace ≤ 1e-6; \|z\| ≤ 3 | **PASS**: trace 6.7e-12 (linear), 2.4e-8 (exponential); identity 12/12 each (\|z\| ≤ 1.27) |
 | P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| low by 4–38 % at τ = 1e-2 and still 2.5–12 % low (same sign, not resolved) at τ = 2.5e-3 (C1) |
 | P3.4.8 (all profiles) | Attenuation vs h and same-centroid comparison: inside (continuum, R = 0.5, 1, 2), outside (paired MC, s = 3.0, thin end at τ = 6.25e-4) | monotonicity, sign recorded; centroid spread | S decreases with h: inside 84/84 steps (all profiles); outside every step resolved for linear and exponential (thin end at τ_c), step thin end unresolved; centroid collapse: 3–9 % inside, 1–22 % outside at the same c̄ (outside not pinned down: 3–6 % or 13–15 % at c̄ = 0.15–0.2 depending on τ) vs 34–66 % and 7–72 % at the same h |
-| P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error ∝ (√(2Dτ)/h)^1.5, 10 % at √(2Dτ)/c̄ ≈ 1.3 (step, linear), 0.9 (exponential); no curvature effect resolved |
+| P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error controlled by √(2Dτ)/h (p ≈ 1.5 for thin step layers at \|e\| ≳ 40 %); profiles collapse in √(2Dτ)/c̄, crossing 10 % at ≈ 0.9–1.3 (measured at c̄ = 0.1); no curvature effect resolved |
 | P3.6.2 | Timestep rule for comparison studies | constraint documented | options documented (keep c = 0.005 for rates; τ ≤ 0.135 c̄² for differences; optional package option; continuum where possible) — **user decision pending** |
 | P3.6.4 | Runtime summary | table | cylinders ≈ 2.6–3× walls; layer ×1.5–1.6; linear ×1.2, exponential ×2.5 vs step; cell list open |
 
@@ -897,8 +897,21 @@ Plan [2026-11-08-timestep-cylinders.md](../docs/superpowers/plans/2026-11-08-tim
 - The default c = 0.005 therefore gives ≈ 0.1 % in R on cylinders too.
 
 **Result 2: the difference error is controlled by the step length relative to the layer, √(2Dτ)/h, not by ΔR₂(0)τ** (panels b, c).
-- **Collapse.** The thin step series (h = 0.05 and 0.1 at R = 1; h = 0.05 at R = 0.5) fall on one curve against √(2Dτ)/h, with p = 1.46 ± 0.11, 1.56 ± 0.10 and 1.56 ± 0.16. Against ΔR₂(0)τ they spread by an order of magnitude.
-- **Sign flip.** At large steps the MC difference even has the wrong sign: |e_ΔS| > 1 for √(2Dτ)/h ≳ 1.5.
+- **Collapse.** The thin step series (h = 0.05 and 0.1 at R = 1; h = 0.05 at R = 0.5) fall on one curve against √(2Dτ)/h. Against ΔR₂(0)τ they spread 4–6× (significant step points at ΔR₂(0)τ ≈ 1–2e-3).
+- **Per-series fits** of |e_ΔS| against √(2Dτ)/h (`fits.csv`, 2σ filter):
+
+  | series | n | selection range of \|e_ΔS\| | p ± SE |
+  |---|---|---|---|
+  | step h = 0.05, R = 1 | 5 | ≈ 0.5–4.4 | 1.46 ± 0.11 |
+  | step h = 0.1, R = 1 | 4 | ≈ 0.4–1.3 | 1.56 ± 0.10 |
+  | step h = 0.05, R = 0.5 | 3 | ≈ 0.4–3.7 | 1.56 ± 0.16 |
+  | exponential h = 0.1 | 3 | ≈ 0.1–0.4 | 1.39 ± 0.28 |
+  | step h = 0.2, R = 1 | 2 | ≈ 0.1–0.3 | 0.54 (2 points, no SE) |
+  | others | ≤ 1 | — | not fitted |
+
+  The p ≈ 1.5 law describes thin step layers at large errors (|e_ΔS| ≳ 40 %, where the MC difference may already have the wrong sign). Near the 10 % level the one 2-point step series is flatter, so no single law is claimed.
+- **Sign flip.** At large steps the MC difference has the wrong sign (|e_ΔS| > 1). Where that happens depends on the series: step h = 0.05 from √(2Dτ)/h ≈ 1.2; step h = 0.1 is still at 0.75 at 1.73 and flips by 2.45.
+- **3σ sensitivity.** The 3σ filter changes only the ΔR₂(0) = 2 rate fit: 1.12 ± 0.07 becomes 0.95 with 2 points.
 - **10 % thresholds:**
 
 | series | threshold √(2Dτ)/h (status, z of first exceedance) | same in √(2Dτ)/c̄ | τ at the threshold (ms) |
@@ -907,21 +920,35 @@ Plan [2026-11-08-timestep-cylinders.md](../docs/superpowers/plans/2026-11-08-tim
 | step h = 0.2, R = 2 | 0.72 (crossed, z 3.8) | 1.4 | 3.5e-3 |
 | linear h = 0.3 | 0.44 (crossed, z 4.6) | 1.3 | 2.9e-3 |
 | exponential h = 0.1 (c̄ ≈ 0.10) | 0.93 (crossed, z 2.1) | 0.93 | 1.4e-3 |
-| step h = 0.05, h = 0.1 (R = 1) | above range: still > 10 % at the smallest τ (3.1e-4 and 6.25e-4; 23 ± 15 % and 12 ± 8 %) | < 1.7, < 1.2 | < 3.1e-4, < 6.25e-4 |
-| step h = 0.5, 1.0; linear h = 0.6; exponential h = 0.2 | below range: < 10 % everywhere scanned | ≥ … | ≥ 1e-2 (lower bound) |
+| step h = 0.05, h = 0.1 (R = 1) | above range: > 10 % at the smallest τ (3.1e-4, 6.25e-4), but **not significant** (23 ± 15 %, 12 ± 8 %; z 1.6) | (< 1.7, < 1.2 if real) | not established |
+| step h = 0.5, 1.0; linear h = 0.6; exponential h = 0.2 | below range: < 10 % everywhere scanned (√(2Dτ)/h up to 0.49, 0.24, 0.41, 1.22) | ≥ 0.98, ≥ 0.49, ≥ 1.22, ≥ 1.27 | ≥ 1e-2 (lower bound) |
 
 - **What the thresholds show.**
-  - Measured against the centroid c̄, step and linear agree (√(2Dτ)/c̄ ≈ 1.3–1.4). The exponential needs a smaller step relative to c̄ (≈ 0.9): its steep part near the surface is shorter than c̄.
-  - The thin step layers are consistent with this: at √(2Dτ)/c̄ = 1.7 and 1.2 they are still at 23 % and 12 %.
+  - **One curve in √(2Dτ)/c̄.** At matched √(2Dτ)/c̄ the three profiles (all at c̄ = 0.1) agree within 1σ at every scanned point:
+
+    | √(2Dτ)/c̄ | step h = 0.2 | linear h = 0.3 | exponential h = 0.1 |
+    |---|---|---|---|
+    | 0.87 | 0.068 ± 0.042 | 0.070 ± 0.039 | 0.096 ± 0.035 |
+    | 1.22 | 0.083 ± 0.079 | 0.087 ± 0.069 | 0.118 ± 0.056 |
+    | 2.45 | 0.35 ± 0.08 | 0.32 ± 0.07 | 0.38 ± 0.07 |
+
+  - **No profile split.** The interpolated crossings (1.3 for step and linear, 0.93 for the exponential) differ only because each crossing interpolates between points that are within 1σ of 10 %. That difference is not resolved. The centroid collapse found for the signal (P3.4.8) holds for the timestep error too: one curve in √(2Dτ)/c̄ that crosses 10 % somewhere around 0.9–1.3.
+  - **Measured at one centroid only.** All four crossed thresholds have c̄ = 0.1 µm. The thin step layers (c̄ = 0.025, 0.05) only bound it, and those bounds are not significant (z 1.6).
   - The radius series (h = 0.1R, so h/R fixed) gives the same error at the same √(2Dτ)/h for R = 0.5, 1 and 2 (e.g. 0.43, 0.40, 0.40 at 1.22). It tests scaling at fixed h/R, not curvature. In the R = 1 thin series, h/R = 0.05, 0.1 and 0.2 differ only weakly at the same √(2Dτ)/h (0.23, 0.27, 0.29 at 0.87). No curvature effect is resolved.
 
-**Result 3: the conventional model's own error.** Resolved at one point only: R = 0.5, τ = 1e-2 (√(Dτ)/R = 0.35), e_S = +6.6e-4 (z 3.4). Elsewhere |z| ≤ 1.1, so the conventional model is not the source of the difference error. Panel d is reported, not fitted.
+**Result 3: the conventional model's own error.** Resolved at one point only: R = 0.5, τ = 1e-2 (√(Dτ)/R = 0.35), e_S = +6.6e-4 (z 3.4). Elsewhere |z| ≤ 1.1.
+- **Not the source of the difference error.** At R = 0.5, τ = 1e-2 the conventional bias is +0.81 ± 0.24 |ΔS_cont| of the h = 0.05 layer, opposite in sign to that layer's e_ΔS.
+- **Still relevant for small cylinders.** Its size matters for comparisons at small R at the default τ.
+- Panel d is reported, not fitted.
 
 **Conclusion.**
 - **Two rules, two purposes.**
   - The existing constraint τ ≤ c/ΔR₂(0) with c = 0.005 controls the **rate** error, ≈ 0.1 %, also on cylinders.
   - It does **not** control the **difference** between models at fixed ρ, which depends on how many steps resolve the layer: √(2Dτ) against the layer's centroid. That is why fixed-ρ comparisons kept failing at the default τ. For thin layers, ΔR₂(0)τ is tiny while √(2Dτ)/h is large.
-- **The data support τ ≤ 0.135·c̄² (µm, ms) at D = 3.** This is √(2Dτ) ≤ 0.9·c̄, the tightest resolved case (the exponential), for |e_ΔS| ≲ 10 %. Step and linear would allow √(2Dτ) ≤ 1.3·c̄. Levels below 10 % are not resolved by these data. The rule is an interpolation inside the scanned range; it is untested for c̄ < 0.05 µm, where the thin step layers only bound it.
+- **The data support τ ≤ 0.135·c̄² (µm, ms) at D = 3, i.e. √(2Dτ) ≤ 0.9·c̄.** This is the conservative end of the 0.9–1.3 range where the curve crosses 10 %.
+  - **Expected error at that point:** about 10 % (measured 7–10 % ± 4 % at √(2Dτ)/c̄ = 0.87; 2σ ≈ 17 %). It is not a margin below 10 %, and levels below 10 % are not resolved by these data.
+  - **Range of validity:** measured at c̄ = 0.1 µm. For smaller c̄ it is extended by the √(2Dτ)/h collapse of the thin step series, which is seen only at larger errors (≳ 25 %). It is untested at the 10 % level for c̄ ≤ 0.05 µm.
+  - **Closing the gap:** one confirmation run would do it, e.g. step h = 0.1 (c̄ = 0.05) at τ ≈ 3e-4.
 
 ### Runtime summary (P3.6.4; existing data, no new runs)
 
@@ -942,8 +969,8 @@ Costs refer to one inside reference run (10 seeds × 2·10⁴ spins × 50 ms) at
 | option | what it does | cost |
 |---|---|---|
 | (a) keep c = 0.005 for single-model runs | rate error ≈ 0.1 % (Result 1) | none, current behaviour |
-| (b) documented rule for comparison studies: τ ≤ 0.135·c̄_min² (D = 3; in general √(2Dτ) ≤ 0.9 c̄) | difference error ≲ 10 % in the scanned range | c̄ = 0.1 µm: τ ≤ 1.35e-3 (×7 steps); c̄ = 0.05: 3.4e-4 (×30); c̄ = 0.025: 8.4e-5 (×120, ≈ 2–4 h per reference run) |
+| (b) documented rule for comparison studies: τ ≤ 0.135·c̄_min² (D = 3; in general √(2Dτ) ≤ 0.9 c̄) | difference error ≈ 10 % (2σ ≈ 17 %); measured at c̄ = 0.1 | c̄ = 0.1 µm: τ ≤ 1.35e-3 (×7 steps, measured); c̄ = 0.05: 3.4e-4 (×30, extrapolated); c̄ = 0.025: 8.4e-5 (×120, ≈ 2–4 h per reference run, extrapolated) |
 | (c) package option implementing (b), e.g. `timestep=(layer_resolution=0.9,)` → τ ≤ (0.9 c̄_min)²/(2D) | makes (b) automatic | a later plan (package code + tests) |
 | (d) use the continuum wherever it exists (single cylinders inside, walls) | exact, no timestep | only for symmetric geometries; arrays and outside still need MC with (b) |
 
-The data support (a) together with (b). Option (d) remains the best reference where it applies. (c) is a convenience whose value depends on how much of Phase 3.7 runs in arrays. The user decides.
+The data support (a) together with (b), with (b) measured at c̄ = 0.1 only; one confirmation run at c̄ = 0.05 (step h = 0.1, τ ≈ 3e-4) would test its extension to thinner layers. Option (d) remains the best reference where it applies. (c) is a convenience whose value depends on how much of Phase 3.7 runs in arrays. The user decides.
