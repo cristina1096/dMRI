@@ -30,7 +30,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.3.4, P3.6.3 | Quadrature tolerance and cost | error vs tolerance; runtime | linear vs closed form ≤ 9e-11; exponential 3.2e-11 at the default 1e-10 (kept); cost ×1.2 (linear), ×2.5 (exponential) vs step; no allocation |
 | P3.4.1, P3.4.3 (linear, exponential) | Single-spin trace; mean-exponent identity | trace ≤ 1e-6; \|z\| ≤ 3 | **PASS**: trace 6.7e-12 (linear), 2.4e-8 (exponential); identity 12/12 each (\|z\| ≤ 1.27) |
 | P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| low by 4–38 % at τ = 1e-2 and still 2.5–12 % low (same sign, not resolved) at τ = 2.5e-3 (C1) |
-| P3.4.8 (all profiles) | Attenuation vs h and same-centroid comparison: inside (continuum, R = 0.5, 1, 2), outside (paired MC, s = 3.0, thin end at τ = 6.25e-4) | monotonicity, sign recorded; centroid spread | S decreases with h for every profile (inside 84/84 steps; outside all steps resolved, thin end at τ_c); centroid collapse: spread 3–9 % inside and 1–22 % outside at the same c̄, vs 34–66 % and 32–72 % at the same h |
+| P3.4.8 (all profiles) | Attenuation vs h and same-centroid comparison: inside (continuum, R = 0.5, 1, 2), outside (paired MC, s = 3.0, thin end at τ = 6.25e-4) | monotonicity, sign recorded; centroid spread | S decreases with h: inside 84/84 steps (all profiles); outside every step resolved for linear and exponential (thin end at τ_c), step thin end unresolved; centroid collapse: 3–9 % inside, 1–22 % outside at the same c̄ (outside not pinned down: 3–6 % or 13–15 % at c̄ = 0.15–0.2 depending on τ) vs 34–66 % and 7–72 % at the same h |
 
 ---
 
@@ -779,7 +779,7 @@ Script [p3_4_8d_profiles_inside.jl](phase3/p3_4_8d_profiles_inside.jl) → [resu
 - **Monotone:** all 84 neighbouring h steps (3 profiles × 3 radii) are resolved, and S(50) falls with h in every one.
 - **Thick limits (R = 1):**
   - step at h = R is uniform: ΔS = −4.51e-4;
-  - linear at h = R is not uniform on a cylinder: ΔS = -4.21e-04;
+  - linear at h = R is not uniform (unlike step at h = R): ΔS = −4.21e-4;
   - exponential approaches the uniform limit as h grows: −4.40e-4 at h = R, −4.48e-4 at 2R, −4.51e-4 at 5R.
 
 | R | c̄/R | ΔS(50) step / linear / exponential | spread, same centroid | spread, same h |
@@ -809,15 +809,18 @@ Scripts:
 
 **Design.**
 - **Geometry and h.** Outer layer only, R = 1, gap 1.0, ρ = 0.02, the same seeds, spins and τ as the step run at s = 3.0 (P3.4.8), so all three profiles can be compared:
-  - linear h = 0.1–1.0, starting at 0.1 because its surface rate 2ρ/h at 0.05 would force τ < 1e-2;
+  - linear h = 0.1–1.0, starting at 0.1 because its surface rate 2ρ/(hκ) at 0.05 would force τ < 1e-2;
   - exponential h = 0.05–1.0, with support equal to the gap, so the outer layers always overlap.
 - **Timesteps.** Each profile is paired with its own conventional run at τ = 1e-2 and 2.5e-3. There is no continuum outside, and inside, |ΔS| of surface-concentrated profiles was still ≈ 10 % low at τ = 2.5e-3 (Group 2). So a third timestep, τ = 6.25e-4, was run at the thin end: the conventional model plus the 3 thinnest h per profile, 10⁴ spins per seed (option B, user decision 2026-11-07).
 
 **Result: monotonicity.**
-- **The identity holds.** E[−ln M⊥] = ρ(S/V)t = 1.0725 within noise for every h and τ.
+- **The identity holds.** E[−ln M⊥] = ρ(S/V)t = 1.0725 within noise for every h at τ = 1e-2 and 2.5e-3. The τ = 6.25e-4 pass did not record it.
 - **Linear.** All layer steps from 0.1 → 0.2 on are resolved and negative at τ = 2.5e-3 (|z| 7.7–15.3). Conventional → 0.1 is not resolved at τ = 2.5e-3 (z −1.4; at τ = 1e-2 it even has the wrong sign, +8.9e-5), but is resolved at τ = 6.25e-4: −7.0e-5 ± 2.2e-5 (z −3.2).
 - **Exponential.** All 6 steps are resolved and negative at τ = 2.5e-3, including conventional → 0.05 (z −5.5). The thin-end steps are confirmed at τ = 6.25e-4 (z −5.3, −19.1, −9.7).
-- **Timestep shifts at the thin end.** The shifts from τ = 2.5e-3 to 6.25e-4 are within 3.1σ and of mixed sign. The SEM of ΔS against the conventional model at τ = 6.25e-4 is ≈ 2–4e-5, i.e. 10–30 % of the value. So a residual bias of the size seen inside (≈ 10 %) is not resolvable here.
+- **Timestep shifts at the thin end.**
+  - **Against the conventional model:** the shifts of ΔS from τ = 2.5e-3 to 6.25e-4 are within 1.6σ, and the SEM at τ = 6.25e-4 is 10–31 % of the value.
+  - **Between neighbouring h (paired):** the exponential's thin-end steps shift by about 3σ: 0.05 → 0.1 from −1.64e-4 to −1.22e-4 (z −2.99), and 0.1 → 0.2 from −1.97e-4 to −1.32e-4 (z −3.14). That is 26–33 % of each step, so a τ dependence of the exponential thin end is resolved at ≈ 3σ.
+  - **Direction:** |ΔS| gets smaller as τ decreases, the opposite of the inside C1 bias. Whether τ = 6.25e-4 is converged is not established.
 
 **Result: the centroid comparison outside.** Centroids: step h/2, linear h/3, exponential h(1 − (c + 1)e^(−c))/(1 − e^(−c)) with c = 1/h. ΔS(50) against the conventional model uses τ = 6.25e-4 at the thin end and τ = 2.5e-3 otherwise, interpolated in c̄.
 
@@ -829,14 +832,20 @@ Scripts:
 | 0.20 | −4.43e-4 | −4.65e-4 | −3.96e-4 | 0.15 |
 | 0.30 | −5.68e-4 | −5.75e-4 | −5.74e-4 | 0.01 |
 
-At the same h the spread is much larger: 0.72, 0.60, 0.57, 0.32 and 0.07 at h = 0.1, 0.2, 0.3, 0.5 and 1.0.
+**Sensitivity to the timestep.** With the exponential's thin-end values taken at τ = 2.5e-3 instead of 6.25e-4, the spread at c̄ = 0.05 / 0.1 / 0.15 / 0.2 becomes 0.12 / 0.18 / 0.03 / 0.06, against 0.22 / 0.12 / 0.13 / 0.15 above.
+
+**Same h.** At the same h the spread is much larger: 0.72, 0.60, 0.57, 0.32 and 0.07 at h = 0.1, 0.2, 0.3, 0.5 and 1.0 (`same_h_outside.csv`).
 
 ![outside centroid](results/phase3/p3_4_8h_outside_centroid/p3_4_8h_outside_centroid.png)
 
 **Conclusion (outside).**
-- **Same ordering as inside, for every profile.** S decreases with h from the conventional model on. All steps are resolved, the thin end at τ = 6.25e-4.
-- **The centroid collapse holds approximately outside.** The profiles differ by up to 72 % at the same h but by 1–22 % at the same centroid. This is looser than inside (3–9 %). The difference is within the Monte Carlo uncertainty:
-  - **SEM:** each ΔS carries 10–30 % SEM at the thin end.
-  - **Exponential, h = 0.2 (c̄ = 0.19):** this outlier is the τ = 6.25e-4 value. It moved 18 % from its τ = 2.5e-3 value at only 1.6σ, and it causes most of the 13–15 % spread at c̄ = 0.15–0.2.
-- **Possible real reason it is looser.** Outside, the exponential's support always overlaps its neighbours', so its profile is not a single-surface profile. A real, smaller deviation from the collapse is therefore possible. Resolving it needs an outside 2D continuum or more spins.
+- **Ordering.** For linear and exponential, S decreases with h from the conventional model on, and every step is resolved (the thin end at τ = 6.25e-4). For the step profile outside, the thin end stays unresolved even at τ = 6.25e-4 (conventional → 0.05: z −1.8; 0.05 → 0.1: z −2.3; see P3.4.8).
+- **The centroid collapse is approximate outside, and its size is not pinned down.**
+  - At the same h the profiles differ by 7–72 %; at the same centroid by 1–22 %.
+  - At c̄ = 0.15–0.2 the same-centroid spread is 13–15 % with the exponential's τ = 6.25e-4 thin-end values, but 3–6 % with its τ = 2.5e-3 values. The exponential thin end shows a ≈ 3σ τ dependence (above), and no SEM of the spread was computed, so which value is right is undetermined.
+  - So the collapse outside is consistent with the inside result (3–9 %) but not established at that precision.
+- **Possible real reasons for a looser collapse.**
+  - Outside, the exponential's support always overlaps its neighbours', so its profile is not a single-surface profile.
+  - The planar centroid h∫u g du ignores the r/R area weighting of a curved shell.
+- **What would resolve it.** Per-seed values and a paired cross-profile SEM (the profiles share trajectories at each τ), more spins at τ = 6.25e-4 or smaller, or an outside 2D continuum.
 - **Timestep.** Outside fixed-ρ differences at the default τ = 1e-2 are biased enough to flip a sign (linear thin end). For comparison studies, τ ≤ 2.5e-3 is needed, and τ ≤ 6.25e-4 for thin layers (P3.6.2).
