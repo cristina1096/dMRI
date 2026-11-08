@@ -5,6 +5,7 @@
 # T₂ of the condition (ddep: of D = 3); map: 41 readouts to t_end = ln 100/λ₁,conv.
 # Output (rewritten after every condition, so partial results survive): results/phase3/p3_7_<task>/conditions.csv,
 # curves.csv, summary.json.
+# Resume: conditions whose label is already in conditions.csv are skipped and their rows kept (RESUME=0 starts afresh).
 # Run: TASK=fig9a julia --project=research/baseline -t 8 research/phase3/p3_7_run.jl
 
 include(joinpath(@__DIR__, "harness.jl"))
@@ -65,9 +66,15 @@ function conditions(task)
     return c
 end
 
+const CFILE, KFILE = joinpath(OUT, "conditions.csv"), joinpath(OUT, "curves.csv")
+const RESUME = get(ENV, "RESUME", "1") != "0"
+const PREV_C = RESUME ? read_done(CFILE) : read_done("")
+const PREV_K = RESUME ? read_done(KFILE) : read_done("")
+isempty(PREV_C.labels) || println("resuming: skipping ", join(sort(collect(PREV_C.labels)), ", "))
 conds = NamedTuple[]
 curves = NamedTuple[]
 for (label, R, D, ρ, bulk, layers, mode, te_fixed) in conditions(TASK)
+    label in PREV_C.labels && continue
     cmin = minimum(cbar(s, h, R) for (_, s, h) in layers)
     rmax = maximum(rate0(s, ρ, h, R) for (_, s, h) in layers)
     τ = min(0.135 * cmin^2, 0.005 / rmax)
@@ -90,11 +97,12 @@ for (label, R, D, ρ, bulk, layers, mode, te_fixed) in conditions(TASK)
             S_mean=r.S_mean[name][k], S_sem=r.S_sem[name][k], S_cont=r.S_cont[name][k],
             dS_mean=haslayer ? r.dS_mean[name][k] : NaN, dS_sem=haslayer ? r.dS_sem[name][k] : NaN, dS_cont=haslayer ? r.dS_cont[name][k] : NaN))
     end
-    write_csv(joinpath(OUT, "conditions.csv"), conds)
-    write_csv(joinpath(OUT, "curves.csv"), curves)
+    write_merged(CFILE, PREV_C, conds)
+    write_merged(KFILE, PREV_K, curves)
     @printf("%s %-12s τ = %.3e, %d readouts to %.3g ms, identical %s, %.0f s\n", TASK, label, r.tau, length(times), times[end],
         r.identical_trajectories, time() - t0)
 end
-write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "task" => TASK, "n_conditions" => length(conds),
-    "all_identical" => all(c -> c.identical_trajectories, conds), "nspins" => NSPINS))
+write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "task" => TASK, "n_conditions" => length(conds) + length(PREV_C.labels),
+    "n_resumed" => length(PREV_C.labels), "all_identical" => all(c -> c.identical_trajectories, conds) &&
+    all(l -> occursin(",true,", l), PREV_C.lines), "nspins" => NSPINS))
 println("saved to $OUT")

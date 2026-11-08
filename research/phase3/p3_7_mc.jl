@@ -40,3 +40,26 @@ function run_condition(; R, D, rho, R2_bulk, models, times, tau, nspins=20_000, 
     return (times=collect(Float64, times), tau=runs[ref].tau, identical_trajectories=identical, S=S, S_mean=S_mean, S_sem=S_sem,
             S_cont=S_cont, dS_mean=dS_mean, dS_sem=dS_sem, dS_cont=dS_cont)
 end
+
+# Resume support for the long drivers (Group A review M3): rows already written are kept verbatim and their labels skipped.
+"Rows already in a CSV written by `write_csv`: (header, lines, labels of the `label` column); empty when absent."
+function read_done(path)
+    isfile(path) || return (header="", lines=String[], labels=Set{String}())
+    ls = readlines(path)
+    k = findfirst(==("label"), split(ls[1], ','))
+    return (header=ls[1], lines=ls[2:end], labels=Set(String(split(l, ',')[k]) for l in ls[2:end]))
+end
+
+"Write the previous rows of `read_done` followed by `rows` (NamedTuples, `write_csv` format); headers must agree."
+function write_merged(path, prev, rows)
+    if isempty(rows)
+        isempty(prev.header) || open(io -> foreach(l -> println(io, l), vcat(prev.header, prev.lines)), path, "w")
+        return path
+    end
+    tmp = write_csv(path * ".new", rows)
+    new = readlines(tmp)
+    rm(tmp)
+    isempty(prev.header) || new[1] == prev.header || error("write_merged: header mismatch in $path")
+    open(io -> foreach(l -> println(io, l), vcat(new[1], prev.lines, new[2:end])), path, "w")
+    return path
+end

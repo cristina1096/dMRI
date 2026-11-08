@@ -12,3 +12,17 @@
     @test r.S_mean["step_h0.2"][2] < 1.0
     @test r.tau == 1e-2
 end
+
+@testset "p3_7 resume: read_done / write_merged (Group A review M3)" begin
+    dir = mktempdir()
+    f = joinpath(dir, "conditions.csv")
+    @test read_done(f).labels == Set{String}()                 # no file yet: nothing done
+    write_csv(f, [(label="a", x=1.0), (label="b", x=2.0)])
+    prev = read_done(f)
+    @test prev.labels == Set(["a", "b"])
+    write_merged(f, prev, [(label="c", x=3.0)])                # previous rows kept, new row appended
+    @test readlines(f) == ["label,x", "a,1", "b,2", "c,3"]
+    write_merged(f, read_done(f), NamedTuple[])                # nothing new: file unchanged
+    @test readlines(f) == ["label,x", "a,1", "b,2", "c,3"]
+    @test_throws ErrorException write_merged(f, read_done(f), [(label="d", y=1.0)])   # header mismatch
+end
