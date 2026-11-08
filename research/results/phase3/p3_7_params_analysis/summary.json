@@ -1,0 +1,30 @@
+{
+  "all_identical": true,
+  "files": [
+    "at_te.csv",
+    "dS_ratio.csv",
+    "continuum_dense.csv",
+    "continuum_only.csv",
+    "p3_7_params.png"
+  ],
+  "max_abs_dT2_rel_mc": 0.0036100078117426654,
+  "max_abs_z_S": 2.3785468797805422,
+  "n_mc_conditions": 10,
+  "noise2_snr100": 0.05792773463180016,
+  "noise2_snr200": 0.02896386731590008,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-11-09T08:38:20.414",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "ec1700bb9077d434884c33c51f325a94e1eeb817",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_7_params_analysis.jl",
+    "src_modified": false
+  }
+}
