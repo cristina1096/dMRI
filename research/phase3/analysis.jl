@@ -54,3 +54,53 @@ threshold_at(x, y, level) = threshold_status(x, y, level)[1]
 
 "Relative error (mc − cont)/cont."
 rel_error(mc, cont) = (mc - cont) / cont
+"Two-point apparent T₂ = −TE/ln(S(TE)/S(0)) for a signal normalised to S(0) = 1."
+apparent_t2(S_TE, TE) = -TE / log(S_TE)
+
+"Relative noise of the two-point T₂ at SNR `snr`: σ_T₂/T₂ = √(1 + r²)/(SNR·r·|ln r|), r = S(TE)/S(0)."
+t2_noise_rel(r, snr) = sqrt(1 + r^2) / (snr * r * abs(log(r)))
+
+"Fastest decay of any surface sink inside a cylinder (absorbing wall): D·j₀₁²/R², j₀₁ = 2.404825557695773."
+conventional_ceiling(R, D) = D * (2.404825557695773 / R)^2
+
+"The t in [0, t_hi] with Sfun(t) = e^(−1) for a monotonically decreasing Sfun (bisection, 200 steps)."
+function te_star(Sfun; t_hi)
+    lo, hi = 0.0, Float64(t_hi)
+    Sfun(hi) > exp(-1) && error("te_star: S(t_hi) > e^(−1); increase t_hi")
+    for _ in 1:200
+        mid = (lo + hi) / 2
+        Sfun(mid) > exp(-1) ? (lo = mid) : (hi = mid)
+    end
+    return (lo + hi) / 2
+end
+
+"""
+    best_fit_conventional(S_layer, times, Sconv_of_rho; rho0, lo=exp(-4), hi=exp(8), ngrid=61, iters=60)
+
+Minimax fit of the conventional model's ρ_c to a layer curve: ρ_c minimising max_t |S_layer(t) − S_conv(t; ρ_c)|.
+A log-grid scan over [lo·rho0, hi·rho0], then golden-section search between the neighbours of the best grid point.
+Returns (rho_c, residual, at_edge); at_edge = true when the best grid point is the first or last (the fit wants to
+leave the searched range, e.g. beyond the conventional ceiling).
+"""
+function best_fit_conventional(S_layer, times, Sconv_of_rho; rho0, lo=exp(-4), hi=exp(8), ngrid=61, iters=60)
+    obj(ρ) = maximum(abs.(S_layer .- Sconv_of_rho(ρ)))
+    grid = rho0 .* exp.(range(log(lo), log(hi), length=ngrid))
+    vals = obj.(grid)
+    k = argmin(vals)
+    at_edge = k == 1 || k == ngrid
+    a, b = log(grid[max(k - 1, 1)]), log(grid[min(k + 1, ngrid)])
+    g = (sqrt(5) - 1) / 2
+    c, d = b - g * (b - a), a + g * (b - a)
+    fc, fd = obj(exp(c)), obj(exp(d))
+    for _ in 1:iters
+        if fc < fd
+            b, d, fd = d, c, fc
+            c = b - g * (b - a); fc = obj(exp(c))
+        else
+            a, c, fc = c, d, fd
+            d = a + g * (b - a); fd = obj(exp(d))
+        end
+    end
+    ρc = exp((a + b) / 2)
+    return (ρc, obj(ρc), at_edge)
+end

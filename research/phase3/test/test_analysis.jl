@@ -43,3 +43,24 @@ end
     @test p ≈ β[2] rtol=1e-12
     @test se ≈ se_ref rtol=1e-10
 end
+
+@testset "comparison helpers (3.7a)" begin
+    @test apparent_t2(exp(-1), 70.0) ≈ 70.0
+    r = exp(-1)
+    @test t2_noise_rel(r, 200) ≈ sqrt(1 + r^2) / (200 * r) rtol=1e-12          # |ln r| = 1
+    @test 2 * t2_noise_rel(r, 200) ≈ 0.0289 atol=1e-4                            # the 2σ at TE* quoted in the plan
+    @test conventional_ceiling(1.0, 3.0) ≈ 3 * 2.404825557695773^2
+    @test te_star(t -> exp(-t / 70); t_hi=1000.0) ≈ 70.0 rtol=1e-9
+    # best fit recovers a known rate for a mono-exponential family
+    times = collect(0.0:5.0:100.0)
+    Sl = exp.(-times ./ 40)
+    fam(ρ) = exp.(-ρ .* times)
+    (ρc, res, edge) = best_fit_conventional(Sl, times, fam; rho0=0.01)
+    @test ρc ≈ 1 / 40 rtol=1e-6
+    @test res < 1e-8
+    @test !edge
+    # a target faster than the family can reach → the fit runs to the edge and says so
+    capped(ρ) = exp.(-min(ρ, 0.02) .* times)
+    (_, res2, edge2) = best_fit_conventional(Sl, times, capped; rho0=0.01)
+    @test edge2 || res2 > 1e-3
+end
