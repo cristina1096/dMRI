@@ -31,7 +31,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.1, P3.4.3 (linear, exponential) | Single-spin trace; mean-exponent identity | trace ≤ 1e-6; \|z\| ≤ 3 | **PASS**: trace 6.7e-12 (linear), 2.4e-8 (exponential); identity 12/12 each (\|z\| ≤ 1.27) |
 | P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| low by 4–38 % at τ = 1e-2 and still 2.5–12 % low (same sign, not resolved) at τ = 2.5e-3 (C1) |
 | P3.4.8 (all profiles) | Attenuation vs h and same-centroid comparison: inside (continuum, R = 0.5, 1, 2), outside (paired MC, s = 3.0, thin end at τ = 6.25e-4) | monotonicity, sign recorded; centroid spread | S decreases with h: inside 84/84 steps (all profiles); outside every step resolved for linear and exponential (thin end at τ_c), step thin end unresolved; centroid collapse: 3–9 % inside, 1–22 % outside at the same c̄ (outside not pinned down: 3–6 % or 13–15 % at c̄ = 0.15–0.2 depending on τ) vs 34–66 % and 7–72 % at the same h |
-| P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error controlled by √(2Dτ)/h (p ≈ 1.5 for thin step layers at \|e\| ≳ 40 %); profiles collapse in √(2Dτ)/c̄, crossing 10 % at ≈ 0.9–1.3 (measured at c̄ = 0.1); no curvature effect resolved |
+| P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error controlled by √(2Dτ)/h (p ≈ 1.5 for thin step layers at \|e\| ≳ 40 %); profiles collapse in √(2Dτ)/c̄, crossing 10 % at ≈ 0.9–1.3 (measured at c̄ = 0.1; rule √(2Dτ) ≤ 0.9 c̄ confirmed at c̄ = 0.05: 4.3 ± 3.8 %); no curvature effect resolved |
 | P3.6.2 | Timestep rule for comparison studies | constraint documented | options documented (keep c = 0.005 for rates; τ ≤ 0.135 c̄² for differences; optional package option; continuum where possible) — **user decision pending** |
 | P3.6.4 | Runtime summary | table | cylinders ≈ 2.6–3× walls; layer ×1.5–1.6; linear ×1.2, exponential ×2.5 vs step; cell list open |
 
@@ -947,8 +947,12 @@ Plan [2026-11-08-timestep-cylinders.md](../docs/superpowers/plans/2026-11-08-tim
   - It does **not** control the **difference** between models at fixed ρ, which depends on how many steps resolve the layer: √(2Dτ) against the layer's centroid. That is why fixed-ρ comparisons kept failing at the default τ. For thin layers, ΔR₂(0)τ is tiny while √(2Dτ)/h is large.
 - **The data support τ ≤ 0.135·c̄² (µm, ms) at D = 3, i.e. √(2Dτ) ≤ 0.9·c̄.** This is the conservative end of the 0.9–1.3 range where the curve crosses 10 %.
   - **Expected error at that point:** about 10 % (measured 7–10 % ± 4 % at √(2Dτ)/c̄ = 0.87; 2σ ≈ 17 %). It is not a margin below 10 %, and levels below 10 % are not resolved by these data.
-  - **Range of validity:** measured at c̄ = 0.1 µm. For smaller c̄ it is extended by the √(2Dτ)/h collapse of the thin step series, which is seen only at larger errors (≳ 25 %). It is untested at the 10 % level for c̄ ≤ 0.05 µm.
-  - **Closing the gap:** one confirmation run would do it, e.g. step h = 0.1 (c̄ = 0.05) at τ ≈ 3e-4.
+  - **Range of validity:** measured at c̄ = 0.1 µm and confirmed at c̄ = 0.05 µm (below). For c̄ < 0.05 it rests on the √(2Dτ)/h collapse of the thin step series, seen only at larger errors (≳ 25 %).
+  - **Confirmation at c̄ = 0.05 (user request 2026-11-08).** Step h = 0.1 (c̄ = 0.05) was run exactly at the rule's operating point, τ = 0.135·0.05² = 3.375e-4 (√(2Dτ)/c̄ = 0.90), paired with the conventional model, 10⁵ spins × 10 seeds (`results/phase3/p3_6_1_tau_scan_confirm/`; script committed before the run, `deba008`). Result:
+    - ΔS(50) = −1.065e-4 ± 4.2e-6 against −1.114e-4 from the continuum, so **e_ΔS = 4.3 ± 3.8 %** (z 1.14);
+    - S of both models agrees with the continuum (z 0.51 and 1.06).
+
+    The rule therefore holds at c̄ = 0.05 as well, at about half the error seen at c̄ = 0.1 (2σ upper bound ≈ 12 %). The extension to c̄ = 0.05 is now measured; c̄ = 0.025 remains an extrapolation.
 
 ### Runtime summary (P3.6.4; existing data, no new runs)
 
@@ -969,8 +973,8 @@ Costs refer to one inside reference run (10 seeds × 2·10⁴ spins × 50 ms) at
 | option | what it does | cost |
 |---|---|---|
 | (a) keep c = 0.005 for single-model runs | rate error ≈ 0.1 % (Result 1) | none, current behaviour |
-| (b) documented rule for comparison studies: τ ≤ 0.135·c̄_min² (D = 3; in general √(2Dτ) ≤ 0.9 c̄) | difference error ≈ 10 % (2σ ≈ 17 %); measured at c̄ = 0.1 | c̄ = 0.1 µm: τ ≤ 1.35e-3 (×7 steps, measured); c̄ = 0.05: 3.4e-4 (×30, extrapolated); c̄ = 0.025: 8.4e-5 (×120, ≈ 2–4 h per reference run, extrapolated) |
+| (b) documented rule for comparison studies: τ ≤ 0.135·c̄_min² (D = 3; in general √(2Dτ) ≤ 0.9 c̄) | difference error ≲ 10 %: ≈ 7–10 % ± 4 % at c̄ = 0.1, 4.3 ± 3.8 % at c̄ = 0.05 | c̄ = 0.1 µm: τ ≤ 1.35e-3 (×7 steps, measured); c̄ = 0.05: 3.4e-4 (×30, measured); c̄ = 0.025: 8.4e-5 (×120, ≈ 2–4 h per reference run, extrapolated) |
 | (c) package option implementing (b), e.g. `timestep=(layer_resolution=0.9,)` → τ ≤ (0.9 c̄_min)²/(2D) | makes (b) automatic | a later plan (package code + tests) |
 | (d) use the continuum wherever it exists (single cylinders inside, walls) | exact, no timestep | only for symmetric geometries; arrays and outside still need MC with (b) |
 
-The data support (a) together with (b), with (b) measured at c̄ = 0.1 only; one confirmation run at c̄ = 0.05 (step h = 0.1, τ ≈ 3e-4) would test its extension to thinner layers. Option (d) remains the best reference where it applies. (c) is a convenience whose value depends on how much of Phase 3.7 runs in arrays. The user decides.
+The data support (a) together with (b); (b) is measured at c̄ = 0.1 and confirmed at c̄ = 0.05 (4.3 ± 3.8 %). Option (d) remains the best reference where it applies. (c) is a convenience whose value depends on how much of Phase 3.7 runs in arrays. The user decides.
