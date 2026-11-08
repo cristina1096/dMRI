@@ -32,7 +32,7 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.4.6 (linear, exponential) | MC vs radial continuum inside (continuum now with exact ring averages for all profiles) | max \|z\| ≤ 3 at τ_b for S and paired ΔS | **PASS** (5/5; ΔS \|z\| ≤ 2.09); \|ΔS\| low by 4–38 % at τ = 1e-2 and still 2.5–12 % low (same sign, not resolved) at τ = 2.5e-3 (C1) |
 | P3.4.8 (all profiles) | Attenuation vs h and same-centroid comparison: inside (continuum, R = 0.5, 1, 2), outside (paired MC, s = 3.0, thin end at τ = 6.25e-4) | monotonicity, sign recorded; centroid spread | S decreases with h: inside 84/84 steps (all profiles); outside every step resolved for linear and exponential (thin end at τ_c), step thin end unresolved; centroid collapse: 3–9 % inside, 1–22 % outside at the same c̄ (outside not pinned down: 3–6 % or 13–15 % at c̄ = 0.15–0.2 depending on τ) vs 34–66 % and 7–72 % at the same h |
 | P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error controlled by √(2Dτ)/h (p ≈ 1.5 for thin step layers at \|e\| ≳ 40 %); profiles collapse in √(2Dτ)/c̄, crossing 10 % at ≈ 0.9–1.3 (measured at c̄ = 0.1; rule √(2Dτ) ≤ 0.9 c̄ confirmed at c̄ = 0.05: 4.3 ± 3.8 %); no curvature effect resolved |
-| P3.6.2 | Timestep rule for comparison studies | constraint documented | options documented (keep c = 0.005 for rates; τ ≤ 0.135 c̄² for differences; optional package option; continuum where possible) — **user decision pending** |
+| P3.6.2 | Timestep rule for comparison studies | constraint documented | **Decided (user, 2026-11-08): option (b)** — comparison studies use τ ≤ 0.135 c̄_min² (√(2Dτ) ≤ 0.9 c̄; error ≲ 10 %, measured at c̄ = 0.1 and 0.05); default c = 0.005 unchanged for single-model runs; no package option |
 | P3.6.4 | Runtime summary | table | cylinders ≈ 2.6–3× walls; layer ×1.5–1.6; linear ×1.2, exponential ×2.5 vs step; cell list open |
 
 ---
@@ -966,7 +966,22 @@ Plan [2026-11-08-timestep-cylinders.md](../docs/superpowers/plans/2026-11-08-tim
 
 Cylinders cost ≈ 2.6–3× walls per spin-step without a layer. The layer adds ×1.5–1.6 (step), and linear and exponential add ×1.2 and ×2.5 on top. The cost grows with the number of cylinders per cell. The cell list of layer indices, which would make it scale with cylinders within reach, remains **open** (P3.6.4).
 
-### P3.6.2: options for the user (decision pending)
+### P3.6.2: decision (user, 2026-11-08): option (b)
+
+**Rule for comparison studies.** Monte Carlo runs that compare models or profiles at fixed ρ (differences ΔS, apparent T₂ differences) use
+
+  τ ≤ 0.135·c̄_min²  (µm, ms; D = 3),  in general  √(2Dτ) ≤ 0.9·c̄_min,
+
+where c̄_min is the smallest layer centroid in the run. The expected error of the difference is ≲ 10 %: 7–10 % ± 4 % at c̄ = 0.1, and 4.3 ± 3.8 % at c̄ = 0.05.
+
+**What does not change.**
+- The package default stays τ ≤ c/ΔR₂(0)_max with c = 0.005. It controls the error of a single model's decay to ≈ 0.1 %.
+- No package option is added; option (c) is not pursued.
+- Where the continuum exists (inside single cylinders, walls), it remains the reference, option (d).
+
+**Applies from Phase 3.5/3.7 on.** Runs set `timestep = 0.135·c̄_min²` explicitly. The rule is extrapolated for c̄ < 0.05 µm.
+
+### P3.6.2: the options as presented
 
 Costs refer to one inside reference run (10 seeds × 2·10⁴ spins × 50 ms) at the default τ = 1e-2: ≈ 1–2 min for a step layer.
 
