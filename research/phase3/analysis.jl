@@ -80,14 +80,16 @@ end
 Minimax fit of the conventional model's ρ_c to a layer curve: ρ_c minimising max_t |S_layer(t) − S_conv(t; ρ_c)|.
 A log-grid scan over [lo·rho0, hi·rho0], then golden-section search between the neighbours of the best grid point.
 Returns (rho_c, residual, at_edge); at_edge = true when the best grid point is the first or last (the fit wants to
-leave the searched range, e.g. beyond the conventional ceiling).
+leave the searched range, e.g. beyond the conventional ceiling). A plateau that ties the minimum within 1e-9 up to
+either end of the grid (a family that has stopped changing, e.g. near D·j₀₁²/R²) also counts as at the edge: its ρ_c is
+not determined and callers must not report ρ_c or the residual for it.
 """
 function best_fit_conventional(S_layer, times, Sconv_of_rho; rho0, lo=exp(-4), hi=exp(8), ngrid=61, iters=60)
     obj(ρ) = maximum(abs.(S_layer .- Sconv_of_rho(ρ)))
     grid = rho0 .* exp.(range(log(lo), log(hi), length=ngrid))
     vals = obj.(grid)
     k = argmin(vals)
-    at_edge = k == 1 || k == ngrid
+    at_edge = vals[1] - vals[k] <= 1e-9 || vals[end] - vals[k] <= 1e-9
     a, b = log(grid[max(k - 1, 1)]), log(grid[min(k + 1, ngrid)])
     g = (sqrt(5) - 1) / 2
     c, d = b - g * (b - a), a + g * (b - a)

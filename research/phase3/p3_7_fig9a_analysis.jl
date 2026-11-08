@@ -82,6 +82,17 @@ for r in rows
         r.label, r.model, r.T2_mc, r.T2_sigma, r.T2_cont, r.z_S, 100r.dT2_rel, 100r.dT2_rel_sigma, 100r.dT2_rel_cont, r.z_dS)
 end
 
+# Group A review I2: the per-point |z| hides a same-sign pattern, so report ΔS_mc/ΔS_cont ± SEM_ΔS/|ΔS_cont| per point and
+# per condition (the profiles of one condition share trajectories, so their ratios are correlated, not independent)
+bias = [(label=r.label, model=r.model, tau=r.tau, ratio=r.dS_mc / r.dS_cont, ratio_sigma=r.dS_sem / abs(r.dS_cont), z_dS=r.z_dS)
+        for r in rows if r.model != "conventional"]
+write_csv(joinpath(OUT, "dS_ratio.csv"), bias)
+for l in unique(b.label for b in bias)
+    sel = [b for b in bias if b.label == l]
+    @printf("%-11s ΔS_mc/ΔS_cont: %s  (z_ΔS signs %s)\n", l, join([@sprintf("%.3f ± %.3f", b.ratio, b.ratio_sigma) for b in sel], ", "),
+        join([b.z_dS > 0 ? "+" : "−" for b in sel]))
+end
+
 # ---- continuum dense curves ----
 Rs = collect(range(0.25, 3.0, length=45))
 dense = NamedTuple[]
@@ -103,7 +114,7 @@ write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "n_
     "all_identical" => all(r -> r.identical, rows), "max_abs_z_S" => maximum(abs(r.z_S) for r in rows),
     "max_abs_z_dS" => maximum((abs(r.z_dS) for r in rows if !isnan(r.z_dS)); init=0.0),
     "noise2_snr200" => 2 * t2_noise_rel(exp(-1), 200), "noise2_snr100" => 2 * t2_noise_rel(exp(-1), 100),
-    "files" => ["at_te.csv", "continuum_dense.csv", "p3_7_fig9a.png"]))
+    "files" => ["at_te.csv", "dS_ratio.csv", "continuum_dense.csv", "p3_7_fig9a.png"]))
 
 # ---- figure ----
 cols = Dict("conventional" => :black, "step" => Makie.wong_colors()[1], "linear" => Makie.wong_colors()[2],

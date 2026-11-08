@@ -2,6 +2,7 @@
   "all_identical": true,
   "files": [
     "at_te.csv",
+    "dS_ratio.csv",
     "continuum_dense.csv",
     "p3_7_fig9a.png"
   ],
@@ -14,9 +15,9 @@
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-11-08T19:37:12.126",
+    "date": "2026-11-08T19:48:31.431",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "1303be80c2708b8f585df93f02fc70d368ff2cb3",
+    "git_commit": "b63600b4c23f1dd433f9b093cc9c41c017fe890f",
     "julia": "1.12.7",
     "julia_threads": 1,
     "memory_GB": 16.0,

@@ -63,4 +63,10 @@ end
     capped(ρ) = exp.(-min(ρ, 0.02) .* times)
     (_, res2, edge2) = best_fit_conventional(Sl, times, capped; rho0=0.01)
     @test edge2 || res2 > 1e-3
+    # Group A review I1: a family that stops changing (plateau reaching the grid edge) leaves several grid points tied at
+    # the minimum; argmin picks an interior one, but the fit has still run to the edge and must say so
+    @test edge2
+    floored(ρ) = exp.(-max(ρ, 0.05) .* times)          # target slower than the family's floor: plateau at the low edge
+    (_, _, edge3) = best_fit_conventional(Sl, times, floored; rho0=0.01)
+    @test edge3
 end
