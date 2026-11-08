@@ -8,7 +8,10 @@
 - **A dimensionless map over ρR/D and h/R:** where the difference exceeds single-measurement noise at known ρ, and where it remains after fitting the conventional ρ freely.
 - **The D-dependence signature.**
 
-**Architecture:** Research code only. Tested helpers in `research/phase3/analysis.jl` (apparent T₂, two-point T₂ noise, TE*, best-fit conventional, conventional ceiling). Five continuum scripts take seconds to minutes. One Monte Carlo spot-check script uses the comparison timestep rule.
+**Architecture:** Research code only.
+- **Helpers:** tested in `research/phase3/analysis.jl` (apparent T₂, two-point T₂ noise, TE*, best-fit conventional, conventional ceiling).
+- **Monte Carlo is primary** (user, 2026-11-08). One tested, paired MC runner computes every condition, with the comparison timestep rule. The exact radial continuum supports it: dense curves, a check of every MC point, TE*, and the conventional family for the best fit.
+- **Runs:** detached overnight chains (≈ 25 h total).
 
 **Tech Stack:** Julia 1.12, research environment `research/baseline` (MCMRSimulator, CairoMakie, SpecialFunctions), the radial continuum (`research/phase3/continuum_radial.jl`, validated for all profiles in P3.4.6/P3.4.6d).
 
@@ -154,148 +157,87 @@ end
 
 ---
 
-### Task 2: Apparent T₂ against radius — the Fig. 9A analogue (P3.7.1)
+## Revision (user, 2026-11-08): Monte Carlo is the primary method, the continuum is support
 
-**Files:** Create `research/phase3/p3_7_1_fig9a.jl` → `research/results/phase3/p3_7_1_fig9a/` (`t2_vs_R.csv`, `summary.json`, `p3_7_1_fig9a.png`)
+Tasks 2–5 are computed by **Monte Carlo**. The radial continuum supports them in three ways:
+- **Dense backdrop curves** around the MC points;
+- **An exact check** of every MC point: S and ΔS, |z| reported;
+- **TE*:** the readout grid needs it before the MC run, so it is computed from the conventional continuum. The MC conventional T₂ is also reported.
 
-**Method.** ρ = ρ_ref = 1/140 µm/ms (surface property fixed while R varies), D = 3, bulk R₂ = 1/2000. For R ∈ {0.25, 0.5, 0.75, 1, 1.5, 2, 3}:
-- **conventional:** T₂_conv = TE* from the continuum (Robin, ρ), by `te_star` on `radial_signal(...)`;
-- **every profile,** in two matchings:
-  - same h: h = 0.1 µm, all R; linear needs h ≤ R, satisfied;
-  - same centroid: c̄ = 0.05 µm (step h = 0.1, linear h = 0.15, exponential by bisection with support R);
-- **at TE*:** S_layer(TE*) directly, T₂_app = apparent_t2(S, TE*), ΔT₂/T₂ = T₂_app/T₂_conv − 1;
-- **noise:** 2σ at SNR 100 and 200 at TE*;
-- **levels:** "observable at SNR X" if |ΔT₂/T₂| ≥ 2σ_X.
-- **Also:** the T₂_conv(R) curve itself, the paper's Fig. 9A trend (T₂ ↑ with R through S/V = 2/R), and its ratio to 1/(R₂,bulk + 2ρ/R).
+The conventional **family** for the best-fit in Task 4 is the continuum Robin solution, which is exact: fitting by repeated MC runs at many θ would cost ≈ 60× more. The former Task 6 (MC spot checks) is superseded and removed.
 
-- [ ] **Step 1: Write the script**
+**Budget rules.**
+- **Timestep:** τ = min(0.135·c̄_min², 0.005/ΔR₂(0)_max) per condition (comparison timestep rule).
+- **Centroids:** c̄ ≥ 0.1 µm wherever the question allows (τ ≤ 1.35e-3). c̄ = 0.05 only where it is the question.
+- **Statistics:** seeds 1–10, 2·10⁴ spins in the box [−R, R]³. All models of a condition share τ, so ΔS and ΔT₂ are paired.
+- **Readouts:** 0 to 1.5·TE*, in steps of TE*/10 (Tasks 2, 3, 5); to S_conv ≈ 0.01 (Task 4).
+- **Execution:** long runs go in detached chains, and scripts are committed before they run.
 
-```julia
-# P3.7.1 (inside, Fig. 9A analogue): apparent T₂ against axon radius at fixed ρ, conventional vs step/linear/exponential,
-# from the exact radial continuum. ρ = 1/140 µm/ms, D = 3, bulk R2 = 1/2000; TE* = T₂ of the conventional model at each R.
-# Matchings: same h = 0.1 µm, and same centroid c̄ = 0.05 µm. Noise: two-point T₂ at TE*, 2σ at SNR 100 / 200.
-# Run: julia --project=research/baseline -t 8 research/phase3/p3_7_1_fig9a.jl
+### Task 2: The shared paired MC runner (with tests)
 
-include(joinpath(@__DIR__, "harness.jl"))
-include(joinpath(@__DIR__, "continuum_radial.jl"))
-include(joinpath(@__DIR__, "analysis.jl"))
-using CairoMakie
-const OUT = phase3_outdir("p3_7_1_fig9a")
-const RHO, D, R2B = 1 / 140, 3.0, 1 / 2000
-const RS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]
-const SHAPES = ("step", "linear", "exponential")
-cbar(shape, h, R) = shape == "step" ? h / 2 : shape == "linear" ? h / 3 : (c = R / h; h * (1 - (c + 1) * exp(-c)) / -expm1(-c))
-function h_for_cbar(shape, cb, R)
-    shape == "step" && return 2cb
-    shape == "linear" && return 3cb
-    lo, hi = 1e-6, 100R
-    for _ in 1:200
-        mid = sqrt(lo * hi); cbar("exponential", mid, R) < cb ? (lo = mid) : (hi = mid)
-    end
-    return sqrt(lo * hi)
-end
-S(R, kw...) = t -> radial_signal(; R=R, D=D, times=[t], R2_bulk=R2B, kw...)[1]
-rows = NamedTuple[]
-for R in RS
-    Sc = S(R, :surface => RHO)
-    T2c = te_star(Sc; t_hi=20 * 1 / (R2B + 2RHO / R))
-    n200, n100 = 2t2_noise_rel(exp(-1), 200), 2t2_noise_rel(exp(-1), 100)
-    for shape in SHAPES, (match, h) in (("same_h", 0.1), ("same_centroid", h_for_cbar(shape, 0.05, R)))
-        (shape == "linear" && h > R) && continue
-        Sl = radial_signal(R=R, D=D, times=[T2c], R2_bulk=R2B, layer=(shape, RHO, h))[1]
-        T2l = apparent_t2(Sl, T2c)
-        d = T2l / T2c - 1
-        push!(rows, (R=R, shape=shape, match=match, h=h, centroid=cbar(shape, h, R), T2_conv=T2c, T2_layer=T2l, dT2_rel=d,
-            twosigma_snr200=n200, twosigma_snr100=n100, observable_snr200=abs(d) >= n200, observable_snr100=abs(d) >= n100,
-            T2_fast_diffusion_ref=1 / (R2B + 2RHO / R)))
-        @printf("R = %.2f %-12s %-13s h = %.4f: T₂ conv %.2f, layer %.2f ms, ΔT₂/T₂ %+.2e (2σ@200 %.3f)\n", R, shape, match, h, T2c, T2l, d, n200)
-    end
-end
-write_csv(joinpath(OUT, "t2_vs_R.csv"), rows)
-write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "rho" => RHO, "D" => D, "R2_bulk" => R2B,
-    "max_abs_dT2_rel" => maximum(abs(r.dT2_rel) for r in rows), "n_observable_snr200" => count(r -> r.observable_snr200, rows)))
-fig = Figure(size=(1100, 420))
-ax1 = Axis(fig[1, 1], xlabel="R (µm)", ylabel="T₂ (ms)", title="apparent T₂ vs radius, ρ = 1/140 µm/ms")
-q = filter(r -> r.shape == "step" && r.match == "same_h", rows)
-scatterlines!(ax1, [r.R for r in q], [r.T2_conv for r in q], color=:black, label="conventional")
-for (sh, col) in zip(SHAPES, (:steelblue, :darkorange, :seagreen))
-    q = filter(r -> r.shape == sh && r.match == "same_h", rows)
-    scatterlines!(ax1, [r.R for r in q], [r.T2_layer for r in q], color=col, label="$sh (h = 0.1)")
-end
-axislegend(ax1, position=:lt, labelsize=9)
-ax2 = Axis(fig[1, 2], xlabel="R (µm)", ylabel="ΔT₂/T₂ (layer − conventional)", title="difference vs 2σ two-point noise at SNR 200")
-for (sh, col) in zip(SHAPES, (:steelblue, :darkorange, :seagreen)), (m, ls) in (("same_h", :solid), ("same_centroid", :dash))
-    q = filter(r -> r.shape == sh && r.match == m, rows)
-    lines!(ax2, [r.R for r in q], [r.dT2_rel for r in q], color=col, linestyle=ls, label="$sh, $m")
-end
-hlines!(ax2, [-2t2_noise_rel(exp(-1), 200), 2t2_noise_rel(exp(-1), 200)], color=:gray, linestyle=:dot)
-axislegend(ax2, position=:lb, labelsize=8)
-save(joinpath(OUT, "p3_7_1_fig9a.png"), fig)
-println("saved to $OUT")
-```
+**Files:** Create `research/phase3/p3_7_mc.jl` (library: `run_condition`) and `research/phase3/p3_7_run.jl` (driver: `TASK` = fig9a | params | map | ddep → `research/results/phase3/p3_7_<task>/conditions.csv`, `curves.csv`, `summary.json`). Test: `research/phase3/test/test_p3_7_mc.jl`.
 
-- [ ] **Step 2: Commit the script, run it** (≈ 1–2 min), inspect the figure, commit the results.
+**Interfaces — Produces** `run_condition(; R, D, rho, R2_bulk, models, times, tau, nspins=20_000, seeds=1:10)`:
+- `models` is a vector of (name, shape, h), with shape "conventional" for MCMR θ = ρ√(π/D);
+- it returns a NamedTuple with, per model:
+  - S(t): mean and SEM over seeds;
+  - the paired ΔS(t) against "conventional": mean and SEM;
+  - the continuum S(t) for the same model (step/linear/exponential layer, or Robin);
+  - `identical_trajectories`.
 
----
+- [ ] **Step 1: Failing test** (`test_p3_7_mc.jl`). A tiny condition: R = 1, D = 3, ρ = 0.02, conventional plus step h = 0.2, times [0, 10], τ = 1e-2, 500 spins, 2 seeds. Check:
+  - the shapes of the outputs;
+  - `identical_trajectories == true`;
+  - S(0) = 1;
+  - the continuum column equals `radial_signal` at the same times;
+  - ΔS(0) = 0.
+- [ ] **Step 2: Implement.** Build on `run_cylinders` (harness) for each model with `timestep = tau`. The pairing check uses the final positions; ΔS is computed per seed. Include `continuum_radial.jl` for the continuum columns.
+- [ ] **Step 3: The driver** `p3_7_run.jl`. It holds the condition lists of Tasks 3–6 below and writes one row per (condition, model, t). Commit before any run.
 
-### Task 3: Dependence on h (and centroid), D and ρ at R = 1 (P3.7.1)
+### Task 3: Fig. 9A analogue — apparent T₂ against axon radius (P3.7.1)
 
-**Files:** Create `research/phase3/p3_7_1_params.jl` → `research/results/phase3/p3_7_1_params/` (`sweeps.csv`, `summary.json`, `p3_7_1_params.png`)
+**MC conditions** (`TASK=fig9a`): ρ = 1/140, D = 3, bulk 1/2000.
+- R ∈ {0.5, 1, 2}, same centroid c̄ = 0.1 (step h = 0.2, linear h = 0.3, exponential by bisection with support R), plus the conventional model, τ = 1.35e-3;
+- the same-h matching at R = 1 only: h = 0.2 for all, so c̄_min = 0.067 (linear) and τ = 6.0e-4.
 
-**Method.** R = 1, bulk 1/2000, ΔT₂/T₂ at TE* = T₂_conv for each condition, with the 2σ thresholds as in Task 2. One parameter is varied at a time from the reference (ρ = 1/140, D = 3, h = 0.1 or c̄ = 0.05):
-- h ∈ {0.02, 0.05, 0.1, 0.2, 0.5, 1.0} (linear h ≤ R) and centroid c̄ ∈ {0.01, 0.025, 0.05, 0.1, 0.25};
-- D ∈ {0.5, 1, 2, 3};
-- ρ ∈ {1/560, 1/280, 1/140, 1/70, 1/35, 0.1}, with T₂_conv from about 280 ms down to about 5 ms.
+**Quantities.** TE* = continuum conventional T₂ at each R. At TE*, interpolated between the readouts TE*·{0.9, 1.0, 1.1}, of which 1.0 is exact:
+- T₂_app = −TE*/ln S(TE*) for every model;
+- ΔT₂/T₂ (paired);
+- 2σ two-point noise at SNR 100 and 200;
+- the MC − continuum z.
 
-The script follows the Task 2 pattern: a loop over sweeps, writing one row per (sweep, value, shape, match) with the same columns plus `sweep` and `value`. The figure has four panels (h, centroid, D, ρ) of ΔT₂/T₂ with the SNR-200 band.
+**Support.** The continuum dense curve over R ∈ [0.25, 3] for all profiles in both matchings, overlaid on the figure.
 
-- [ ] **Step 1: Write the script** (same structure and helpers as Task 2; the sweep definitions above are its only inputs).
-- [ ] **Step 2: Commit the script, run it, commit the results.**
+**Cost** ≈ 8 h detached (R = 2 is the longest: TE* ≈ 129 ms, 1.4·10⁵ steps).
 
----
+### Task 4: Parameter sweeps at R = 1 (P3.7.1)
 
-### Task 4: The dimensionless map — fixed ρ and best-fit conventional (P3.7.3 inside)
+**MC conditions** (`TASK=params`), one parameter at a time from the reference (ρ = 1/140, D = 3, c̄ = 0.1, the same-centroid matching, reused from Task 3 R = 1):
+- **D** ∈ {0.5, 1, 2};
+- **ρ** ∈ {1/280, 1/70, 1/35, 0.1} (T₂_conv ≈ 128, 34, 17, 5 ms);
+- **c̄** ∈ {0.05, 0.25} (τ = 3.4e-4 and 8.4e-3).
 
-**Files:** Create `research/phase3/p3_7_3_map.jl` → `research/results/phase3/p3_7_3_map/` (`map.csv`, `summary.json`, `p3_7_3_map.png`)
+The quantities are those of Task 3. **Support:** continuum dense curves over each sweep, plus ρ = 1/560 and c̄ = 0.01–0.025, which are continuum-only and labelled as such. **Cost** ≈ 12 h detached; the c̄ = 0.05 and ρ = 1/280 conditions dominate.
 
-**Method.** This is the cylinder analogue of the Phase 2 Review C1 map.
-- **Grid:** R = 1, D = 3, no bulk; ρR/D ∈ {0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30}; h/R ∈ {0.01, 0.05, 0.1, 0.25, 0.5} (plus 1.0 for step); all three profiles.
-- **Readouts:** 41, from 0 until the conventional S ≈ 0.01 (t_end = ln 100/λ₁,conv, with λ₁,conv the lowest continuum rate of the Robin problem from `radial_rates`).
-- **Fixed ρ:** max_t |S_layer − S_conv(ρ)|.
-- **Best-fit conventional:** `best_fit_conventional` with `Sconv_of_rho = ρc -> radial_signal(R, D, times, surface = ρc)`, rho0 = ρ. Report ρ_c/ρ, the residual and `at_edge`.
-- **Ceiling:** the conventional rate cannot exceed D·j₀₁²/R² = 17.35 ms⁻¹. Flag rows where the layer's lowest rate (`radial_rates(layer)[1]`) exceeds the ceiling.
-- **Thresholds:** the first ρR/D where each quantity reaches 0.01 (SNR 200), per profile and h/R.
-- **Grid convergence (Review Focus 3):** h/R = 0.01 at ρR/D = 1, N = 2000 against 4000; report the difference.
+### Task 5: Dimensionless map over ρR/D and h/R (P3.7.3 inside)
 
-- [ ] **Step 1: Write the script.** Its loops are profile × h/R × ρR/D. Per point it calls one continuum solve for the layer, one for the conventional model at ρ, and about 61 + 60 solves for the best fit. In total about 9 × 16 × 125 ≈ 18 000 solves at about 0.05 s each, ≈ 15 min with 8 threads (`Threads.@threads` over the ρR/D values). The figure shows, per profile, heatmaps of max |ΔS| at fixed ρ and of the best-fit residual against (ρR/D, h/R), with the 0.01 contour.
-- [ ] **Step 2: Commit the script, run it, commit the results.**
+**MC conditions** (`TASK=map`): R = 1, D = 3, no bulk; ρR/D ∈ {0.1, 1, 10} × h/R ∈ {0.1, 0.25, 0.5} × the three profiles, plus the conventional model per ρ. For each ρ, the τ is shared by all models (rule and rate limits). Readouts are 41 points to t_end = ln 100/λ₁,conv. At strong ρ the decay is fast, so runs are short.
 
----
+**Quantities.**
+- **Fixed ρ:** max_t |ΔS| from paired MC, with SEM.
+- **Best fit:** `best_fit_conventional(S_layer_MC, times, ρc -> continuum Robin S(t; ρc))`. Report ρ_c/ρ, the residual (with the MC SEM of S_layer as its noise floor) and `at_edge`.
+- **Ceiling flag:** whether the layer's lowest continuum rate exceeds D·j₀₁²/R².
+- **Thresholds:** the first ρR/D where the fixed-ρ |ΔS| and the best-fit residual reach 0.01.
 
-### Task 5: The D-dependence signature (P3.7.3 inside)
+**Support.** The continuum dense map (ρR/D ∈ {0.003, …, 30} × h/R ∈ {0.01, …, 1}) as the heatmap behind the MC points. Grid convergence at h/R = 0.01, ρR/D = 1 (N = 2000 against 4000). **Cost** ≈ 3 h detached.
 
-**Files:** Create `research/phase3/p3_7_3_ddep.jl` → `research/results/phase3/p3_7_3_ddep/`
+### Task 6: D-dependence signature (P3.7.3 inside)
 
-**Method.** This is the analogue of P2.5.9 §4. R = 1, bulk 1/2000, ρ ∈ {0.01, 0.1, 1}, one TE per ρ (the conventional T₂ at D = 3), D ∈ {0.5, 1, 2, 3}. For the conventional model and each profile at h/R ∈ {0.05, 0.1, 0.25, 0.5, 1.0} (linear ≤ 1, exponential with support R): T₂_app(D) and T₂(0.5)/T₂(3) − 1. The two-measurement comparison band is √2 × the single 2σ. The figure plots the ratio against h/R per ρ, with the conventional value as a line.
+**MC conditions** (`TASK=ddep`): R = 1, bulk 1/2000, ρ ∈ {0.1, 1}, D ∈ {0.5, 1, 2, 3}, conventional plus the three profiles at h/R ∈ {0.25, 0.5, 1.0} (linear ≤ 1; exponential support R). TE per ρ is the continuum conventional T₂ at D = 3.
 
-- [ ] Write, commit, run, commit results (≈ 1 min).
+**Quantities.** T₂_app(D) for every model and T₂(0.5)/T₂(3) − 1. The two-measurement band is √2 × the single 2σ.
 
----
-
-### Task 6: Monte Carlo spot checks (P3.7.1 "continuum + MC")
-
-**Files:** Create `research/phase3/p3_7_6_mc_spots.jl` → `research/results/phase3/p3_7_6_mc_spots/`
-
-**Method.** Three points chosen from Tasks 2–4, paired against the conventional model in Monte Carlo (θ = ρ√(π/D)), with the timestep τ = min(0.135·c̄², 0.005/ΔR₂(0)) and readouts every TE*/10 up to 2·TE*:
-1. **Fig. 9A point:** R = 0.5, exponential at same centroid c̄ = 0.05, ρ = 1/140, bulk 1/2000;
-2. **Strong-relaxation point:** R = 1, ρR/D = 1, exponential h/R = 0.25, no bulk (where the best-fit residual of Task 4 is largest within the scanned non-edge rows; use the actual argmax from `map.csv`);
-3. **D-dependence point:** R = 1, ρ = 0.1, D = 0.5, linear h/R = 0.5.
-
-Criterion: S and ΔS against the continuum, max |z| ≤ 3 over readouts. Seeds 1–10, 2·10⁴ spins in the box. Run detached (point 2 has a large ΔR₂(0) and τ ≈ 1e-4, so it is the most expensive).
-
-- [ ] Write, commit, run detached, commit results.
-
----
+**Support:** continuum values for every point and for ρ = 0.01 (continuum-only). **Cost** ≈ 2 h detached.
 
 ### Task 7: Record and tracker
 
@@ -304,8 +246,9 @@ Criterion: S and ΔS against the continuum, max |z| ≤ 3 over readouts. Seeds 1
   - the parameter sweeps;
   - the map with thresholds, best-fit residuals and ceiling flags;
   - the D-dependence;
-  - the MC spot checks;
+  - MC against the continuum for every point;
   - **a comparison with walls** (Phase 2 C1 map and P2.5.9): where the distribution becomes observable on cylinders compared with walls, in ρR/D against ρw/D.
+- [ ] Every MC result is shown against the continuum (z of the difference).
 - [ ] Tracker:
   - P3.7.1 ◐ (inside done; arrays in 3.7b);
   - P3.7.3 ◐ (inside done);
