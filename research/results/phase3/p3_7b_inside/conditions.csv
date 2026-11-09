@@ -1,0 +1,2 @@
+task,label,compartment,s,f,gap,D,rho,R2_bulk,tau,cbar_min,rate0_max,te,t_end,identical_trajectories,runtime_s,nspins,nseeds,seed_first
+inside,inside_R1_c0.1,inside,NaN,NaN,NaN,3,0.007142857143,0.0005,0.00135,0.1,0.07933251604,NaN,304.1474098,true,9420.367657,20000,10,101001
