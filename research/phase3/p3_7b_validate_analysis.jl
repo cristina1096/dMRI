@@ -6,9 +6,11 @@
 #   ΔS ratio ΔS_mc/ΔS_ann at the readout of max_t |ΔS_ann|, σ = SEM_ΔS/|ΔS_ann| (paired), and z_ΔS;
 #   effective rates λ_eff = −ln S(t_end)/t_end, MC against annulus; the kept fraction of the layer in the annulus.
 # Decision rule (plan, fixed before the run):
-#   full    — at every condition max|e_S| ≤ 1 % for all models AND every ΔS ratio within [0.8, 1.2] within 2σ
+#   (S criterion, ruling before any data: |S_mc − S_ann| ≤ 1 %·S_ann + 2·SEM_S at every readout — the plan's bare
+#    max|e_S| ≤ 1 % would fail on MC noise alone where S ≈ 0.01 late in the ρ = 0.2 windows)
+#   full    — at every condition the S criterion holds for all models AND every ΔS ratio within [0.8, 1.2] within 2σ
 #             (ratio + 2σ ≥ 0.8 and ratio − 2σ ≤ 1.2): annulus gives dense curves, TE*, windows, fit family, ceiling;
-#   partial — only the conventional model meets max|e_S| ≤ 1 %: TE*, windows, ceiling (approximate) only;
+#   partial — only the conventional model meets the S criterion: TE*, windows, ceiling (approximate) only;
 #   failure — otherwise: TE and windows only; every outside result MC-only.
 # Run: julia --project=research/baseline research/phase3/p3_7b_validate_analysis.jl
 
@@ -45,28 +47,29 @@ for c in conds
             cbar=num(p[1], "cbar"), kept=num(p[1], "kept"), max_abs_eS=abs(eS[k]), eS_at=eS[k], zS_at=zS[k], t_max_eS=t[k],
             max_abs_zS=maximum(abs.(zS[2:end])), lambda_eff_mc=-log(S[end]) / t[end], lambda_eff_ann=-log(Sa[end]) / t[end],
             dS_ratio=ratio, dS_ratio_sigma=rσ, z_dS=zd, t_max_dS=t[j], maxdS_ann=layer ? abs(dSa[j]) : NaN,
+            S_ok=all(abs.(S[2:end] .- Sa[2:end]) .<= ETOL .* Sa[2:end] .+ 2 .* sem[2:end]),
             identical=c["identical_trajectories"] == "true"))
         series[(label, m)] = (t=t, eS=eS, dS=dS, dsem=dsem, dSa=dSa)
     end
 end
 write_csv(joinpath(OUT, "validation.csv"), rows)
 for r in rows
-    @printf("%-12s %-18s kept %.3f  max|e_S| %.2e (z %+5.1f)  λ_eff mc/ann %.4f/%.4f  ΔS ratio %s\n", r.label, r.model, r.kept,
+    @printf("%-12s %-18s kept %.3f  S ok %-5s max|e_S| %.2e (z %+5.1f)  λ_eff mc/ann %.4f/%.4f  ΔS ratio %s\n", r.label, r.model, r.kept, r.S_ok,
         r.max_abs_eS, r.zS_at, r.lambda_eff_mc, r.lambda_eff_ann,
         isnan(r.dS_ratio) ? "—" : @sprintf("%.3f ± %.3f (z %+4.1f, max|ΔS_ann| %.1e)", r.dS_ratio, r.dS_ratio_sigma, r.z_dS, r.maxdS_ann))
 end
 
 # ---- decision ----
-conv_ok = all(r.max_abs_eS <= ETOL for r in rows if r.model == "conventional")
-layer_S_ok = all(r.max_abs_eS <= ETOL for r in rows if r.model != "conventional")
+conv_ok = all(r.S_ok for r in rows if r.model == "conventional")
+layer_S_ok = all(r.S_ok for r in rows if r.model != "conventional")
 ratio_ok = all(r.dS_ratio + 2r.dS_ratio_sigma >= RLO && r.dS_ratio - 2r.dS_ratio_sigma <= RHI for r in rows if r.model != "conventional")
 decision = conv_ok && layer_S_ok && ratio_ok ? "full" : conv_ok ? "partial" : "failure"
-@printf("decision: %s (conventional max|e_S| ≤ 1 %%: %s; layers: %s; ΔS ratios in [0.8, 1.2] within 2σ: %s)\n",
+@printf("decision: %s (conventional |ΔS| ≤ 1 %% + 2σ: %s; layers: %s; ΔS ratios in [0.8, 1.2] within 2σ: %s)\n",
     decision, conv_ok, layer_S_ok, ratio_ok)
 write_json(joinpath(OUT, "summary.json"), Dict("provenance" => provenance(), "decision" => decision,
     "conventional_eS_ok" => conv_ok, "layer_eS_ok" => layer_S_ok, "dS_ratio_ok" => ratio_ok,
     "max_abs_eS" => maximum(r.max_abs_eS for r in rows), "all_identical" => all(r -> r.identical, rows),
-    "rule" => "full: max|e_S| ≤ 0.01 all models and ΔS ratio in [0.8,1.2] within 2σ; partial: conventional only; else failure",
+    "rule" => "full: |S_mc − S_ann| ≤ 0.01 S_ann + 2 SEM at every readout for all models and ΔS ratio in [0.8,1.2] within 2σ; partial: conventional only; else failure",
     "files" => ["validation.csv", "p3_7b_validate.png"]))
 
 # ---- figure: ΔS(t) MC vs annulus (top), e_S(t) per model (bottom), one column per condition ----
