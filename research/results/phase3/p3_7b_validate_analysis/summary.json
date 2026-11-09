@@ -1,0 +1,28 @@
+{
+  "all_identical": true,
+  "conventional_eS_ok": false,
+  "dS_ratio_ok": false,
+  "decision": "failure",
+  "files": [
+    "validation.csv",
+    "p3_7b_validate.png"
+  ],
+  "layer_eS_ok": false,
+  "max_abs_eS": 0.05085334913656829,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-11-09T21:39:01.951",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "39ea500d31b784e2ff8469906a165d6b2bebbc83",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_7b_validate_analysis.jl",
+    "src_modified": false
+  },
+  "rule": "full: |S_mc − S_ann| ≤ 0.01 S_ann + 2 SEM at every readout for all models and ΔS ratio in [0.8,1.2] within 2σ; partial: conventional only; else failure"
+}

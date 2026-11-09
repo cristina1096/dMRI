@@ -1,0 +1,5 @@
+task,label,compartment,s,f,gap,D,rho,R2_bulk,tau,cbar_min,rate0_max,te,t_end,identical_trajectories,runtime_s,nspins,nseeds,seed_first
+validate,s2.5_rho0.02,outside,2.5,0.5026548246,0.5,3,0.02,0,0.00135,0.1,0.1760293105,NaN,50,true,2051.444206,20000,10,1001
+validate,s2.5_rho0.2,outside,2.5,0.5026548246,0.5,3,0.2,0,0.00135,0.1,1.760293105,NaN,11.4940531,true,437.989758,20000,10,2001
+validate,s4.0_rho0.02,outside,4,0.1963495408,2,3,0.02,0,0.00135,0.1,0.1818181747,NaN,50,true,1858.526002,20000,10,3001
+validate,s4.0_rho0.2,outside,4,0.1963495408,2,3,0.2,0,0.00135,0.1,1.818181747,NaN,48.34484431,true,1873.179613,20000,10,4001
