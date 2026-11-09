@@ -993,3 +993,167 @@ Costs refer to one inside reference run (10 seeds × 2·10⁴ spins × 50 ms) at
 | (d) use the continuum wherever it exists (single cylinders inside, walls) | exact, no timestep | only for symmetric geometries; arrays and outside still need MC with (b) |
 
 The data support (a) together with (b); (b) is measured at c̄ = 0.1 and confirmed at c̄ = 0.05 (4.3 ± 3.8 %). Option (d) remains the best reference where it applies. (c) is a convenience whose value depends on how much of Phase 3.7 runs in arrays. The user decides.
+
+## Comparison with the conventional model inside cylinders (P3.7a)
+
+Plan `docs/superpowers/plans/2026-11-08-comparison-inside-cylinders.md`. Single cylinders, inside only, no RF. Arrays, packing density and the annulus model are P3.7b.
+
+### Design
+
+- **Question.** Where, inside a single cylinder, does the distributed layer ΔR₂(d) = (ρ/h)·g(d/h)/κ become distinguishable from the conventional surface model (MCMR θ = ρ√(π/D), P3.1.6), and by which measurement?
+- **Three tests, from weakest to strongest assumption:**
+  1. **Apparent T₂ at fixed ρ** (P3.7.1). Here ρ is known, as in the paper's Fig. 9.
+  2. **Best-fit conventional model** (P3.7.3). The conventional ρ_c is fitted freely to the layer curve, which is the realistic single-condition test.
+  3. **D-dependence signature** (P3.7.3). The same ρ is measured at two D, as found on walls (P2.5.9).
+- **Reference, not truth.** The conventional model is the comparison baseline, and no fast-diffusion or Brownstein–Tarr limit is assumed (rd-model framing).
+- **Methods.** Monte Carlo is primary (user, 2026-11-08). The exact radial continuum (P3.4.6, all profiles) runs alongside every Monte Carlo condition and gives the dense curves and maps.
+- **Matchings.** The *same centroid* matching sets c̄ = ∫u g du / ∫g du · h equal across profiles (step h/2, linear h/3, exponential by bisection with support R). The *same h* matching keeps h equal. Phase 2 showed that the centroid collapses the profiles; here it is rechecked inside cylinders.
+
+### Method
+
+**Paired Monte Carlo** (`p3_7_mc.jl`, `run_condition`):
+- Every model of a condition runs with the same seeds (1–10), the same τ and 2·10⁴ spins per seed, started uniformly in the box [−R, R]³; only spins inside the cylinder are kept.
+- The trajectories are therefore identical across models, which is checked on the final positions (true in every condition). Differences ΔS = S_layer − S_conv are formed per seed, so SEM_ΔS = std_seeds(ΔS)/√10.
+- **Timestep.** τ = min(0.135·c̄_min², 0.005/ΔR₂(0)_max), from the comparison rule (P3.6.2; √(2Dτ) ≤ 0.9 c̄ at D = 3) and the package rate limit. The rule is kept at D = 3 values for D < 3 (ruling, Group A review M1), which is conservative there.
+- **Resume.** The driver `p3_7_run.jl` skips conditions already written (Group A review M3).
+
+**Apparent T₂.** The echo time is TE* = the continuum conventional T₂ of the condition (S_conv(TE*) = e⁻¹), taken as an exact readout (readout 11 of 0:TE*/10:1.5·TE*).
+- T₂_app = −TE*/ln S(TE*), with σ(T₂) = TE*·SEM_S/(S ln² S) to first order;
+- ΔT₂/T₂ = (T₂_layer − T₂_conv)/T₂_conv, with σ ≈ TE*·SEM_ΔS/(S_layer ln² S_layer)/T₂_conv (paired);
+- **detectability**: the two-point relative noise of T₂ is n(r) = √(1 + r²)/(SNR·r·|ln r|), r = S(TE). At r = e⁻¹ the 2σ level is 2n = 2.90 % at SNR 200 and 5.79 % at SNR 100.
+
+**Best fit.** ρ_c = argmin over ρ_c of max_t |S_layer(t) − S_conv(t; ρ_c)|, where S_conv is the continuum conventional family:
+- log-grid over e⁻⁴…e⁸ × ρ, then golden-section refinement (`best_fit_conventional`);
+- **flags.** `at_edge` is set when the minimum lies at, or on a plateau reaching, the end of the grid (Group A review I1). `ceiling` is set when the layer's lowest continuum rate exceeds λ_max = D·j₀₁²/R² (17.35 ms⁻¹ at R = 1, D = 3), the decay of a perfectly absorbing wall, which no conventional ρ can exceed. Flagged fits report no ρ_c and no residual;
+- the residual's noise floor is max_t SEM(S_layer); the threshold is 0.01 (2σ at SNR 200, single curve).
+
+**D signature.** q = T₂(D = 0.5)/T₂(D = 3) − 1 at fixed ρ, with TE fixed per ρ (the continuum conventional T₂ at D = 3). The layer-specific part is q_layer − q_conv. It is compared with the two-measurement band 2·√(n(S₀.₅)² + n(S₃)²) at SNR 200.
+
+**Runs** (all `identical_trajectories = true`; all on an Apple M1 Pro, 8 threads):
+
+| task | conditions | τ (ms) | wall time |
+|---|---|---|---|
+| fig9a (Task 3) | R ∈ {0.5, 1, 2} same centroid c̄ = 0.1; R = 1 same h = 0.2 | 1.35e-3; 6.0e-4 | 5.0 h |
+| params (Task 4) | R = 1: D ∈ {0.5, 1, 2}, ρ ∈ {1/280, 1/70, 1/35, 0.1}, c̄ ∈ {0.05, 0.25} | 1.35e-3; 3.4e-4 (c̄ 0.05); 8.4e-3 (c̄ 0.25) | 12.2 h |
+| seed check | fig9a R = 1 reference with seeds 11–20 | 1.35e-3 | 1.4 h |
+| map (Task 5) | R = 1, D = 3, no bulk: ρR/D ∈ {0.1, 1, 10} × h/R ∈ {0.1, 0.25, 0.5} × 3 profiles | 1.5e-4; 8.1e-5; 8.1e-6 | 4.2 h |
+| ddep (Task 6) | R = 1, ρ ∈ {0.1, 1} × D ∈ {0.5, 1, 2, 3} × h/R ∈ {0.25, 0.5, 1} × 3 profiles | 9.4e-4; 5.7e-4 | 1.3 h |
+
+Reference values: ρ = 1/140 µm/ms, D = 3 µm²/ms, R2_bulk = 1/2000 ms⁻¹ (except the map).
+
+### Result 1: apparent T₂ against radius (Fig. 9A analogue, P3.7.1)
+
+Scripts `p3_7_run.jl` (TASK=fig9a), [p3_7_fig9a_analysis.jl](phase3/p3_7_fig9a_analysis.jl) → [results/phase3/p3_7_fig9a_analysis/](results/phase3/p3_7_fig9a_analysis/).
+
+| condition | T₂,conv at TE* (ms) | ΔT₂/T₂ MC: step / linear / exponential | continuum |
+|---|---|---|---|
+| R = 0.5, c̄ = 0.1 | 34.41 | −0.018 / −0.018 / −0.016 % (± 0.003–0.004) | −0.022 / −0.022 / −0.021 % |
+| R = 1, c̄ = 0.1 | 67.67 | −0.025 / −0.025 / −0.024 % (± 0.002) | −0.026 / −0.027 / −0.027 % |
+| R = 2, c̄ = 0.1 | 130.99 | −0.024 / −0.026 / −0.027 % (± 0.002) | −0.027 / −0.028 / −0.029 % |
+| R = 1, h = 0.2 | 67.68 | −0.029 / −0.020 / −0.044 % (± 0.003–0.004) | −0.026 / −0.019 / −0.040 % |
+
+![fig9a](results/phase3/p3_7_fig9a_analysis/p3_7_fig9a.png)
+
+- **T₂ follows the radius** as in the paper's Fig. 9A: T₂_conv ≈ 1/(R2_bulk + 2ρ/R) = 34.40, 67.63, 130.84 ms, within 0.03–0.11 % of the measured values.
+- **The layer is invisible here.** Every ΔT₂/T₂ is negative (the layer attenuates more, as on walls) and |ΔT₂/T₂| ≤ 0.044 %. That is 70–180× below the 2σ noise of 2.9 % at SNR 200. The continuum curves over R = 0.25–3 stay within 0.014–0.030 % (same centroid) and 0.013–0.054 % (same h).
+- **Profiles.** At the same centroid the three profiles agree within the Monte Carlo error. At the same h they order exponential > step > linear, which is the order of their centroids (0.19, 0.10, 0.067 µm at h = 0.2; the exponential's support is R).
+- **Monte Carlo against the continuum.** |z_S| ≤ 1.0 and |z_ΔS| ≤ 1.8. The ratio ΔS_mc/ΔS_cont was 0.78–0.94 at every same-centroid point with seeds 1–10. The fresh-seed check (seeds 11–20, R = 1) gives 1.04–1.12 (± 0.15–0.19). The 20 seeds combined give 0.97 ± 0.07, 0.97 ± 0.07 and 0.94 ± 0.06 (step, linear, exponential), which is consistent with 1. **The low ratio was shared seed noise:** every fig9a/params condition reuses seeds 1–10, and conditions with D = 3 and the same τ have identical trajectories, so they are not independent (Group B review I1). The σ values are 10-seed estimates; with seeds 11–20, SEM_ΔS was 2.4× larger than with seeds 1–10.
+
+### Result 2: parameter sweeps at R = 1 (P3.7.1)
+
+[p3_7_params_analysis.jl](phase3/p3_7_params_analysis.jl) → [results/phase3/p3_7_params_analysis/](results/phase3/p3_7_params_analysis/). One parameter is varied at a time from the reference (fig9a R = 1, c̄ = 0.1).
+
+| sweep | value | TE* (ms) | ΔT₂/T₂ MC (step / linear / exp) | continuum (step) |
+|---|---|---|---|---|
+| D | 0.5 / 1 / 2 / 3 | 67.9 / 67.8 / 67.7 / 67.7 | −0.142 / −0.073 / −0.035 / −0.025 % (step) | −0.156 / −0.078 / −0.039 / −0.026 % |
+| ρ | 1/280 / 1/140 / 1/70 / 1/35 / 0.1 | 130.9 / 67.7 / 34.4 / 17.4 / 5.0 | −0.013 / −0.025 / −0.050 / −0.106 / −0.349 % (step); −0.361 % linear at ρ = 0.1 | −0.013 / −0.026 / −0.053 / −0.107 / −0.375 %; −0.385 % linear at ρ = 0.1 |
+| c̄ | 0.05 / 0.1 / 0.25 | 67.7 | −0.010 / −0.025 / −0.048 % (step; exponential −0.011 / −0.024 / −0.042 %) | −0.014 / −0.026 / −0.049 % |
+
+Continuum-only points: ρ = 1/560 gives −0.006 %; c̄ = 0.01 gives −0.003 % and c̄ = 0.025 gives −0.007 to −0.008 %.
+
+![params](results/phase3/p3_7_params_analysis/p3_7_params.png)
+
+- **Scaling.** |ΔT₂/T₂| grows as 1/D (×5.7 from D = 3 to 0.5, against ×6) and as ρ (|ΔT₂/T₂|/ρ = 3.5–3.7 % per µm/ms throughout; TE* changes with ρ), and with the centroid. The same scalings were found on walls (Review C1 follow-up).
+- **Largest effect:** 0.36 % (MC, linear, ρ = 0.1; continuum 0.385 %). That is ≥ 8× below the 2σ noise at SNR 200. **No configuration of the sweep is detectable at SNR 100 or 200.**
+- **Profiles at the same centroid** agree only to about 10 %, and the order changes with c̄: exponential is highest at c̄ = 0.01 (continuum 3.36e-5 against step 3.03e-5) and lowest at c̄ = 0.25 (MC 0.042 % against 0.048 %).
+- **Monte Carlo against the continuum.** ΔS_mc/ΔS_cont = 0.88–1.04 with σ 0.04–0.24. These are not independent of fig9a (shared seeds, see Result 1). The c̄ sweep does **not** test the timestep: √(2Dτ)/c̄ = 0.9 at every D = 3 condition by construction. Only the D sweep varies it (0.37 / 0.52 / 0.73 / 0.9), and the ratio shows no trend with it (Group B review I2).
+
+### Result 3: dimensionless map and the best-fit conventional model (P3.7.3)
+
+[p3_7_map_analysis.jl](phase3/p3_7_map_analysis.jl) → [results/phase3/p3_7_map_analysis/](results/phase3/p3_7_map_analysis/). R = 1, D = 3, no bulk; 41 readouts to t_end = ln 100/λ₁,conv. The continuum map covers ρR/D = 0.003–30 × h/R = 0.01–1.
+
+**Monte Carlo points** (max_t |ΔS| at fixed ρ; best fit):
+
+| ρR/D | max\|ΔS\| MC (range over 9 models) | z against continuum | ρ_c/ρ | best-fit residual | flagged |
+|---|---|---|---|---|---|
+| 0.1 | 0.0014–0.0082 | +0.4 … +2.6 | 1.004–1.023 | 7.5e-5 – 1.2e-4 (floor 0.7–2.5e-4) | 0/9 |
+| 1 | 0.012–0.073 | +2.0 … +5.1 (MC 1–7 % low) | 1.04–1.27 | 7.2e-4 – 8.2e-3 | 0/9 |
+| 10 | 0.048–0.344 | −0.9 … +2.0 | 1.72 (linear h/R 0.1), 2.33 (step h/R 0.1) | 3.1e-3, 6.2e-3 | 7/9 (λ₁ > λ_max) |
+
+**Thresholds** (first ρR/D at which the quantity reaches 0.01; continuum; "> x" means that it stays below 0.01 among the valid fits up to x, with the next point flagged or the end of the map):
+
+| profile | h/R | fixed ρ: max\|ΔS\| ≥ 0.01 | best fit: residual ≥ 0.01 |
+|---|---|---|---|
+| step | 0.01 / 0.025 / 0.05 / 0.1 | > 30 / 3.0 / 1.08 / 0.50 | > 30 / > 30 / > 10 / > 10 |
+| step | 0.25 / 0.5 / 1 | 0.21 / 0.13 / 0.11 | 2.4 / 1.25 / > 1 (flagged from 3) |
+| linear | 0.01 / 0.025 / 0.05 / 0.1 | > 30 / 6.6 / 1.8 / 0.74 | > 30 / > 30 / > 30 / > 10 |
+| linear | 0.25 / 0.5 / 1 | 0.29 / 0.16 / 0.12 | > 3 / 1.7 / 1.1 |
+| exponential | 0.01 / 0.025 / 0.05 / 0.1 | 3.7 / 0.95 / 0.46 / 0.25 | > 30 / > 10 / 9.2 / 2.8 |
+| exponential | 0.25 / 0.5 / 1 | 0.14 / 0.12 / 0.11 | 1.4 / 1.1 / > 1 (flagged from 3) |
+
+The Monte Carlo fixed-ρ thresholds agree with the continuum to within 10 %: step 0.54 / 0.22 / 0.13, linear 0.81 / 0.31 / 0.17 and exponential 0.26 / 0.15 / 0.12 at h/R = 0.1 / 0.25 / 0.5.
+
+![map](results/phase3/p3_7_map_analysis/p3_7_map.png)
+
+- **Fixed ρ.** The layer becomes visible from a single curve at SNR 200 once ρR/D ≈ 0.1–0.75 for h/R ≥ 0.1, and later for thinner layers. The exponential profile, whose support is R, is visible earliest.
+- **Free ρ.** A fitted conventional model hides the layer up to ρR/D ≈ 1. ρ_c then exceeds ρ by up to 27 %, so the conventional ρ absorbs the layer's extra attenuation. The single curve separates at SNR 200 from ρR/D ≈ 1–3 for h/R ≥ 0.25 (exponential from h/R = 0.1, and from ρR/D ≈ 9 at h/R = 0.05). Among valid fits it never separates for h/R ≤ 0.05 (step, linear); there the layer first passes the ceiling (step h/R = 0.05 at ρR/D = 30).
+- **Ceiling.** For ρR/D ≳ 3–10 and thick layers the layer decays faster than λ_max = D·j₀₁²/R², so no conventional ρ can reproduce it. In the Monte Carlo, 7 of 9 layer models at ρR/D = 10 are flagged. This is the cylinder version of the wall ceiling D·π²/w².
+- **Checks:**
+  - continuum grid at h/R = 0.01, ρR/D = 1: |S(N = 2000) − S(N = 4000)| ≤ 9e-7;
+  - fit family at N = 1000 against 2000: identical ρ_c and residual;
+  - conventional Monte Carlo at strong per-hit attenuation (θ√τ = 0.004 / 0.028 / 0.087): max|S_mc − S_cont| = 2.0e-4 / 8.7e-4 / 1.3e-3, i.e. relative 0.06 / 0.2 / 0.2 % (z −1.0 / −2.6 / +2.1);
+  - Monte Carlo max|ΔS| at ρR/D = 1 is 1–7 % below the continuum (z up to 5.1), largest for the thinnest layer (linear h/R = 0.1, √(2Dτ)/c̄ = 0.66). This is within the rule's ≲ 10 %.
+
+### Result 4: D-dependence signature (P3.7.3)
+
+[p3_7_ddep_analysis.jl](phase3/p3_7_ddep_analysis.jl) → [results/phase3/p3_7_ddep_analysis/](results/phase3/p3_7_ddep_analysis/). R = 1; TE = 5.03 ms (ρ = 0.1) and 0.54 ms (ρ = 1).
+
+| ρ | q_conv | q_layer (9 models) | q_layer − q_conv | two-measurement band (SNR 200) |
+|---|---|---|---|---|
+| 0.01 (continuum only) | 0.0041 | 0 – 0.0024 | −0.0016 … −0.0041 | — |
+| 0.1 | 0.041 ± 0.001 | 0 – 0.025 | −0.016 … −0.041 | 0.041: not detectable |
+| 1 | 0.355 ± 0.003 | 0 – 0.215 | −0.14 … −0.36 | 0.041: detectable (3.4–8.7×) |
+
+![ddep](results/phase3/p3_7_ddep_analysis/p3_7_ddep.png)
+
+- **The conventional T₂ depends on D, the layer's much less.** A surface sink is diffusion-limited, so its T₂ rises as D falls. A layer that relaxes spins inside the volume depends less on diffusion, and not at all when it is uniform (step at h = R: q = 0 exactly). q_layer falls with h and is smallest for the exponential (support R).
+- **Observability** at SNR 200 with two measurements: from ρ ≈ 1 µm/ms (ρR/D = 0.33 at D = 3, conventional T₂ ≈ 0.54 ms) for every profile and h/R ≥ 0.25; not at ρ = 0.1.
+- **Monte Carlo against the continuum:** |z_q| ≤ 1.5. σ_q adds the two T₂ errors in quadrature, which overstates it because the D conditions share seeds and scaled draws.
+- **Caveats.** ρ is assumed independent of D, so MCMR's θ = ρ√(π/D) changes with D. If θ were fixed instead, q_conv would differ. The band is single-SNR two-point noise; a fit across several D would be stronger.
+
+### Comparison with walls (P3.7.4, inside part)
+
+Phase 2 used walls with gap w = 2 µm (Review C1 follow-up map; P2.5.9), and this section uses cylinders with R = 1 µm (diameter 2 µm), both at D = 3. To compare at the same physical layer, thresholds are converted to ρ in µm/ms (walls ρ = x·D/w = 1.5x, cylinders ρ = y·D/R = 3y) at equal absolute h.
+
+| quantity | walls (w = 2) | cylinder inside (R = 1) |
+|---|---|---|
+| S/V | 2/w = 1 µm⁻¹ | 2/R = 2 µm⁻¹ |
+| fixed ρ, max\|ΔS\| ≥ 0.01, h = 0.1 µm | step 4.5, linear 4.5, exponential 1.4 | step 1.5, linear 2.2, exponential 0.74 |
+| fixed ρ, h = 0.5 µm | 0.45 (all) | step 0.39, linear 0.49, exponential 0.36 |
+| fixed ρ, h = 1 µm | 0.45 (all) | step 0.33, linear 0.36, exponential 0.34 |
+| best fit, residual ≥ 0.01, h = 0.5 µm | step 4.5, linear 14, exponential 4.5 | step 3.8, linear 5.1, exponential 3.4 |
+| ceiling | D·π²/w² = 7.40 ms⁻¹ | D·j₀₁²/R² = 17.35 ms⁻¹ |
+| D signature, thick layer (h ≳ w/2, h ≳ R/2) | q_layer ≤ 0.5 % / 4.6 % vs q_conv 5.5 % / 47 % (ρ = 0.1 / 1) | q_layer ≤ 1.3 % / 11 % (h = R/2) vs q_conv 4.1 % / 36 % |
+
+- **The layer becomes observable at about the same ρ on both geometries** for thick layers (ρ ≈ 0.3–0.5 µm/ms at fixed ρ; ≈ 3.4–5 µm/ms with a free conventional ρ for step and exponential, while linear separates earlier in the cylinder, 5.1 vs 14 µm/ms). Inside the cylinder it is observable earlier for thin layers (h = 0.1 µm: 1.5–2.2 vs 4.5 µm/ms; exponential 0.74 vs 1.4). This is consistent with the doubled S/V at the same physical size: the same ρ gives twice the surface rate.
+- **The ceiling is higher in the cylinder** (17.4 vs 7.4 ms⁻¹), but the layer reaches it at a similar ρ because the layer's own rate also scales with S/V.
+- **The D signature is weaker in the cylinder** at the same ρ: the conventional q is 4.1 % / 36 % against 5.5 % / 47 % on walls. It is detectable at ρ = 1 in both, and at ρ = 0.1 in neither at SNR 200.
+- **In the physiological range** at D = 3 (ρ ≲ 0.03 µm/ms, R ≈ 0.5–2 µm, ρR/D ≲ 0.02) none of the three tests separates the models in a single cylinder at SNR 200: |ΔT₂/T₂| ≤ 0.11 %, and the best fit absorbs the layer. At lower D the effect grows as 1/D (0.14 % at D = 0.5, ρ = 1/140), still ≥ 20× below the noise.
+
+### Conclusion
+
+- **Fixed ρ** (ρ known): the distributed layer is distinguishable inside a cylinder only where ρR/D ≳ 0.1–0.75 (h/R ≥ 0.1). At the reference ρ = 1/140 and R = 0.5–2 µm, ρR/D ≈ 0.001–0.005 and the effect on T₂ is ≤ 0.05 %.
+- **Free conventional ρ:** a single decay curve separates only from ρR/D ≈ 1–3 with h/R ≳ 0.25, or beyond the ceiling D·j₀₁²/R², where no conventional model fits.
+- **D dependence:** this is the most sensitive signature at strong ρ, detectable from ρ ≈ 1 µm/ms (T₂ ≲ 1 ms) and not at ρ = 0.1.
+- **Monte Carlo agrees with the continuum** within the timestep rule wherever both exist. The seeds 1–10 run-to-run correlation was diagnosed with fresh seeds and is not a bias.
+- **Open for P3.7b:** arrays and packing density (Fig. 9B analogue), the outside compartment and overlapping layers between neighbours. There the continuum does not exist and Monte Carlo with the comparison rule is the only method.

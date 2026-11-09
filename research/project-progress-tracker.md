@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 25 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 25 (+6 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -400,10 +400,10 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.7.1 | ☐ | Fixed-ρ comparison (mapping from P3.1.6): ΔS(t) and apparent T₂ vs radius (true Fig. 9A analogue), h (and centroid), D, ρ; single cylinder (continuum + MC) and arrays (MC) | ΔS and ΔT₂/T₂ with paired SEM vs SNR 100/200 (T₂ at TE* = T₂) | figs + tables |
+| P3.7.1 | ◐ | Fixed-ρ comparison (mapping from P3.1.6): ΔS(t) and apparent T₂ vs radius (true Fig. 9A analogue), h (and centroid), D, ρ; single cylinder (continuum + MC) and arrays (MC) | ΔS and ΔT₂/T₂ with paired SEM vs SNR 100/200 (T₂ at TE* = T₂) | figs + tables; **inside done (P3.7a, 2026-11-09)**: \|ΔT₂/T₂\| ≤ 0.044 % over R = 0.5–2 and ≤ 0.36 % over the D, ρ, c̄ sweeps, all ≥ 8× below 2σ noise at SNR 200; ∝ ρ, ∝ 1/D; MC vs continuum consistent (fresh-seed check); arrays in P3.7b |
 | P3.7.2 | ☐ | Packing density / volume fraction (Fig. 9B analogue), intra and extra compartments separately and summed | as above | fig |
-| P3.7.3 | ☐ | Best-fit conventional residual (single condition) and the D-dependence signature found on walls (thick/overlapping layers) | characterisation | table |
-| P3.7.4 | ☐ | Summary: where the spatial distribution becomes observable on cylinders, compared with walls | written paragraph with numbers | note |
+| P3.7.3 | ◐ | Best-fit conventional residual (single condition) and the D-dependence signature found on walls (thick/overlapping layers) | characterisation | table; **inside done (P3.7a)**: fixed-ρ threshold ρR/D ≈ 0.1–0.75 (h/R ≥ 0.1); free conventional ρ separates from ρR/D ≈ 1–3 (h/R ≳ 0.25) or beyond the ceiling D·j₀₁²/R²; D signature q_layer − q_conv detectable at ρ = 1 (3.4–8.7× band), not at ρ = 0.1 |
+| P3.7.4 | ◐ | Summary: where the spatial distribution becomes observable on cylinders, compared with walls | written paragraph with numbers | note; **inside paragraph written (P3.7a)**: same ρ as walls for thick layers, earlier for thin (doubled S/V); ceiling 17.4 vs 7.4 ms⁻¹; weaker D signature; arrays/outside in P3.7b |
 
 ## 3.8 Record and tag
 
