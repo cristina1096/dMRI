@@ -4,6 +4,8 @@
 # Per condition: τ = min(0.135·c̄_min², 0.005/ΔR₂(0)_max) over its layer models (comparison rule, D = 3 value for all D);
 # seeds = 1000·k + (1:10) with k = task offset + condition index (conditions independent; 3.7a Group B review I1);
 # 2·10⁴ spins per seed. R = 1 throughout; outside runs set only the outer layer.
+# Group C trim (user decision 2026-11-10): ddep uses h/R ∈ {0.25, 0.5} (not 0.1, whose linear c̄ = 0.033 forced τ = 1.5e-4);
+# the map at s = 4, ρR/D ∈ {0.1, 10} uses 5 seeds (the longest windows); the seed count is recorded per condition.
 # Output (results/phase3/p3_7b_<task>/): curves.csv then conditions.csv, both via temporary file + rename after every
 # condition; resume skips labels present in both (RESUME=0 starts afresh); summary.json at the end.
 # Run: TASK=validate julia --project=research/baseline -t 8 research/phase3/p3_7b_run.jl
@@ -76,7 +78,7 @@ function conditions(task)
         for ρ in (0.1, 1.0)
             te = te_out(s, D3, ρ, R2B)
             for D in (0.5, 1.0, 2.0, 3.0)
-                push!(c, ("s$(s)_rho$(ρ)_D$(D)", :outside, s, D, ρ, R2B, outer_hR((0.1, 0.25, 0.5)),
+                push!(c, ("s$(s)_rho$(ρ)_D$(D)", :outside, s, D, ρ, R2B, outer_hR((0.25, 0.5)),
                           collect(range(0.0, 1.5te, length=16)), te))
             end
         end
@@ -104,7 +106,8 @@ conds = NamedTuple[]
 curves = NamedTuple[]
 for (k, (label, comp, s, D, ρ, bulk, layers, times, te)) in enumerate(conditions(TASK))
     label in PREV.labels && continue
-    seeds = 1000 * (OFFSET[TASK] + k) .+ (1:NSEEDS)
+    nseeds = (TASK == "map" && s == 4.0 && ρ * R1 / D3 in (0.1, 10.0)) ? min(5, NSEEDS) : NSEEDS
+    seeds = 1000 * (OFFSET[TASK] + k) .+ (1:nseeds)
     cb(sh, h) = comp == :inside ? cbar(sh, h, R1) : cbar_out(sh, h, s)
     cmin = minimum(cb(sh, h) for (_, sh, h) in layers)
     rmax = maximum(comp == :inside ? rate0_in(sh, ρ, h) : rate0_out(sh, ρ, h, support_out(sh, h, s)) for (_, sh, h) in layers)
@@ -119,7 +122,7 @@ for (k, (label, comp, s, D, ρ, bulk, layers, times, te)) in enumerate(condition
         Ssup, dSsup, kept = r.S_ann, r.dS_ann, r.kept
     end
     push!(conds, NamedTuple{CKEYS}((TASK, label, String(comp), s, comp == :inside ? NaN : fof(s), comp == :inside ? NaN : gapof(s),
-        D, ρ, bulk, r.tau, cmin, rmax, te, times[end], r.identical_trajectories, time() - t0, NSPINS, NSEEDS, first(seeds))))
+        D, ρ, bulk, r.tau, cmin, rmax, te, times[end], r.identical_trajectories, time() - t0, NSPINS, nseeds, first(seeds))))
     for (name, shape, h) in models, (j, t) in enumerate(times)
         lay = shape != "conventional"
         push!(curves, NamedTuple{KKEYS}((label, name, shape, h, lay ? cb(shape, h) : 0.0, kept[name], t,
