@@ -12,7 +12,9 @@
 #   2σ two-point noise at SNR 100/200 with r = S_conv(TE) of that compartment;
 #   z against support: intra vs the radial continuum (exact); extra and sum vs the annulus ONLY where the annulus has
 #   full support (s ≥ 4, validated range; Task 3 + Group A review I1); elsewhere MC-only (annulus gives TE only).
-# Dense support curves: intra continuum (independent of s); extra/sum annulus for s ∈ [4, 6] only, labelled.
+# Dense support curves: intra continuum over s ∈ [2.3, 6] (exact at any s; its TE uses the annulus, allowed); extra/sum
+# annulus for s ∈ [4, 6] only — EXTRAPOLATED beyond the validated s = 4, justified by ρR_out/D ≤ 0.008 ≪ 0.067 here
+# (Group B review I5).
 # Note: the inside run is shared by all densities, so the intra columns and the intra part of the sums are correlated
 # across densities.
 # Run: julia --project=research/baseline research/phase3/p3_7b_density_analysis.jl  (works on partial outside results)
@@ -92,9 +94,9 @@ for r in rows
         isnan(r.z_S) ? "—" : @sprintf("%+.1f", r.z_S), r.support)
 end
 
-# ---- dense support curves: intra (s-independent), extra and sum on the annulus for s ∈ [4, 6] ----
+# ---- dense support curves: intra over s ∈ [2.3, 6]; extra and sum on the annulus for s ∈ [4, 6] only ----
 dense = NamedTuple[]
-for s in collect(range(S_FULL, 6.0, length=9))
+for s in sort(unique(vcat(collect(range(2.3, 6.0, length=19)), [S_FULL])))
     f = π * R1^2 / s^2
     Ro = krogh_radius(s); gap = s - 2R1
     Sin = Dict("conventional" => signal_fun(R=R1, D=D3, surface=RHO, bulk=BULK))
@@ -109,7 +111,7 @@ for s in collect(range(S_FULL, 6.0, length=9))
         vals = Dict("intra" => Sin[m](te), "extra" => Sout[m](te), "sum" => f * Sin[m](te) + (1 - f) * Sout[m](te))
         cvals = Dict("intra" => Sin["conventional"](te), "extra" => Sout["conventional"](te),
                      "sum" => f * Sin["conventional"](te) + (1 - f) * Sout["conventional"](te))
-        for comp in ("intra", "extra", "sum")
+        for comp in (s >= S_FULL ? ("intra", "extra", "sum") : ("intra",))
             T2, T2c = t2(vals[comp], te), t2(cvals[comp], te)
             push!(dense, (s=s, f=f, te=te, compartment=comp, model=m, T2=T2, dT2_rel=(T2 - T2c) / T2c))
         end
@@ -129,20 +131,21 @@ mk = Dict("intra" => :circle, "extra" => :utriangle, "sum" => :rect)
 sty = Dict("intra" => :dot, "extra" => :dash, "sum" => :solid)
 fig = Figure(size=(1500, 820))
 axa = Axis(fig[1, 1], xlabel="intra-axonal volume fraction f = πR²/s²", ylabel="T₂,app at TE_sum* (ms)",
-    title="(a) apparent T₂ vs packing (ρ = 1/140, D = 3, R = 1)")
+    title="(a) apparent T₂ vs packing, conventional (layers coincide to ≤ 0.03 %, see b)")
 axb = Axis(fig[1, 2], xlabel="f", ylabel="|ΔT₂/T₂| vs conventional (%)", yscale=log10,
-    title="(b) |layer − conventional|, paired (filled ΔT₂ < 0, open > 0)")
+    title="(b) |layer − conventional|, paired, 2σ bars (filled ΔT₂ < 0, open > 0)")
 axc = Axis(fig[2, 1:2], xlabel="density / compartment / model", ylabel="z = (MC − support)/SEM",
     title="(c) Monte Carlo against support (intra: exact continuum; extra, sum: annulus only at s ≥ 4)")
 for comp in ("intra", "extra", "sum"), m in MODELS
     sh = m == "conventional" ? "conventional" : split(m, "_")[1]
     d = sort([q for q in dense if q.compartment == comp && q.model == m], by=q -> q.f)
-    lines!(axa, [q.f for q in d], [q.T2 for q in d], color=cols[sh], linestyle=sty[comp])
+    m == "conventional" && lines!(axa, [q.f for q in d], [q.T2 for q in d], color=:black, linestyle=sty[comp])
     m == "conventional" || lines!(axb, [q.f for q in d], [max(100abs(q.dT2_rel), 1e-6) for q in d], color=cols[sh], linestyle=sty[comp])
     p = sort([r for r in rows if r.compartment == comp && r.model == m], by=r -> r.f)
-    errorbars!(axa, [r.f for r in p], [r.T2_mc for r in p], [2r.T2_sigma for r in p], color=cols[sh])
-    scatter!(axa, [r.f for r in p], [r.T2_mc for r in p], color=cols[sh], marker=mk[comp], markersize=9,
-        label=m == "conventional" ? "conventional, $(comp)" : nothing)
+    if m == "conventional"
+        errorbars!(axa, [r.f for r in p], [r.T2_mc for r in p], [2r.T2_sigma for r in p], color=:black)
+        scatter!(axa, [r.f for r in p], [r.T2_mc for r in p], color=:black, marker=mk[comp], markersize=9, label="MC, $(comp)")
+    end
     if m != "conventional"
         y = [100abs(r.dT2_rel) for r in p]; e = [200r.dT2_rel_sigma for r in p]
         rangebars!(axb, [r.f for r in p], max.(y .- e, y ./ 10), y .+ e, color=cols[sh])
@@ -154,7 +157,7 @@ n200 = 100 * 2 * t2_noise_rel(exp(-1), 200)
 hlines!(axb, [n200], color=:gray, linestyle=:dash, label="2σ noise SNR 200 (sum, r = e⁻¹)")
 axislegend(axa, position=:lt, labelsize=9)
 Legend(fig[1, 3], axb, labelsize=9)
-Label(fig[1, 3, Bottom()], "markers: ● intra, ▲ extra, ■ sum\nlines: dotted intra (continuum),\ndashed extra, solid sum (annulus, s ≥ 4)", fontsize=10)
+Label(fig[1, 3, Bottom()], "markers: ● intra, ▲ extra, ■ sum (MC)\nlines: dotted intra (continuum, any s),\ndashed extra, solid sum (annulus: validated\nat s = 4, extrapolated to s = 6)", fontsize=10)
 zr = [r for r in rows if !isnan(r.z_S)]
 scatter!(axc, 1:length(zr), [r.z_S for r in zr], color=[cols[r.model == "conventional" ? "conventional" : split(r.model, "_")[1]] for r in zr],
     marker=[mk[r.compartment] for r in zr], markersize=8)
