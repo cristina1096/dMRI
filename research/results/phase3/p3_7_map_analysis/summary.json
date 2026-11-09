@@ -2,8 +2,8 @@
   "all_identical": true,
   "ceiling": 17.349557888840355,
   "family_check": {
-    "rho_c_N1000": 89428.73959749215,
-    "rho_c_N2000": 89428.73841493388
+    "rho_c_N1000": 69.89973119887945,
+    "rho_c_N2000": 69.89925645447852
   },
   "files": [
     "mc_map.csv",
@@ -19,9 +19,9 @@
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-11-09T18:03:16.810",
+    "date": "2026-11-09T18:35:21.504",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "34cb10feca3403019bb30d953cfb983474d565b2",
+    "git_commit": "035fa85cd8b55849edfd6cd25e1c3e1c2d6fadb1",
     "julia": "1.12.7",
     "julia_threads": 8,
     "memory_GB": 16.0,

@@ -79,8 +79,9 @@ end
 for r in convrows
     @printf("conventional ρR/D %-5g τ %.2e θ√τ %.3f max|z_S| %.1f\n", r.rhoRD, r.tau, r.theta_sqrt_tau, r.max_abs_z_S)
 end
-# family resolution check at one MC point (the thickest strong layer, most demanding fit)
-chk = first(sort([r for r in mc if r.rhoRD == maximum(r.rhoRD for r in mc)], by=r -> -r.hR))
+# family resolution check at the most demanding VALID fit (final review I4: a flagged point sits at the grid end for both
+# N and proves nothing): the non-flagged MC fit with the largest ρR/D, then the largest residual
+chk = first(sort([r for r in mc if !r.at_edge && !r.ceiling], by=r -> (-r.rhoRD, -r.residual)))
 chk_times = sort(unique(num(r, "t") for r in curves if r["label"] == chk.label))
 chk_S = [num(r, "S_mean") for r in sort([r for r in curves if r["label"] == chk.label && r["model"] == chk.model], by=r -> num(r, "t"))]
 chk2000 = best_fit_conventional(chk_S, chk_times, conv_family(chk_times; N=2000); rho0=chk.rho)

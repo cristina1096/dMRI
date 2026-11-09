@@ -1,0 +1,10 @@
+shape,h_um,walls_fixed_rho,walls_fixed_status,cyl_fixed_rho,cyl_fixed_status,walls_bestfit_rho,walls_bestfit_status,cyl_bestfit_rho,cyl_bestfit_status
+step,0.1,1.512929722,crossed,1.499518066,crossed,45,below_range,30,below_range
+step,0.5,0.3356755461,crossed,0.3881388716,crossed,4.045916722,crossed,3.764380137,crossed
+step,1,0.2493963219,crossed,0.3313654797,crossed,2.887073384,crossed,3,below_range
+linear,0.1,2.371402084,crossed,2.212060371,crossed,45,below_range,30,below_range
+linear,0.5,0.4417802264,crossed,0.4947489944,crossed,6.119545787,crossed,5.134866932,crossed
+linear,1,0.2778718743,crossed,0.3557273872,crossed,3.224129475,crossed,3.367692263,crossed
+exponential,0.1,0.6720163292,crossed,0.7410405764,crossed,10.62410424,crossed,8.254517673,crossed
+exponential,0.5,0.2634054063,crossed,0.3625096431,crossed,3.04270709,crossed,3.430117636,crossed
+exponential,1,0.2507426005,crossed,0.3401136518,crossed,2.901976663,crossed,3,below_range
