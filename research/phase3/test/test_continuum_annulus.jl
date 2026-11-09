@@ -29,13 +29,20 @@
     end
 
     # mean rate at t = 0 equals ρ·2πR·kept / area (untruncated and truncated)
-    meanrate(layer) = (Mx = annulus_operator(R=R, R_out=Ro25, D=D, layer=layer); F = eigen(Mx[1]);
+    meanrate(layer; renormalise=false) = (Mx = annulus_operator(R=R, R_out=Ro25, D=D, layer=layer, renormalise=renormalise); F = eigen(Mx[1]);
                        c2 = (F.vectors' * sqrt.(Mx[2])) .^ 2 ./ sum(Mx[2]); sum(c2 .* F.values))
     area = π * (Ro25^2 - R^2)
     for (layer, truncated) in ((("step", 0.02, 0.2, 0.2), false), (("exponential", 0.02, 0.2, 0.5), true))
         kept = annulus_layer_kept(layer[1], layer[3], layer[4], R, Ro25)
         @test truncated ? kept < 1 : kept == 1.0
         @test meanrate(layer) ≈ 0.02 * 2π * R * kept / area rtol = 1e-6
+        # P3.7b Task 3 (user decision 2026-11-09): renormalised by 1/kept, the cut layer keeps the full mean rate ρ·S/V
+        @test meanrate(layer; renormalise=true) ≈ 0.02 * 2π * R / area rtol = 1e-6
+    end
+    # the default is renormalised
+    let lay = ("exponential", 0.02, 0.2, 0.5)
+        @test annulus_signal(R=R, R_out=Ro25, D=D, times=[5.0], layer=lay) ≈
+              annulus_signal(R=R, R_out=Ro25, D=D, times=[5.0], layer=lay, renormalise=true)
     end
 
     # Robin: lowest rate against the exact Bessel root

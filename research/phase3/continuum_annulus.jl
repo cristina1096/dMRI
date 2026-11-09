@@ -7,8 +7,10 @@
 #     layer:        ∂_r m = 0 at r = R,  ΔR2(r) = (ρ/h)·g((r − R)/h)/κ_out on 0 ≤ r − R ≤ L,  κ_out = 1 + c̄/R
 #                   (L = h for step/linear, the cutoff for the exponential; c̄ the centroid with that support, D3.1/D3.5),
 #     conventional: D ∂_r m = ρ m at r = R (Robin; the sink is on the inner face of the fluid region).
-# If R + L > R_out the layer is cut at R_out and NOT renormalised; `annulus_layer_kept` reports the kept fraction of
-# ∫ΔR2 dA. Finite volumes as continuum_radial.jl: N rings of width dr = (R_out − R)/N, exact ring integrals of g, the
+# If R + L > R_out the layer is cut at R_out; by default (`renormalise=true`, user decision 2026-11-09 after the P3.7b
+# validation) the kept part is scaled by 1/kept so that ∫ΔR2 dA = 2πRρ, the mean-exponent identity E[−ln M] = ρ(S/V)t
+# that holds exactly in the true cell. Without it, a 1.5 % loss (exponential at s = 2.5) swamped the profile effect.
+# `annulus_layer_kept` reports the kept fraction; `renormalise=false` gives the cut, unscaled layer. Finite volumes as continuum_radial.jl: N rings of width dr = (R_out − R)/N, exact ring integrals of g, the
 # Robin sink on the inner face as 2πRρ/(1 + ρ dr/2D) (second order); y = √A m gives a symmetric tridiagonal M and
 # S(t) = Σ_k (u_kᵀ√A)² e^(−λ_k t) / Σ A_i.
 # Roundoff floor: eigenvalues carry an absolute error ≈ ε‖M‖ ≈ 1e-8 /ms at N = 2000 (‖M‖ ∝ D/dr²), so S(t) is exact
@@ -57,7 +59,7 @@ annulus_layer_kept(shape, h, L, R, R_out) =
     outer_ring_integral(shape, h, R, L, R, min(R + L, R_out)) / outer_ring_integral(shape, h, R, L, R, R + L)
 
 "Symmetric operator M (1/ms) and ring areas A; `layer = (shape, ρ, h, L)`, `surface = ρ` for the conventional model."
-function annulus_operator(; R, R_out, D, layer=nothing, surface=0.0, N=2000)
+function annulus_operator(; R, R_out, D, layer=nothing, surface=0.0, N=2000, renormalise=true)
     R_out > R || error("annulus_operator: R_out = $R_out must exceed R = $R")
     dr = (R_out - R) / N
     redge = R .+ collect(0:N) .* dr
@@ -66,8 +68,9 @@ function annulus_operator(; R, R_out, D, layer=nothing, surface=0.0, N=2000)
     if !isnothing(layer)
         (shape, ρ, h, L) = layer
         κ = 1 + outer_centroid(shape, h, L) / R
+        scale = renormalise ? 1 / annulus_layer_kept(shape, h, L, R, R_out) : 1.0
         for i in 1:N
-            V[i] = ρ / (h * κ) * 2π * outer_ring_integral(shape, h, R, L, redge[i], redge[i + 1]) / A[i]
+            V[i] = scale * ρ / (h * κ) * 2π * outer_ring_integral(shape, h, R, L, redge[i], redge[i + 1]) / A[i]
         end
     end
     c = [2π * D * redge[i + 1] / dr for i in 1:N - 1]
@@ -85,8 +88,8 @@ end
 annulus_rates(; R2_bulk=0.0, kw...) = eigvals(annulus_operator(; kw...)[1]) .+ R2_bulk
 
 "S(t) closure from one eigendecomposition of the annulus operator."
-function annulus_signal_fun(; R, R_out, D, layer=nothing, surface=0.0, bulk=0.0, N=2000)
-    (M, A) = annulus_operator(; R=R, R_out=R_out, D=D, layer=layer, surface=surface, N=N)
+function annulus_signal_fun(; R, R_out, D, layer=nothing, surface=0.0, bulk=0.0, N=2000, renormalise=true)
+    (M, A) = annulus_operator(; R=R, R_out=R_out, D=D, layer=layer, surface=surface, N=N, renormalise=renormalise)
     F = eigen(M)
     c2 = (F.vectors' * sqrt.(A)) .^ 2 ./ sum(A)
     return t -> sum(c2 .* exp.(-F.values .* t)) * exp(-bulk * t)
@@ -98,8 +101,8 @@ end
 S(t)/S(0) in the annulus for a uniform start. `layer = (shape, ρ, h, L)` (ρ per unit surface area, D3.1), `surface = ρ`
 for the conventional model.
 """
-annulus_signal(; R, R_out, D, times, layer=nothing, surface=0.0, R2_bulk=0.0, N=2000) =
-    annulus_signal_fun(R=R, R_out=R_out, D=D, layer=layer, surface=surface, bulk=R2_bulk, N=N).(times)
+annulus_signal(; R, R_out, D, times, layer=nothing, surface=0.0, R2_bulk=0.0, N=2000, renormalise=true) =
+    annulus_signal_fun(R=R, R_out=R_out, D=D, layer=layer, surface=surface, bulk=R2_bulk, N=N, renormalise=renormalise).(times)
 
 "First root of f on (k0, kmax) by a scan in steps dk then bisection (f continuous, no poles)."
 function first_root(f, k0, dk, kmax)
