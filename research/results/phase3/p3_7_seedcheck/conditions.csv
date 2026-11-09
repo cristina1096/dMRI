@@ -1,0 +1,2 @@
+task,label,R,D,rho,R2_bulk,tau,cbar_min,te,t_end,identical_trajectories,runtime_s,seeds
+seedcheck,R1.0_c0.1_seeds11-20,1,3,0.007142857143,0.0005,0.00135,0.1,67.67175106,101.5076266,true,5132.088562,11-20
