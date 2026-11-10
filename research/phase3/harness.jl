@@ -119,19 +119,20 @@ function side_prefactor(ρ, shape, h, L, R, inside; n=200_000)
 end
 
 """
-    brute_rate_profile(x, y; R, s, inner, outer)
+    brute_rate_profile(x, y; R, s=Inf, sx=s, sy=s, inner, outer)
 
-Summed ΔR2 at (x, y) for a square array of spacing `s` (one cylinder per cell at the origin; `s = Inf` for a single
-cylinder) from the 5 × 5 nearest images; `inner`/`outer` = (shape, h, L, pre) or `nothing`. Independent of the package.
+Summed ΔR2 at (x, y) for a rectangular array of spacings (`sx`, `sy`) (one cylinder per cell at the origin; `s` sets
+both; `Inf` for a single cylinder) from the 7 × 7 nearest images; `inner`/`outer` = (shape, h, L, pre) or `nothing`.
+The support is inclusive (0 ≤ d ≤ L). Independent of the package.
 """
-function brute_rate_profile(x, y; R, s, inner, outer)
-    cells = isfinite(s) ? (-2:2) : (0:0)
-    sp = isfinite(s) ? s : 0.0
-    cx = isfinite(s) ? round(x / s) * s : 0.0
-    cy = isfinite(s) ? round(y / s) * s : 0.0
+function brute_rate_profile(x, y; R, s=Inf, sx=s, sy=s, inner, outer)
+    rep = isfinite(sx) && isfinite(sy)
+    cells = rep ? (-3:3) : (0:0)
+    cx = rep ? round(x / sx) * sx : 0.0
+    cy = rep ? round(y / sy) * sy : 0.0
     total = 0.0
     for i in cells, j in cells
-        r = hypot(x - cx - i * sp, y - cy - j * sp)
+        r = hypot(x - cx - (rep ? i * sx : 0.0), y - cy - (rep ? j * sy : 0.0))
         if !isnothing(inner) && 0 <= R - r <= inner.L
             total += inner.pre * g_profile(inner.shape, (R - r) / inner.h, inner.L / inner.h)
         end
@@ -140,4 +141,32 @@ function brute_rate_profile(x, y; R, s, inner, outer)
         end
     end
     return total
+end
+
+"""
+    classify_overlap(sx, sy, R, L)
+
+Overlap of outer supports L in a rectangular array (P3.5.1): (x_overlap, y_overlap, interstitial_fold) with
+x_overlap = L > (sx − 2R)/2 (likewise y); fold 4 when the cell corner point, at distance √((sx/2)² + (sy/2)²) − R from
+all four surfaces, lies inside the supports; otherwise 2 if any axis overlaps, else 1.
+"""
+function classify_overlap(sx, sy, R, L)
+    xo, yo = L > (sx - 2R) / 2, L > (sy - 2R) / 2
+    fold = hypot(sx / 2, sy / 2) - R < L ? 4 : (xo || yo) ? 2 : 1
+    return (xo, yo, fold)
+end
+
+"Maximum number of outer supports L covering one fluid point, on an n × n grid of the unit cell (corners included)."
+function max_overlap_count(sx, sy, R, L; n=401)
+    best = 0
+    for x in range(-sx / 2, sx / 2, length=n), y in range(-sy / 2, sy / 2, length=n)
+        cnt, inside = 0, false
+        for i in -2:2, j in -2:2
+            r = hypot(x - i * sx, y - j * sy)
+            r < R && (inside = true; break)
+            r - R <= L && (cnt += 1)
+        end
+        inside || (best = max(best, cnt))
+    end
+    return best
 end
