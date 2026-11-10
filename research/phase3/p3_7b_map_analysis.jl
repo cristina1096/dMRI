@@ -138,7 +138,7 @@ for sh in SHAPES, hr in hrs
     (vd, sd) = threshold_status([d.rhoRD for d in sel], [d.maxdS for d in sel], LEVEL)
     ok = [d for d in sel if !isnan(d.residual)]
     (vb, sb) = length(ok) >= 2 ? threshold_status([d.rhoRD for d in ok], [d.residual for d in ok], LEVEL) : (NaN, :no_valid_fits)
-    push!(ths, (source="annulus s4 (≤ ρR/D $(xvalid))", s=4.0, shape=sh, hR=hr, fixed_rho_threshold=vd, fixed_rho_status=String(sd),
+    push!(ths, (source="annulus s4 (≤ ρR/D $(round(xvalid, sigdigits=3)))", s=4.0, shape=sh, hR=hr, fixed_rho_threshold=vd, fixed_rho_status=String(sd),
         bestfit_threshold=vb, bestfit_status=String(sb), n_valid_fits=length(ok)))
 end
 write_csv(joinpath(OUT, "thresholds.csv"), ths)
