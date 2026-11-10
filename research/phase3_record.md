@@ -1153,7 +1153,7 @@ Phase 2 used walls with gap w = 2 µm (Review C1 follow-up map; P2.5.9), and thi
 - **At fixed ρ the layer becomes observable at about the same physical ρ on both geometries.** For thin layers (h = 0.1 µm) the thresholds agree within 10 % (1.5–2.4 µm/ms, exponential 0.7). For thick layers (h = 0.5–1 µm) the cylinder needs 10–40 % larger ρ (0.33–0.49 against 0.25–0.44 µm/ms). The doubled S/V of the cylinder at the same size therefore does **not** make the layer visible earlier; at the same ρ both the conventional sink and the layer relax faster, and the difference between them is what matters.
 - **With a free conventional ρ** the thresholds agree within about 20 % (h = 0.5: 3.0–6.1 µm/ms on walls, 3.4–5.1 in the cylinder). Thin layers (h = 0.1 µm) are separable only for the exponential, at about 8–11 µm/ms on both.
 - **The ceiling is higher in the cylinder** (17.4 vs 7.4 ms⁻¹), and the layer reaches it at a similar ρ because the layer's own rate also scales with S/V. On both geometries a flagged (over-ceiling) curve is usually, but not always, far from every conventional curve (Result 3).
-- **The D signature is weaker in the cylinder** at the same ρ: the conventional q is 4.1 % / 36 % against 5.5 % / 47 % on walls. It is detectable at ρ = 1 in both, and at ρ = 0.1 in neither at SNR 200.
+- **The D signature is weaker in the cylinder** at the same ρ: the conventional q is 4.1 % / 36 % against 5.5 % / 47 % on walls. It is detectable at ρ = 1 in both. At ρ = 0.1 it is not detectable in the cylinder (at most 0.999× the band), but on walls the thick layers (h/w ≥ 0.5: q_layer ≤ 0.0054 vs q_conv 0.0545) give |Δq| ≈ 0.049–0.054, ≈ 1.2–1.3× the Phase 3 band (≈ 0.041) — marginally detectable (P2.5.9 calls it marginal; corrected after the 3.7 final review).
 - **In the physiological range** at D = 3 (ρ ≲ 0.03 µm/ms, R ≈ 0.5–2 µm, ρR/D ≲ 0.02) none of the three tests separates the models in a single cylinder at SNR 200: |ΔT₂/T₂| ≤ 0.11 %, and the best fit absorbs the layer. At lower D the effect grows as 1/D (0.14 % at D = 0.5, ρ = 1/140), still ≥ 20× below the noise.
 
 ### Conclusion
@@ -1315,12 +1315,15 @@ All thresholds below are in physical ρ (µm/ms; cylinders ρ = y·D/R = 3y, wal
 - **At fixed ρ** (known ρ, single free-decay curve, SNR 200), a near-surface layer becomes visible at about the same physical ρ on walls, inside cylinders and outside cylinders:
   - ≈ 1.5–2.7 µm/ms for h = 0.1 µm (exponential ≈ 0.7–0.8);
   - ≈ 0.3–0.6 µm/ms for h = 0.5 µm.
-  - The differences are mostly within the ≈ 10 % method bias. The clear exceptions are tied to geometry: the exponential reaches further when the gap is wide (outside s = 4), and overlapping layers in the narrow gap (outside s = 2.5, h = 0.5 µm) delay visibility.
+  - Many differences are within the ≈ 10 % method bias of the Monte Carlo decade-point thresholds (which does not apply to the walls continuum). Three clear exceptions remain:
+    - **walls vs inside for thick layers:** at h = 0.5 µm the cylinder needs 16–42 % larger ρ than walls (step 0.40 vs 0.34, linear 0.51 vs 0.44, exponential 0.37 vs 0.26), as already found on one convention in P3.7a ("thick 10–40 % later in the cylinder");
+    - the exponential reaches further when the gap is wide (outside s = 4: < 0.3 at h = 0.5 µm);
+    - overlapping layers in the narrow gap delay visibility (outside s = 2.5, h = 0.5 µm: 0.53–0.61).
 - **With a free conventional ρ** the layer stays hidden much longer:
   - inside it separates from ρR/D ≈ 1–3;
   - on walls from ρ ≈ 3–6 µm/ms (h = 0.5 µm);
   - outside the test is only available at s = 4, ρR/D = 0.1, where the layer is absorbed down to the method floor.
-- **D signature** (two D, SNR 200): detectable from ρ ≈ 1 µm/ms in all three geometries, not at ρ = 0.1. The conventional q is largest on walls (0.055 / 0.47), then inside (0.041 / 0.355), then outside s = 2.5 (0.032 / 0.257).
+- **D signature** (two D, SNR 200, same convention in all geometries: D 0.5 vs 3, TE = conventional T₂ at D = 3, same ρ): detectable at ρ = 1 µm/ms in all three geometries. At ρ = 0.1 it is not detectable in cylinders (inside ≤ 0.999×, outside s = 2.5 ≤ 0.64× the band) but marginally detectable on walls for thick layers (≈ 1.2–1.3×). The conventional q, and with it the signature, is largest on walls (0.055 / 0.47), then inside (0.041 / 0.355), then outside s = 2.5 (0.032 / 0.257).
 
 ### Conclusion
 
@@ -1329,4 +1332,4 @@ All thresholds below are in physical ρ (µm/ms; cylinders ρ = y·D/R = 3y, wal
 - **Free conventional ρ.** Outside, the comparison is limited by the support model. Where the annulus is valid (s = 4, ρR/D = 0.1), the fitted conventional model reproduces the layer to the method floor (≈ 4e-4). Beyond it, outside best fits are not determined.
 - **D dependence.** This is the most robust signature in every geometry, detectable at SNR 200 from ρ ≈ 1 µm/ms (T₂ ≲ 1 ms). It is weaker outside than inside.
 - **Annulus model.** It is a useful support only at wide spacing and weak relaxation (validated s = 4, ρR/D ≤ 0.1, after renormalising truncated layers). At dense packing or strong ρ the square cell differs from the Krogh circle by as much as the effect being measured.
-- **Monte Carlo** agrees with every validated support: intra |z| ≤ 0.82; annulus at s = 4 to 5e-5 at weak ρ. The comparison timestep rule holds, except where c̄_min = 0.033 (extrapolated, flagged).
+- **Monte Carlo against support.** Intra: agrees with the exact radial continuum (|z| ≤ 0.82). Annulus: passes the pre-registered tolerance where used, but with two resolved systematics: at s = 4, ρ = 0.2 the annulus overestimates |ΔS| by 8 ± 3 %; at s = 4, ρR/D = 0.1 (validated map condition) the conventional MC differs from the annulus by 1.27e-3 (z 7.8), within the 1 %·S tolerance (this sets the best-fit floor, Result 2). At ρ = 1/140 (density, s = 4) S agrees to 5e-5. The comparison timestep rule holds, except where c̄_min = 0.033 (extrapolated, flagged).
