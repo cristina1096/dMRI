@@ -606,3 +606,100 @@ quad_test_integrand(s) = exp(-s)
     @test measure_spi(Layers.shell_profile_integral, side, O, A, B) == 0
     @test measure_quad(Layers.quad_adaptive, quad_test_integrand) == 0
 end
+
+@testset "test_layer_cylinders.jl: overlapping outer layers, exact summation (P3.5.3)" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(c) = mr.Simulation([]; geometry=c, verbose=false).geometry
+    V3(x, y, z=0.) = SVector{3, Float64}(x, y, z)
+    "Brute-force summed outer rate over images (±3 cells), support inclusive, written from the layer's own parameters."
+    function brute_rate(g, x, y, sx, sy, shape)
+        l = g[1].layer[1]
+        pre = l.outer.rho / l.outer.h / Layers.kappa(l.outer, 1.0, false)
+        t = 0.0
+        for i in -3:3, j in -3:3
+            d = hypot(x - i * sx, y - j * sy) - 1.0
+            0 <= d <= l.outer.cutoff && (t += pre * Layers.profile_g(shape, d / l.outer.h, l.outer.cutoff / l.outer.h))
+        end
+        return t
+    end
+    "Brute-force ∫ rate dt along p0 → p1 (dt = 1): split at every crossing of r = R and r = R + L of every image, 64-point
+    Gauss–Legendre on each smooth piece."
+    function brute_exponent(g, p0, p1, sx, sy, shape)
+        L = g[1].layer[1].outer.cutoff
+        a, b = p0[1:2], p1[1:2] .- p0[1:2]
+        cuts = [0.0, 1.0]
+        for i in -3:3, j in -3:3, rad in (1.0, 1.0 + L)
+            c = [i * sx, j * sy]
+            q = a .- c
+            A, B, C = b' * b, 2 * (q' * b), q' * q - rad^2
+            disc = B^2 - 4A * C
+            A > 0 && disc > 0 && append!(cuts, filter(s -> 0 < s < 1, [(-B - sqrt(disc)) / (2A), (-B + sqrt(disc)) / (2A)]))
+        end
+        sort!(cuts)
+        (xg, wg) = Layers.gauss_legendre(64)
+        total = 0.0
+        for k in 1:length(cuts) - 1
+            lo, hi = cuts[k], cuts[k + 1]
+            hi - lo < 1e-15 && continue
+            for (xi, wi) in zip(xg, wg)
+                s = lo + (xi + 1) / 2 * (hi - lo)
+                total += wi * (hi - lo) / 2 * brute_rate(g, (a .+ s .* b)..., sx, sy, shape)
+            end
+        end
+        return total
+    end
+    "Random straight pieces with both ends in the fluid (outside every cylinder) inside the box `centre ± half`."
+    function pieces(sx, sy, centre, half, maxlen; n=200, seed=11)
+        Random.seed!(seed)
+        fluid(p) = all(hypot(p[1] - i * sx, p[2] - j * sy) > 1.0 for i in -3:3, j in -3:3)
+        out = Tuple{SVector{3, Float64}, SVector{3, Float64}}[]
+        while length(out) < n
+            p0 = centre .+ half .* (2 .* rand(2) .- 1)
+            dir = 2π * rand()
+            p1 = p0 .+ maxlen * rand() .* [cos(dir), sin(dir)]
+            (fluid(p0) && fluid(p1)) && push!(out, (V3(p0...), V3(p1...)))
+        end
+        return out
+    end
+    relerr(e, b) = abs(e - b) / max(abs(b), 1e-300)
+
+    @testset "(a) rectangular array, one-direction overlap: linear h = 0.4 and exponential (cutoff = gap 0.5)" begin
+        for (shape, h) in ((:linear, 0.4), (:exponential, 0.2))
+            g = geom(mr.Cylinders(radius=1., repeats=[2.5, 4.0], layer_rho_outer=0.03, layer_h_outer=h, layer_shape=String(shape)))
+            @test g[1].layer[1].outer.cutoff ≈ (shape == :linear ? 0.4 : 0.5)
+            pts = pieces(2.5, 4.0, [1.25, 0.0], [0.6, 1.5], 0.5)
+            @test maximum(relerr(Layers.layer_exponent(g, p, p, 1.0), brute_rate(g, p[1], p[2], 2.5, 4.0, shape)) for (p, _) in pts) <= 1e-12
+            @test maximum(relerr(Layers.layer_exponent(g, p0, p1, 1.0), brute_exponent(g, p0, p1, 2.5, 4.0, shape)) for (p0, p1) in pts) <= 1e-10
+        end
+    end
+
+    @testset "(b) 4-fold interstitial overlap: square 4.0, exponential with default cutoff 2.0" begin
+        g = geom(mr.Cylinders(radius=1., repeats=[4.0, 4.0], layer_rho_outer=0.03, layer_h_outer=0.3, layer_shape="exponential"))
+        @test g[1].layer[1].outer.cutoff ≈ 2.0
+        @test brute_rate(g, 2.0, 2.0, 4.0, 4.0, :exponential) > 0          # the corner point is reached by all four
+        pts = pieces(4.0, 4.0, [2.0, 2.0], [0.5, 0.5], 0.5)
+        @test maximum(relerr(Layers.layer_exponent(g, p, p, 1.0), brute_rate(g, p[1], p[2], 4.0, 4.0, :exponential)) for (p, _) in pts) <= 1e-12
+        @test maximum(relerr(Layers.layer_exponent(g, p0, p1, 1.0), brute_exponent(g, p0, p1, 4.0, 4.0, :exponential)) for (p0, p1) in pts) <= 1e-10
+    end
+
+    @testset "(c) h = gap: step and linear at square 2.5, gap midline and facing surfaces" begin
+        for shape in (:step, :linear)
+            g = geom(mr.Cylinders(radius=1., repeats=[2.5, 2.5], layer_rho_outer=0.03, layer_h_outer=0.5, layer_shape=String(shape)))
+            for p in (V3(1.25, 0.), V3(1.25, 0.3), V3(1.0 + 1e-9, 0.), V3(1.5 - 1e-9, 0.), V3(0., 1.25))
+                @test Layers.layer_exponent(g, p, p, 1.0) ≈ brute_rate(g, p[1], p[2], 2.5, 2.5, shape) rtol=1e-12
+            end
+        end
+    end
+
+    @testset "(d) max_layer_rate bounds the summed rate (grid maximum)" begin
+        for (rep, kw, shape) in (([2.5, 4.0], (layer_h_outer=0.4, layer_shape="linear"), :linear),
+                                 ([2.5, 4.0], (layer_h_outer=0.2, layer_shape="exponential"), :exponential),
+                                 ([4.0, 4.0], (layer_h_outer=0.3, layer_shape="exponential"), :exponential),
+                                 ([2.5, 2.5], (layer_h_outer=0.5, layer_shape="step"), :step))
+            g = geom(mr.Cylinders(radius=1., repeats=rep, layer_rho_outer=0.03; kw...))
+            gridmax = maximum(brute_rate(g, x, y, rep[1], rep[2], shape) for x in range(-rep[1] / 2, rep[1] / 2, length=301),
+                              y in range(-rep[2] / 2, rep[2] / 2, length=301))
+            @test Layers.max_layer_rate(g) >= gridmax * (1 - 1e-12)
+        end
+    end
+end
