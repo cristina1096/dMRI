@@ -1,0 +1,28 @@
+geometry,sx,sy,gap_x,gap_y,shape,h,L,x_overlap,y_overlap,corner_fold,configuration,max_overlap_count,overlap_area_fraction
+square 2.5,2.5,2.5,0.5,0.5,step,0.15,0.15,false,false,1,separated,1,0
+square 2.5,2.5,2.5,0.5,0.5,step,0.25,0.25,false,false,1,separated,2,0
+square 2.5,2.5,2.5,0.5,0.5,step,0.35,0.35,true,true,2,two-direction,2,0.0882484361
+square 2.5,2.5,2.5,0.5,0.5,step,0.5,0.5,true,true,2,two-direction,2,0.3621983914
+square 2.5,2.5,2.5,0.5,0.5,linear,0.15,0.15,false,false,1,separated,1,0
+square 2.5,2.5,2.5,0.5,0.5,linear,0.25,0.25,false,false,1,separated,2,0
+square 2.5,2.5,2.5,0.5,0.5,linear,0.35,0.35,true,true,2,two-direction,2,0.0882484361
+square 2.5,2.5,2.5,0.5,0.5,linear,0.5,0.5,true,true,2,two-direction,2,0.3621983914
+square 2.5,2.5,2.5,0.5,0.5,exponential,NaN,0.5,true,true,2,two-direction,2,0.3621983914
+rect 2.5x4.0,2.5,4,0.5,2,step,0.15,0.15,false,false,1,separated,1,0
+rect 2.5x4.0,2.5,4,0.5,2,step,0.25,0.25,false,false,1,separated,2,0
+rect 2.5x4.0,2.5,4,0.5,2,step,0.35,0.35,true,false,2,one-direction,2,0.01999287126
+rect 2.5x4.0,2.5,4,0.5,2,step,0.5,0.5,true,false,2,one-direction,2,0.08204529989
+rect 2.5x4.0,2.5,4,0.5,2,linear,0.15,0.15,false,false,1,separated,1,0
+rect 2.5x4.0,2.5,4,0.5,2,linear,0.25,0.25,false,false,1,separated,2,0
+rect 2.5x4.0,2.5,4,0.5,2,linear,0.35,0.35,true,false,2,one-direction,2,0.01999287126
+rect 2.5x4.0,2.5,4,0.5,2,linear,0.5,0.5,true,false,2,one-direction,2,0.08204529989
+rect 2.5x4.0,2.5,4,0.5,2,exponential,NaN,0.5,true,false,2,one-direction,2,0.08204529989
+square 4.0,4,4,2,2,step,0.15,0.15,false,false,1,separated,1,0
+square 4.0,4,4,2,2,step,0.25,0.25,false,false,1,separated,1,0
+square 4.0,4,4,2,2,step,0.35,0.35,false,false,1,separated,1,0
+square 4.0,4,4,2,2,step,0.5,0.5,false,false,1,separated,1,0
+square 4.0,4,4,2,2,linear,0.15,0.15,false,false,1,separated,1,0
+square 4.0,4,4,2,2,linear,0.25,0.25,false,false,1,separated,1,0
+square 4.0,4,4,2,2,linear,0.35,0.35,false,false,1,separated,1,0
+square 4.0,4,4,2,2,linear,0.5,0.5,false,false,1,separated,1,0
+square 4.0,4,4,2,2,exponential,NaN,2,true,true,4,interstitial 4-fold,4,0.8830051985

@@ -1,0 +1,21 @@
+{
+  "files": [
+    "configs.csv"
+  ],
+  "n": 27,
+  "provenance": {
+    "MCMRSimulator": "1.1.0",
+    "MRIBuilder": "0.4.1 @ v0.4.1",
+    "cpu": "Apple M1 Pro",
+    "date": "2026-11-11T06:12:31.608",
+    "git_branch": "cc/near-surface-r2",
+    "git_commit": "c9c98151cc8807f9bc99d8c18793c6755507a4c2",
+    "julia": "1.12.7",
+    "julia_threads": 1,
+    "memory_GB": 16.0,
+    "ncpu": 8,
+    "os": "Darwin arm64-apple-darwin25.5.0",
+    "script": "p3_5_configs.jl",
+    "src_modified": false
+  }
+}
