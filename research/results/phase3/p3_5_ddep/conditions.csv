@@ -1,0 +1,3 @@
+task,label,sx,sy,gap,D,rho,R2_bulk,tau,cbar_min,max_rate_summed,max_rate_tau,te,t_end,identical_trajectories,runtime_s,nspins,nseeds,seed_first
+ddep,sq2.5_rho1.0_D0.5,2.5,2.5,0.5,0.5,1,0.0005,0.0001636706866,0.05,30.54914782,0.005,0.5168604977,0.7752907465,true,403.569694,20000,10,601001
+ddep,sq2.5_rho1.0_D3.0,2.5,2.5,0.5,3,1,0.0005,0.0001636706866,0.05,30.54914782,0.005,0.5168604977,0.7752907465,true,506.5810602,20000,10,602001
