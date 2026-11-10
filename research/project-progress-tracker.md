@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 29 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 33 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -382,10 +382,10 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.5.1 | ☐ | Three configurations: separated (gap > 2h in both directions), one-direction overlap (rectangular array), two-direction overlap | configurations defined by gap/h; occupancy recorded | table |
-| P3.5.2 | ☐ | Realism of the summed rate in 2D: no interior maximum above the surface value (interstitial points included); step counter-example | pass/fail per configuration | fig + table |
-| P3.5.3 | ☐ | Identification of multiple nearby surfaces: brute-force sum vs implementation on random points and segments | ≤ 1e-10 | tests |
-| P3.5.4 | ☐ | Signal vs overlap degree, compared with the conventional model at the same ρ (see 3.7) | characterisation | fig |
+| P3.5.1 | ☑ | Three configurations: separated (gap > 2h in both directions), one-direction overlap (rectangular array), two-direction overlap | configurations defined by gap/h; occupancy recorded | table; **Done (2026-11-11)**: square 2.5 two-direction from h 0.35, rect 2.5×4 one-direction, square 4 exponential 4-fold (88 % ≥ 2-fold); coverage and farthest-point table |
+| P3.5.2 | ☑ | Realism of the summed rate in 2D: no interior maximum above the surface value (interstitial points included); step counter-example | pass/fail per configuration | fig + table; **Done**: linear realistic everywhere; step doubles where layers overlap (counter-example); exponential with support = gap NOT realistic on curved arrays — jump e^(−gap/h) (≤ 0.37) inside narrow gaps (D3.5 for user decision) |
+| P3.5.3 | ☑ | Identification of multiple nearby surfaces: brute-force sum vs implementation on random points and segments | ≤ 1e-10 | tests; **PASS**: exact brute force ≤ 1e-12 (rates) / ≤ 1e-10 (segments): rectangle, 4-fold interstitial, h = gap, summed τ bound; suite 3579/3579 (no-plots) |
+| P3.5.4 | ☑ | Signal vs overlap degree, compared with the conventional model at the same ρ (see 3.7) | characterisation | fig; **Done**: max|ΔS| keeps rising with h through overlap (sublinear in the square), all ΔS < 0; D dependence reduced but not removed at full overlap (≥ 0.13 q_conv; walls ≤ 0.1) |
 
 ## 3.6 Timestep, tolerance and cost on cylinders
 

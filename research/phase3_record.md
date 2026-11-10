@@ -1334,3 +1334,136 @@ All thresholds below are in physical ρ (µm/ms; cylinders ρ = y·D/R = 3y, wal
 - **D dependence.** This is the most robust signature in every geometry, detectable at SNR 200 from ρ ≈ 1 µm/ms (T₂ ≲ 1 ms). It is weaker outside than inside.
 - **Annulus model.** It is a useful support only at wide spacing and weak relaxation (validated s = 4, ρR/D ≤ 0.1, after renormalising truncated layers). At dense packing or strong ρ the square cell differs from the Krogh circle by as much as the effect being measured.
 - **Monte Carlo against support.** Intra: agrees with the exact radial continuum (|z| ≤ 0.82). Annulus: passes the pre-registered tolerance where used, but with two resolved systematics: at s = 4, ρ = 0.2 the annulus overestimates |ΔS| by 8 ± 3 %; at s = 4, ρR/D = 0.1 (validated map condition) the conventional MC differs from the annulus by 1.27e-3 (z 7.8), within the 1 %·S tolerance (this sets the best-fit floor, Result 2). At ρ = 1/140 (density, s = 4) S agrees to 5e-5. The comparison timestep rule holds, except where c̄_min = 0.033 (extrapolated, flagged).
+
+## Overlapping layers in arrays (P3.5)
+
+Plan `docs/superpowers/plans/2026-11-11-overlapping-layers-arrays.md`. Outer layers of neighbouring cylinders in square and rectangular arrays, R = 1 µm, no RF.
+
+### Design
+
+- **Question.** When the outer layers of neighbouring cylinders overlap, four things are checked:
+  - Is the summed rate still a realistic near-surface profile?
+  - Does the package add the layers exactly?
+  - How does the layer-vs-conventional difference change with the overlap degree?
+  - Does overlap remove the D dependence, as found on walls (P2.5.9)?
+- **Overlapping layers add** (package convention, D3.4): the rate at a point is the sum over every cylinder within its support.
+- **Supports.** Step and linear: L = h, which must be ≤ the smallest gap (`check_outer_reach`). Exponential: L = the default cutoff, the smallest surface gap (D3.5).
+- **Overlap degree** varied through h at fixed spacing (user, 2026-11-11):
+  - square s = 2.5: gap 0.5, overlap in two directions;
+  - rectangle 2.5 × 4.0: gaps 0.5 and 2.0, overlap in one direction;
+  - h/gap = 0.3 (separated), 0.5 (touching), 0.7 and 1.0 (overlapping).
+- The signal study is at ρR/D = 1 only, where differences are resolvable (user). There is no continuum for overlapping arrays: Monte Carlo only.
+
+### Method
+
+**Configurations (P3.5.1, [p3_5_configs.jl](phase3/p3_5_configs.jl)).** For each geometry and support L, on a 600 × 600 grid of the unit cell:
+- overlap per direction (L > gap/2);
+- the fold at the cell corner (interstitial point);
+- the maximum number of supports covering one point;
+- the fluid fraction covered by ≥ 2 supports (overlap) and by ≥ 1 support (coverage);
+- the largest distance of a fluid point from every surface.
+
+**Realism (P3.5.2, [p3_5_realism.jl](phase3/p3_5_realism.jl)).**
+- **Criterion.** No interior maximum above the surface value (tracker; the walls analogue "never higher mid-gap", P2.5.9). In 2D it is tested along rays: from every surface point along its outward normal, up to the cylinder's own Voronoi cell (the unit rectangle, the analogue of the walls' half gap), the summed rate must never exceed its value at that surface point (excess ≤ 1e-9).
+- **Sampling.** 1800 angles plus refinement to ±1e-6 rad around each facing direction; t log-spaced from 1e-9 µm, then every 2e-4 µm. For the exponential the analytic excess is reported, and the sampled one is checked to reach it.
+- **Rulings** (2026-11-11):
+  - The plan's first wording compared the peak with the **single-cylinder** surface value. That is not the spec: the exponential fails it trivially through its neighbour's tail at the facing surface.
+  - A global max/max comparison was replaced by the ray test (a neighbour's support circle cuts into the gap).
+  - Rays were cut at the own Voronoi cell, and the sampling refined near the surface (Group A review).
+
+**Exact summation (P3.5.3, package `test/test_layer_cylinders.jl`).** New tests against an exact brute force:
+- stationary points: the exponent equals rate·dt, to 1e-12;
+- segments: split at every crossing of r = R and r = R + L of every image, 64-point Gauss–Legendre per smooth piece, to 1e-10;
+- cases: (a) the rectangle (one-direction overlap), linear and exponential; (b) the 4-fold interstitial exponential at s = 4 (cutoff 2); (c) h = gap; (d) `max_layer_rate` ≥ the brute-force peak.
+
+**Signal against overlap (P3.5.4, [p3_5_run.jl](phase3/p3_5_run.jl), [p3_5_overlap_analysis.jl](phase3/p3_5_overlap_analysis.jl)).** Paired MC:
+- conventional + three profiles × four h per geometry, 10 seeds × 2·10⁴ spins, own seeds per condition;
+- τ = min(0.135·c̄_min², 0.005/ΔR₂,max), with ΔR₂,max the package's **summed** bound. That bound sets τ (5.5e-5 square, 9.1e-5 rectangle; ΔR₂,max·τ = 0.005). It is conservative, 5× the true peak at s = 2.5, which cost runtime but not accuracy;
+- 41 readouts to ln 100/λ₁ of the equal-area annulus (window only);
+- quantity: max_t |ΔS|, ΔS = S_layer − S_conv.
+
+**D dependence (P3.5.4, [p3_5_ddep_analysis.jl](phase3/p3_5_ddep_analysis.jl)).**
+- Square 2.5, ρ = 1, bulk 1/2000, D 0.5 vs 3, TE = annulus conventional T₂ at D = 3 (0.517 ms).
+- New h ∈ {0.15, 0.35}, combined with the 3.7b ddep h ∈ {0.25, 0.5} (same geometry, TE, grid and formulas; independent seeds; each curve paired with and normalised by its own conventional run).
+- q = T₂(0.5)/T₂(3) − 1, Δq = q_layer − q_conv, against the two-measurement band 2√(n² + n²). The band ignores the (1 + q) factor in the noise of q, so it is understated by ≤ 15 %. This is inherited from 3.7b.
+
+### Result 1: configurations (P3.5.1)
+
+| geometry | support L (µm) | configuration | max fold | fluid covered ≥ 2 / ≥ 1 | farthest point from every surface (µm) |
+|---|---|---|---|---|---|
+| square 2.5 | 0.15 / 0.25 / 0.35 / 0.5 | separated / touching / two-direction / two-direction | 1 / 2 (point) / 2 / 2 | ≥ 2: 0 / 0 / 0.088 / 0.362; ≥ 1: 0.326 / 0.569 / 0.743 / 0.901 | 0.765 |
+| rect 2.5 × 4.0 | same | separated / touching / one-direction / one-direction | ≤ 2 | ≥ 2: 0 / 0 / 0.020 / 0.082; ≥ 1: 0.148 / 0.258 / 0.357 / 0.491 | 1.355 |
+| square 4.0 | step/linear 0.15–0.5; exponential 2.0 | separated; exponential 4-fold at the corners | 1; 4 | ≥ 2: 0 (exponential 0.883); ≥ 1: 0.079 / 0.137 / 0.201 / 0.305 | 1.824 |
+
+At s = 2.5 the corner point is 0.77 µm from every surface, beyond any allowed support, so overlaps there are at most pairwise. Four-fold overlap needs wide spacing and a long support (exponential at s = 4).
+
+### Result 2: realism of the summed rate (P3.5.2)
+
+| profile | square 2.5 | rectangle 2.5 × 4 | square 4.0 |
+|---|---|---|---|
+| linear, h = 0.15–0.5 | realistic | realistic | realistic |
+| step, h ≤ gap/2 | realistic (h = gap/2: touching point only, measure zero) | same | realistic |
+| step, h > gap/2 | **not**: the rate doubles in the overlap (74 % of the surface at h = gap) | **not** (37 % at h = gap) | — |
+| exponential (L = gap) | **not**: excess e^(−gap/h) = 0.036 / 0.135 / 0.240 / 0.368 (h 0.15 … 0.5) | same | **not**: e^(−2/h) = 1.6e-6 … 0.018 |
+
+![realism](results/phase3/p3_5_realism/p3_5_realism.png)
+
+- **Linear** is realistic in every configuration, including full overlap (h = gap). Across the gap the two linear layers sum to a constant along the line of centres and decrease off it. This is the same as on walls.
+- **Step** is the counter-example: wherever two supports overlap the rate doubles.
+- **Exponential with the default cutoff L = gap is never strictly realistic on curved arrays.**
+  - The neighbour's support (a circle of radius R + L around it) touches the facing surface only at one point. Off the line of centres it cuts into the gap, so the neighbour's truncated tail switches on with a jump of e^(−L/h) relative to the surface value, inside the fluid.
+  - The excess equals e^(−gap/h) exactly; the sampled values reach it to 4 significant figures.
+  - On walls the cut falls exactly on the opposite wall, so this cannot happen there.
+  - It is small when h ≪ gap (1.6e-6 at s = 4, h = 0.15) but up to 0.37 when h = gap.
+  - **Design decision D3.5 (exponential support = smallest gap) therefore produces a non-physical jump in narrow gaps. This is a modelling choice for the user to revisit** (for example a smooth taper), not a code defect.
+
+### Result 3: exact summation in the package (P3.5.3)
+
+All new tests pass, on their first run: the package already sums overlapping layers exactly.
+- **Agreement:** stationary rates to ≤ 1e-12, segment exponents to ≤ 1e-10.
+- **What the tests guard against:** a wrong cutoff (smallest gap) in rectangular arrays, a truncated image reach for 4-fold overlap, and a non-summed τ bound.
+- **Full package suite** without the display-dependent plots (`test_args=["no-plots"]`): 3579/3579 (+24). With plots, the one failure was the visual regression "Plot walls in 3D", which needs a display (CI uses xvfb).
+
+### Result 4: signal against the overlap degree at fixed ρ (P3.5.4)
+
+ρR/D = 1, outside, max_t |ΔS| (paired; SEM ≤ 5e-4):
+
+| h/gap | square 2.5: step / linear / exponential | rectangle 2.5 × 4: step / linear / exponential |
+|---|---|---|
+| 0.3 (separated) | 0.026 / 0.019 / 0.040 | 0.023 / 0.017 / 0.043 |
+| 0.5 (touching) | 0.037 / 0.029 / 0.046 | 0.037 / 0.027 / 0.052 |
+| 0.7 | 0.044 / 0.037 / 0.048 | 0.049 / 0.037 / 0.056 |
+| 1.0 (full overlap) | 0.052 / 0.045 / 0.049 | 0.065 / 0.050 / 0.059 |
+
+![overlap](results/phase3/p3_5_overlap_analysis/p3_5_overlap.png)
+
+- **Every ΔS is negative** (the layer attenuates more), and every step in h is resolved (z ≥ 2.9 with a conservative unpaired σ; the h models share trajectories but only per-model SEMs are stored).
+- **Step and linear keep growing through touching into full overlap**: overlap does not cap the difference. But the growth is **sublinear in the square** (per µm of h: step 0.113 → 0.070 → 0.049, linear 0.101 → 0.076 → 0.052) and nearly linear in the rectangle (step 0.136 → 0.121 → 0.109). There is no same-h control without overlap, so the damping cannot be attributed to overlap alone.
+- **The exponential's flattening (+14 / +5 / +3 % in the square) is not an overlap effect.** Its support, and so its overlap area (0.362 / 0.082), is the same at every h; the profile flattens within a fixed support.
+- **Wider spacing.** The 3.7b map at s = 4 (no step/linear overlap) gives larger values (step h = 0.5: 0.073). S/V (0.49 vs 2.02 µm⁻¹) and the time window differ, so this is not an "overlap penalty".
+- On walls (P2.5.9), overlap saturated the fixed-ρ difference. On cylinders at these h it damps but does not saturate step and linear.
+
+### Result 5: D dependence of overlapping layers (P3.5.4)
+
+Square 2.5, ρ = 1; q_conv = 0.254 / 0.257 (the two sources):
+
+| h/gap | q_layer / q_conv: step / linear / exponential | absolute q_layer | Δq / band |
+|---|---|---|---|
+| 0.3 | 0.55 / 0.66 / 0.30 | 0.139 / 0.168 / 0.077 | 2.7 / 2.0 / 4.2 |
+| 0.5 | 0.35 / 0.48 / 0.22 | 0.090 / 0.125 / 0.055 | 3.9 / 3.1 / 4.8 |
+| 0.7 | 0.24 / 0.36 / 0.19 | 0.062 / 0.092 / 0.048 | 4.6 / 3.8 / 4.9 |
+| 1.0 | 0.13 / 0.23 / 0.16 | 0.034 / 0.060 / 0.042 | 5.3 / 4.7 / 5.1 |
+
+![ddep overlap](results/phase3/p3_5_ddep_analysis/p3_5_ddep.png)
+
+- **Overlap reduces the layers' D dependence monotonically**, and Δq is detectable at SNR 200 everywhere (2.0–5.3× the band).
+- **It is not removed at full overlap:** q_layer ≥ 0.034, ≥ 0.13 q_conv. On walls (P2.5.9, same D pair and TE convention, ρ = 1, w = 2) thick or overlapping layers kept ≤ 4.6 % against q_conv = 47 %, and the bound was set at linear h/w = 0.5, where the layers only touch.
+  - The comparison is not like for like in strength: q_conv is 0.25 here against 0.47 on walls (ρ·gap/D 0.17 against ρw/D 0.67).
+- **Hypothesis (untested) for the difference.** It is not partial overlap, because walls lose the D dependence without overlap. It is coverage: on walls with h/w ≥ 0.5 every fluid point is within h of a surface, while here at h = gap 9.9 % of the fluid lies beyond every support (farthest point 0.765 µm from every surface). So the rate is not spread over the whole fluid, and diffusion still matters.
+
+### Conclusion
+
+- **Profiles.** Linear layers remain realistic profiles when they overlap, in every configuration. Step layers are the known counter-example (doubling). Exponential layers with the default support = gap jump by e^(−gap/h) inside narrow gaps on curved arrays, an artefact of truncation that walls do not have. **D3.5 deserves a user decision.**
+- **Package.** It sums overlapping layers exactly; the summed τ bound is valid but conservative (up to 5× in the square array).
+- **Signal.** At fixed ρ, overlap does not cap the layer-vs-conventional difference for step and linear layers; in two-direction overlap their growth with h is sublinear.
+- **D dependence.** Overlap reduces it monotonically but does not remove it on cylinders (≥ 13 % of the conventional value at full overlap), unlike walls. The suggested reason, incomplete coverage of the fluid, is a hypothesis.
