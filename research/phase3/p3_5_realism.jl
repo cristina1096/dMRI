@@ -50,22 +50,28 @@ Threads.@threads for k in eachindex(cases)
     sv = [rate((R1 + 1e-12) * cos(θ), (R1 + 1e-12) * sin(θ)) / surface for θ in range(0, 2π, length=3601)]
     surf_max = maximum(min(sv[i], sv[i + 1]) for i in 1:length(sv) - 1)
     mx = max(interior_max, surf_max)
-    # ray test: 1800 surface points, outward normal rays in steps of 2e-4 µm up to 2·max(gap) or until another cylinder
-    rmax_ray = 2 * max(c.sx, c.sy)
+    # ray test (Group A review I1, I2): outward normal rays stop at the cylinder's own Voronoi cell (the unit rectangle,
+    # |x| ≤ sx/2, |y| ≤ sy/2 — the 2D analogue of the walls' half gap); t sampled log-spaced from 1e-9 µm (the
+    # truncation jump sits within ~1e-5 µm of the surface near the facing directions) then every 2e-4 µm; angles: 1800
+    # uniform plus refinement at ±(1e-2 … 1e-6) rad around each facing direction (0, π/2, π, 3π/2)
     excess, nviol, θworst = 0.0, 0, 0.0
-    θs = range(0, 2π, length=1801)[1:end-1]
-    for θ in θs
+    θu = collect(range(0, 2π, length=1801)[1:end-1])
+    θr = [φ + σ * δ for φ in (0.0, π / 2, π, 3π / 2) for δ in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6) for σ in (-1, 1)]
+    θs = vcat(θu, θr)
+    tgrid = vcat(exp10.(range(-9, log10(2e-4), length=60)), collect(4e-4:2e-4:max(c.sx, c.sy)))
+    for (iθ, θ) in enumerate(θs)
         u = (cos(θ), sin(θ))
         s0 = rate((R1 + 1e-12) * u[1], (R1 + 1e-12) * u[2])   # just outside: cos/sin rounding can put R·u at r < R
         best = s0
-        for t in 2e-4:2e-4:rmax_ray
+        for t in tgrid
             x, y = (R1 + t) * u[1], (R1 + t) * u[2]
+            (abs(x) <= c.sx / 2 && abs(y) <= c.sy / 2) || break
             fluid(x, y) || break
             v = rate(x, y)
             best = max(best, v)
         end
         e = s0 > 0 ? best / s0 - 1 : (best > 0 ? Inf : 0.0)
-        if e > 1e-9
+        if e > 1e-9 && iθ <= length(θu)                        # fraction counted on the uniform angles only
             nviol += 1
             e > excess && (θworst = θ)
         end
@@ -76,14 +82,20 @@ Threads.@threads for k in eachindex(cases)
     results[k] = merge(c, (surface_rate=surface, max_ratio=mx, interior_max_ratio=interior_max, surface_max_ratio=surf_max,
         x_at_max=xs[imax[1]], y_at_max=ys[imax[2]],
         gap_mid_ratio=rate(c.sx / 2, 0.0) / surface, corner_ratio=fluid(c.sx / 2, c.sy / 2) ? rate(c.sx / 2, c.sy / 2) / surface : NaN,
-        facing_surface_ratio=rate(R1, 0.0) / surface, ray_max_excess=excess, ray_violation_fraction=nviol / length(θs),
-        ray_worst_angle_deg=rad2deg(θworst), realistic=excess <= 1e-9,
+        facing_surface_ratio=rate(R1, 0.0) / surface, ray_max_excess=excess, ray_violation_fraction=nviol / length(θu),
+        excess_analytic=c.shape == "exponential" ? exp(-(min(c.sx, c.sy) - 2R1) / c.h) : NaN,
+        ray_worst_angle_deg=rad2deg(θworst),
+        realistic=c.shape == "exponential" ? false : excess <= 1e-9,     # exponential, cutoff = gap: never strictly realistic (analytic)
         violation_touching_point_only=touching_only))
     lock(lk) do
         maps[k] = M
     end
 end
 write_csv(joinpath(OUT, "realism.csv"), results)
+# sampled excess must reach the analytic supremum e^(−gap/h) for the exponential (sampled values are lower bounds)
+for r in results
+    r.shape == "exponential" && (r.ray_max_excess >= 0.98 * r.excess_analytic || error("sampled excess $(r.ray_max_excess) does not reach e^(−gap/h) = $(r.excess_analytic) for $(r.geometry) h = $(r.h)"))
+end
 foreach(r -> @printf("%-13s %-12s h %.2f L %.2f  interior max %.4f  surface max %.4f (× single)  gap mid %.4f  corner %s  %s\n", r.geometry, r.shape,
     r.h, r.L, r.interior_max_ratio, r.surface_max_ratio, r.gap_mid_ratio, isnan(r.corner_ratio) ? "—" : @sprintf("%.4f", r.corner_ratio),
     r.realistic ? "realistic" : @sprintf("NOT realistic (ray excess %.3f on %.1f %% of the surface)", r.ray_max_excess, 100r.ray_violation_fraction)), results)

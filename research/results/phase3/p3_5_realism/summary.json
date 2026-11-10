@@ -5,14 +5,14 @@
     "p3_5_realism.png"
   ],
   "n_cases": 36,
-  "n_unrealistic": 17,
+  "n_unrealistic": 18,
   "provenance": {
     "MCMRSimulator": "1.1.0",
     "MRIBuilder": "0.4.1 @ v0.4.1",
     "cpu": "Apple M1 Pro",
-    "date": "2026-11-11T06:22:33.909",
+    "date": "2026-11-11T07:19:00.964",
     "git_branch": "cc/near-surface-r2",
-    "git_commit": "fb27e1b5e82af936ff4a012d407337c17fb65d67",
+    "git_commit": "4593641291bb58fe1d251c7ec5019742608a1f58",
     "julia": "1.12.7",
     "julia_threads": 8,
     "memory_GB": 16.0,
