@@ -99,7 +99,7 @@ end
     annulus_signal(; R, R_out, D, times, layer=nothing, surface=0.0, R2_bulk=0.0, N=2000)
 
 S(t)/S(0) in the annulus for a uniform start. `layer = (shape, ρ, h, L)` (ρ per unit surface area, D3.1), `surface = ρ`
-for the conventional model.
+for the conventional model. `renormalise=true` (default) scales a layer cut at R_out by 1/kept so that ∫ΔR2 dA = 2πRρ.
 """
 annulus_signal(; R, R_out, D, times, layer=nothing, surface=0.0, R2_bulk=0.0, N=2000, renormalise=true) =
     annulus_signal_fun(R=R, R_out=R_out, D=D, layer=layer, surface=surface, bulk=R2_bulk, N=N, renormalise=renormalise).(times)

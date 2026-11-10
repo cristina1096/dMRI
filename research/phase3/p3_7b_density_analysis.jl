@@ -78,7 +78,7 @@ for c in den_c
         end
         T2, T2c = t2(S, te), t2(Sc, te)
         layer = m != "conventional"
-        push!(rows, (label=label, s=s, f=f, te=te, compartment=comp, model=m, shape=out.shape[m],
+        push!(rows, (label=label, s=s, f=f, te=te, compartment=comp, model=m, shape=comp == "intra" ? ins.shape[m] : out.shape[m],
             S_mc=S, S_sem=sem, T2_mc=T2, T2_sigma=t2σ(S, sem, te),
             dT2_rel=layer ? (T2 - T2c) / T2c : NaN, dT2_rel_sigma=layer ? t2σ(S, dsem, te) / T2c : NaN,
             noise2_snr200=2 * t2_noise_rel(Sc, 200), noise2_snr100=2 * t2_noise_rel(Sc, 100),
@@ -133,7 +133,7 @@ fig = Figure(size=(1500, 820))
 axa = Axis(fig[1, 1], xlabel="intra-axonal volume fraction f = πR²/s²", ylabel="T₂,app at TE_sum* (ms)",
     title="(a) apparent T₂ vs packing, conventional (layers coincide to ≤ 0.03 %, see b)")
 axb = Axis(fig[1, 2], xlabel="f", ylabel="|ΔT₂/T₂| vs conventional (%)", yscale=log10,
-    title="(b) |layer − conventional|, paired, 2σ bars (filled ΔT₂ < 0, open > 0)")
+    title="(b) |layer − conventional|, paired, 2σ bars, lower ends clipped at y/10 (filled ΔT₂ < 0, open > 0)")
 axc = Axis(fig[2, 1:2], xlabel="density / compartment / model", ylabel="z = (MC − support)/SEM",
     title="(c) Monte Carlo against support (intra: exact continuum; extra, sum: annulus only at s ≥ 4)")
 for comp in ("intra", "extra", "sum"), m in MODELS

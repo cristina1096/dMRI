@@ -17,6 +17,7 @@
 # Checks: conventional θ√τ and MC − annulus z (s = 4); annulus grid at h/R = 0.1, ρR/D = 1 and 30 (N 2000 vs 4000); fit
 # family N = 1000 vs 2000 at the most demanding VALID fit (3.7a lesson I4). c̄_min = 0.033 (linear h/R = 0.1) < 0.05:
 # the τ rule is extrapolated there (flagged).
+# The dense annulus map below ρR/D = 0.1 for h/R 0.25–0.5 is a mild extrapolation (validation used c̄ = 0.1 layers; low ρ).
 # Run: julia --project=research/baseline -t 8 research/phase3/p3_7b_map_analysis.jl  (works on partial results)
 
 include(joinpath(@__DIR__, "harness.jl"))
@@ -106,7 +107,8 @@ for s in sort(unique(r.s for r in mc)), sh in SHAPES, hr in sort(unique(r.hR for
     length(sel) < 2 && continue
     (vd, sd) = threshold_status([r.rhoRD for r in sel], [r.maxdS_mc for r in sel], LEVEL)
     ok = [r for r in sel if !isnan(r.residual)]
-    (vb, sb) = length(ok) >= 2 ? threshold_status([r.rhoRD for r in ok], [r.residual for r in ok], LEVEL) : (NaN, :no_valid_fits)
+    (vb, sb) = length(ok) >= 2 ? threshold_status([r.rhoRD for r in ok], [r.residual for r in ok], LEVEL) :
+               (NaN, isempty(ok) ? :no_valid_fits : :one_valid_fit)          # one valid fit cannot bracket a threshold
     push!(ths, (source="mc", s=s, shape=sh, hR=hr, fixed_rho_threshold=vd, fixed_rho_status=String(sd), bestfit_threshold=vb,
         bestfit_status=String(sb), n_valid_fits=length(ok)))
 end

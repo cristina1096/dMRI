@@ -4,7 +4,8 @@
 # Quantities:
 #   e_S(t) = (S_mc − S_ann)/S_ann and z_S = (S_mc − S_ann)/SEM_S per model and readout (t > 0); max_t |e_S|;
 #   ΔS ratio ΔS_mc/ΔS_ann at the readout of max_t |ΔS_ann|, σ = SEM_ΔS/|ΔS_ann| (paired), and z_ΔS;
-#   effective rates λ_eff = −ln S(t_end)/t_end, MC against annulus; the kept fraction of the layer in the annulus.
+#   effective rates λ_eff = −ln S(t_end)/t_end (endpoint, not the plan's log-linear fit; reported only), MC against
+#   annulus; the kept fraction of the layer in the annulus.
 # Decision rule (plan, fixed before the run):
 #   (S criterion, ruling before any data: |S_mc − S_ann| ≤ 1 %·S_ann + 2·SEM_S at every readout — the plan's bare
 #    max|e_S| ≤ 1 % would fail on MC noise alone where S ≈ 0.01 late in the ρ = 0.2 windows)

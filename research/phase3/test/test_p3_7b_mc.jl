@@ -46,3 +46,11 @@ end
     @test isempty(read_done_both(joinpath(dir, "none.csv"), kf; cheader="label,x", kheader="label,t").labels)
     @test_throws ErrorException read_done_both(cf, kf; cheader="label,y", kheader="label,t")
 end
+
+@testset "p3_7b: resume — label only in conditions.csv is not done (plan Task 2 case)" begin
+    dir = mktempdir()
+    cf, kf = joinpath(dir, "conditions.csv"), joinpath(dir, "curves.csv")
+    write_atomic(kf, [(label="a", t=0.0)])
+    write_atomic(cf, [(label="a", x=1.0), (label="b", x=2.0)])
+    @test read_done_both(cf, kf; cheader="label,x", kheader="label,t").labels == Set(["a"])
+end

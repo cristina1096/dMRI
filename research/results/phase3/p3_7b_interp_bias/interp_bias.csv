@@ -1,0 +1,10 @@
+shape,hR,threshold_dense,status_dense,threshold_decade,status_decade,bias
+step,0.1,0.5081852435,crossed,0.5446358538,crossed,0.0717270144
+step,0.25,0.197021433,crossed,0.2067816364,crossed,0.04953879038
+step,0.5,0.1094576959,crossed,0.1101454581,crossed,0.006283360181
+linear,0.1,0.7765594974,crossed,0.8052492755,crossed,0.03694472633
+linear,0.25,0.2766987143,crossed,0.2953588836,crossed,0.06743858338
+linear,0.5,0.1443523816,crossed,0.1481318254,crossed,0.02618206797
+exponential,0.1,0.2131486285,crossed,0.2238566865,crossed,0.05023751764
+exponential,0.25,0.1024155502,crossed,0.1025614478,crossed,0.001424565287
+exponential,0.5,0.07896933584,crossed,NaN,above_range,NaN
