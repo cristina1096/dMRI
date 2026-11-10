@@ -28,20 +28,22 @@ function h_for_cbar_out(shape, cb, gap)
 end
 
 """
-    run_condition_outside(; R=1.0, s, D, rho, R2_bulk, models, times, tau, nspins=20_000, seeds)
+    run_condition_outside(; R=1.0, s=nothing, sx=s, sy=s, D, rho, R2_bulk, models, times, tau, nspins=20_000, seeds)
 
 `models`: (name, shape, h) with shape "conventional" (MCMR θ = ρ√(π/D), P3.1.6) or an outer profile (outer layer only).
-Square array of spacing `s`, outside spins. Returns the `run_condition` fields with the annulus continuum in place of the
-radial one (`S_ann`, `dS_ann`) and `kept`, the fraction of the layer inside the annulus.
+Square array of spacing `s`, or rectangular (`sx`, `sy`; P3.5), outside spins. Returns the `run_condition` fields with the
+annulus continuum (equal area: π R_out² = sx·sy; exponential support = smallest gap) in place of the radial one
+(`S_ann`, `dS_ann`) and `kept`, the fraction of the layer inside the annulus.
 """
-function run_condition_outside(; R=1.0, s, D, rho, R2_bulk, models, times, tau, nspins=20_000, seeds)
-    gap = s - 2R
-    Ro = krogh_radius(s)
+function run_condition_outside(; R=1.0, s=nothing, sx=s, sy=s, D, rho, R2_bulk, models, times, tau, nspins=20_000, seeds)
+    (isnothing(sx) || isnothing(sy)) && error("run_condition_outside: give s or both sx and sy")
+    gap = min(sx, sy) - 2R
+    Ro = sqrt(sx * sy / π)
     support(shape, h) = shape == "exponential" ? gap : h
     geom(shape, h) = shape == "conventional" ?
-        Cylinders(radius=R, repeats=[s, s], surface_relaxation=rho * sqrt(π / D)) :
-        Cylinders(radius=R, repeats=[s, s], layer_rho_outer=rho, layer_h_outer=h, layer_shape=shape)
-    runs = Dict(name => run_cylinders(geom(shape, h); region=:outside, R=R, sx=s, sy=s, R2_bulk=R2_bulk, timestep=tau,
+        Cylinders(radius=R, repeats=[sx, sy], surface_relaxation=rho * sqrt(π / D)) :
+        Cylinders(radius=R, repeats=[sx, sy], layer_rho_outer=rho, layer_h_outer=h, layer_shape=shape)
+    runs = Dict(name => run_cylinders(geom(shape, h); region=:outside, R=R, sx=sx, sy=sy, R2_bulk=R2_bulk, timestep=tau,
                                       times=times, seeds=seeds, nspins=nspins, D=D) for (name, shape, h) in models)
     ref = any(m -> m[2] == "conventional", models) ? "conventional" : first(models)[1]
     identical = all(all(mr.position.(a) == mr.position.(b) for (a, b) in zip(runs[ref].finals, runs[n].finals)) for (n, _, _) in models)

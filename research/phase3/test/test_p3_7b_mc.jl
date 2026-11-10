@@ -54,3 +54,15 @@ end
     write_atomic(cf, [(label="a", x=1.0), (label="b", x=2.0)])
     @test read_done_both(cf, kf; cheader="label,x", kheader="label,t").labels == Set(["a"])
 end
+
+@testset "p3_7b: run_condition_outside on a rectangular array (P3.5 Task 4)" begin
+    models = [("conventional", "conventional", 0.0), ("step_h0.2", "step", 0.2)]
+    r = run_condition_outside(sx=2.5, sy=4.0, D=3.0, rho=0.02, R2_bulk=0.0, models=models, times=[0.0, 5.0], tau=1e-2,
+                              nspins=400, seeds=1:2)
+    @test r.identical_trajectories
+    @test r.S_mean["step_h0.2"][1] == 1.0
+    @test r.dS_mean["step_h0.2"][1] == 0.0
+    # outside fraction of the box follows the rectangular cell: 1 − π/(sx·sy) ≈ 0.686 (not the square-2.5 value 0.497)
+    @test abs(mean(r.nregion) / 400 - (1 - π / (2.5 * 4.0))) < 0.08
+    @test r.S_ann["conventional"] ≈ annulus_signal(R=1.0, R_out=sqrt(2.5 * 4.0 / π), D=3.0, times=[0.0, 5.0], surface=0.02)
+end
