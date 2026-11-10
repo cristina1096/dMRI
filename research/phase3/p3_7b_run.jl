@@ -106,7 +106,7 @@ conds = NamedTuple[]
 curves = NamedTuple[]
 for (k, (label, comp, s, D, ρ, bulk, layers, times, te)) in enumerate(conditions(TASK))
     label in PREV.labels && continue
-    nseeds = (TASK == "map" && s == 4.0 && ρ * R1 / D3 in (0.1, 10.0)) ? min(5, NSEEDS) : NSEEDS
+    nseeds = (TASK == "map" && s == 4.0 && any(x -> isapprox(ρ * R1 / D3, x; rtol=1e-9), (0.1, 10.0))) ? min(5, NSEEDS) : NSEEDS   # isapprox: ρR/D = 0.1000…02 in floating point
     seeds = 1000 * (OFFSET[TASK] + k) .+ (1:nseeds)
     cb(sh, h) = comp == :inside ? cbar(sh, h, R1) : cbar_out(sh, h, s)
     cmin = minimum(cb(sh, h) for (_, sh, h) in layers)
