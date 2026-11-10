@@ -1164,3 +1164,169 @@ Phase 2 used walls with gap w = 2 µm (Review C1 follow-up map; P2.5.9), and thi
 - **Monte Carlo agrees with the continuum** within the timestep rule wherever both exist. The uniformly low ΔS ratios with seeds 1–10 are explained by shared seed noise (fresh seeds at R = 1: consistent with 1); no bias is seen at the ±7 % level, and one up to ≈ 14 % is not excluded.
 - **Walls and cylinders** (same convention): at fixed ρ the layer becomes observable at about the same physical ρ (thin layers within 10 %, thick ones 10–40 % later in the cylinder); with a free conventional ρ within about 20 %.
 - **Open for P3.7b:** arrays and packing density (Fig. 9B analogue), the outside compartment and overlapping layers between neighbours. There the continuum does not exist and Monte Carlo with the comparison rule is the only method.
+
+## Comparison with the conventional model in arrays and outside cylinders (P3.7b)
+
+Plan `docs/superpowers/plans/2026-11-09-comparison-arrays-outside.md`. Square arrays of cylinders (R = 1 µm, centre spacing s, gap s − 2R), outside compartment, intra + extra summed signal, no RF.
+
+### Design
+
+- **Questions.** The same three as inside (P3.7a): apparent T₂ at fixed ρ (here against packing density, the paper's Fig. 9B), the best-fit conventional model, and the D-dependence signature. They are answered for the **extra-axonal** compartment and the **summed** signal.
+- **Compartments.**
+  - The cylinders are impermeable, so the inside layer cannot act on outside spins. Outside runs set only the outer layer, and the inside run only the inner layer (user, 2026-11-09).
+  - The summed signal is S = f·S_in + (1 − f)·S_out, with f = πR²/s². This is exact for impermeable walls; the SEMs of the independent runs add in quadrature.
+- **Outer layer.** ΔR₂(d) = (ρ/h)·g(d/h)/κ_out with κ_out = 1 + c̄/R. The exponential's support is the cutoff, which by default equals the gap (D3.5). In a narrow gap, the layers of neighbouring cylinders overlap and add.
+- **Support model: the annulus continuum.** No exact continuum exists outside. The support is a Krogh-type cell R ≤ r ≤ R_out with equal area (π R_out² = s²) and a reflecting outer edge, solved like the radial continuum ([continuum_annulus.jl](phase3/continuum_annulus.jl); exact Bessel references for the Robin rate and the ceiling). It is an **approximation**: it has no square-cell corners and no neighbour layers. It is used only where it is validated against Monte Carlo (Method).
+- **Lessons from P3.7a built in:**
+  - each condition has its own seeds (conditions independent);
+  - one threshold convention (`threshold_status`);
+  - a ceiling flag is not separation;
+  - the statistics wording states what the data exclude.
+
+### Method
+
+- **Paired Monte Carlo** (`p3_7b_mc.jl`, `run_condition_outside`): as in P3.7a.
+  - 10 seeds × 2·10⁴ spins in the periodic array, outside spins only;
+  - the same τ and seeds for every model of a condition, so trajectories are identical (checked: true in every condition);
+  - seeds 1000·k + (1:10), with k unique per task and condition;
+  - τ = min(0.135·c̄_min², 0.005/ΔR₂(0)_max) over the layer models.
+- **Crash-safe driver** ([p3_7b_run.jl](phase3/p3_7b_run.jl)): curves are written before conditions, each via a temporary file and rename; resume takes only labels present in both files.
+- **Annulus validation** (Task 3, [p3_7b_validate_analysis.jl](phase3/p3_7b_validate_analysis.jl)): s ∈ {2.5, 4.0} × ρ ∈ {0.02, 0.2} (ρR/D ≤ 0.067), conventional + three profiles at c̄ = 0.1. The rule was fixed before the run:
+  - every model: |S_mc − S_ann| ≤ 1 %·S_ann + 2·SEM at every readout. The 2·SEM term was added before any data existed, because late readouts at S ≈ 0.01 make 1 % comparable to the noise;
+  - every layer: ΔS ratio at the readout of max|ΔS_ann| within [0.8, 1.2] within 2σ;
+  - **full** support if both hold; **partial** if only the conventional model passes; otherwise **failure**, where the annulus sets only TE and readout windows.
+- **Validation outcome and decisions:**
+  - The overall verdict was failure, for two different reasons:
+    1. **Truncation.** The annulus cut the exponential layer at R_out (kept fraction 0.985 at s = 2.5) without renormalising. A 1.5 % loss of ∫ΔR₂ dA alone gave ΔS_ann = +5.3e-3 against MC −2.65e-4.
+    2. **Cell shape.** At s = 2.5, ρ = 0.2, the conventional model's rate is 0.35 % off, giving e_S up to 1.5 % at S ≈ 0.01 and max|S_mc − S_ann| = 1.05e-3. The relative rate error grows with ρ (0.044 % at ρ = 0.02), consistent with the square cell's corners lying beyond the Krogh circle.
+  - **User decision (2026-11-09): "fix + per spacing".**
+    - The cut layer is renormalised by 1/kept, so ∫ΔR₂ dA = 2πRρ, the mean-exponent identity.
+    - The same rule is applied per spacing: **s = 4 full**, **s = 2.5 failure**.
+    - s ≤ 3 is therefore MC-only. s = 3 was not validated and is treated as dense.
+  - After renormalisation every ΔS ratio passes (exponential at s = 2.5: 1.06 ± 0.11 and 0.96 ± 0.04).
+  - At s = 4, ρ = 0.2 the annulus nevertheless **overestimates |ΔS| by 8 ± 3 %** (ratios 0.913–0.921, z ≈ −3): resolved, within the band (Group A review I2).
+  - **Group C (user, 2026-11-10): "map MC decides".** At s = 4 each map condition validates the annulus with the same rule, which extends or limits its use.
+- **Apparent T₂, noise, best fit, D signature:** as in P3.7a.
+  - TE for the summed signal is TE_sum*, where f·S_in,cont + (1 − f)·S_out,ann = e⁻¹ for the conventional model; all compartments are read at it.
+  - In the D signature, Δq = (1 + q_conv)[(1 + δ₀.₅)/(1 + δ₃) − 1] with δ the paired ΔT₂/T₂ per D. Its σ comes from the paired errors, since the D conditions are independent.
+
+**Runs** (Apple M1 Pro, 8 threads; all `identical_trajectories = true`):
+
+| task | conditions | τ (ms) | wall time |
+|---|---|---|---|
+| validate (Task 3) | s ∈ {2.5, 4} × ρ ∈ {0.02, 0.2}, c̄ = 0.1 | 1.35e-3 | 1.7 h |
+| inside (Task 4) | R = 1, c̄ = 0.1, readouts = union of the density grids | 1.35e-3 | 2.6 h |
+| density (Task 4) | s ∈ {2.3, 2.5, 3.0, 4.0}, ρ = 1/140, c̄ = 0.1 | 1.35e-3 | 6.7 h |
+| ddep (Task 6) | s = 2.5, ρ ∈ {0.1, 1} × D ∈ {0.5, 1, 2, 3}, h/R ∈ {0.25, 0.5} | 9.4e-4; 6.8e-4 | 1.0 h |
+| map (Task 5) | s ∈ {2.5, 4} × ρR/D ∈ {0.1, 1, 10} × h/R ∈ {0.1, 0.25, 0.5} | 1.5e-4; 8.6e-5; 8.6e-6 | 16.2 h |
+
+- **Cost decisions (user, 2026-11-10).** ddep dropped h/R = 0.1 (its linear c̄ = 0.033 forced τ = 1.5e-4). The map at s = 4, ρR/D ∈ {0.1, 10} used 5 seeds.
+- **Bug.** An exact floating-point test (ρR/D = 0.1 is 0.1000…02) made s = 4, ρR/D = 0.1 run 10 seeds (8.0 h instead of ≈ 4 h). It is fixed with `isapprox`, and that condition has the smaller SEM.
+- **Timestep validity.** The map's c̄_min = 0.033 < 0.05, so the τ rule is extrapolated there. Overlapping outer layers at s = 2.5 raise the summed rate (step ×2, exponential up to ×1.37), but every summed peak stays below the rate of the τ-setting layer (map 9.24ρ ≤ 19.36ρ, ddep 7.11ρ ≤ 7.39ρ), so ΔR₂τ ≤ 0.005 everywhere.
+
+### Result 1: apparent T₂ against packing density (Fig. 9B analogue, P3.7.1 arrays, P3.7.2)
+
+[p3_7b_density_analysis.jl](phase3/p3_7b_density_analysis.jl) → [results/phase3/p3_7b_density_analysis/](results/phase3/p3_7b_density_analysis/). ρ = 1/140, D = 3, bulk 1/2000, same centroid c̄ = 0.1 on both sides.
+
+| s (f) | TE_sum* (ms) | T₂ conventional, intra / extra / sum (ms) | ΔT₂/T₂ intra | ΔT₂/T₂ extra | ΔT₂/T₂ sum |
+|---|---|---|---|---|---|
+| 2.3 (0.594) | 58.3 | 67.7 / 46.8 / 58.3 | −0.027 % | −0.024 % | −0.025 % |
+| 2.5 (0.503) | 67.3 | 67.7 / 67.0 / 67.3 | −0.026 % | −0.013 % | −0.020 % |
+| 3.0 (0.349) | 99.9 | 67.7 / 122.6 / 99.9 | −0.026 % | −0.018 … −0.021 % | −0.020 … −0.022 % |
+| 4.0 (0.196) | 202.8 | 67.7 / 250.8 / 202.8 | −0.025 % | −0.026 … −0.028 % | −0.022 … −0.024 % |
+
+The σ values are 0.0014–0.006 %, and ranges are over the three profiles.
+
+![density](results/phase3/p3_7b_density_analysis/p3_7b_density.png)
+
+- **The Fig. 9B trend.**
+  - The extra-axonal T₂ rises steeply as packing loosens: 46.8 → 250.8 ms, because S/V = 2πR/(s² − πR²) falls from 2.92 to 0.49 µm⁻¹.
+  - The intra T₂ is the single-cylinder value, 67.7 ms.
+  - The summed T₂ lies between, weighted by f.
+  - At s = 2.5, extra ≈ intra (67.0 vs 67.7 ms) because the two compartments' S/V are nearly equal (2.02 vs 2.00 µm⁻¹).
+- **The layer is invisible at this ρ in every compartment.** Every ΔT₂/T₂ is negative, and |ΔT₂/T₂| ≤ 0.028 %, ≈ 100× below the 2σ two-point noise at SNR 200 (2.9 % for the sum at r = e⁻¹).
+- **Read with care:**
+  - The extra range (−0.013 … −0.028 %) is noise-limited, not a density trend. The s = 2.5 value is one shared fluctuation of the three profiles, ≈ 1.7σ from the annulus estimate (context only there).
+  - Profile differences are not resolved by Monte Carlo; the profiles share trajectories, so overlapping σ is not a test. The support predicts exponential ≥ linear ≥ step by ≤ 13 % (extra, s = 4) and ≈ 2.5 % (intra).
+  - The inside run is shared by all densities, so the intra columns are one measurement read at four TEs.
+- **Monte Carlo against support.**
+  - Intra against the radial continuum: |z| ≤ 0.82.
+  - Extra and sum at s = 4 against the annulus: S agrees to −5e-5 relative (|z| ≤ 0.9). For ΔS the point estimates differ by 0.6–1.9 %, but SEM_ΔS/ΔS ≈ 22 %, so only differences beyond ≈ ±45 % (2σ) are excluded.
+  - The dense annulus curves for s ∈ [4, 6] are extrapolated beyond the validated s = 4, justified by ρR_out/D ≤ 0.008 ≪ 0.067.
+
+### Result 2: outside dimensionless map (P3.7.3 outside)
+
+[p3_7b_map_analysis.jl](phase3/p3_7b_map_analysis.jl) → [results/phase3/p3_7b_map_analysis/](results/phase3/p3_7b_map_analysis/). R = 1, D = 3, no bulk; 41 readouts to ln 100/λ₁,conv.
+
+**Fixed ρ: first ρR/D with max|ΔS| ≥ 0.01** (MC, `threshold_status` over the three decade points):
+
+| profile | h/R | inside (P3.7a MC) | outside s = 2.5 | outside s = 4 |
+|---|---|---|---|---|
+| step | 0.1 / 0.25 / 0.5 | 0.54 / 0.22 / 0.13 | 0.54 / 0.25 / 0.18 | 0.58 / 0.21 / 0.11 |
+| linear | 0.1 / 0.25 / 0.5 | 0.81 / 0.31 / 0.17 | 0.79 / 0.32 / 0.20 | 0.88 / 0.30 / 0.15 |
+| exponential | 0.1 / 0.25 / 0.5 | 0.26 / 0.15 / 0.12 | 0.28 / 0.20 / 0.19 | 0.23 / ≈ 0.1 (unresolved) / < 0.1 (annulus 0.079) |
+
+![map outside](results/phase3/p3_7b_map_analysis/p3_7b_map.png)
+
+- **Outside ≈ inside at fixed ρR/D.** Two method biases apply:
+  - interpolating between decade points overestimates a threshold by ≤ 7 % (thin layers) or ≤ 3 % (thick), checked on the s = 4 annulus;
+  - MC |ΔS| runs 3–8 % low at ρR/D = 1 (ratios to the annulus 0.92–0.97; τ extrapolated at c̄ = 0.033).
+- So outside–inside differences ≲ 10 % are **not resolved**. That covers every h/R = 0.1 value and most others.
+- Two clear differences remain:
+  - **exponential at s = 4 is visible earlier** (≈ 0.1 and < 0.1 vs 0.15 and 0.12), because its support is the 2 µm gap, not R;
+  - **h/R = 0.5 at s = 2.5 is later** (0.18–0.20 vs 0.12–0.17): there the outer layers overlap across the 0.5 µm gap.
+- Equal ρR/D does not mean equal S/V: 2.02 µm⁻¹ at s = 2.5, 0.49 at s = 4, and 2 inside.
+- **Overlap.** At s = 2.5 the h/R = 0.25 step layers just touch, while the h/R = 0.5 step and every exponential (support 0.5) overlap and add. The s = 2.5 results therefore describe summed overlapping layers, not single-surface profiles.
+- **Best fit and support.**
+  - **Annulus validation per condition.** At s = 4 the annulus passes at ρR/D = 0.1 and fails at ρR/D = 1 and 10 on the S criterion. There the conventional model differs by 3.7e-3 (z 8) and 1.1e-2 (z 17), the size of the 0.01 threshold, although the ΔS ratios pass (0.92–1.04).
+  - **Where the fit is possible.** The outside best fit is therefore available only at s = 4, ρR/D = 0.1. The fitted conventional model reproduces every layer curve to 1.9e-4 – 4.4e-4, with ρ_c/ρ 1.001–1.036 (1.004–1.039 relative to the conventional self-fit).
+  - **These residuals sit at the method floor.** The conventional Monte Carlo itself fits the annulus family only to 4.23e-4 (ρ_c/ρ 0.997; MC − annulus 1.27e-3, z 7.8, passing via the 1 %·S tolerance). They are upper bounds dominated by the square cell vs Krogh circle, not the layer's distance from a conventional curve.
+  - **Not determinable.** The best-fit threshold outside is "> 0.1" at s = 4 and cannot be determined beyond, nor at s = 2.5.
+- **Checks:**
+  - annulus grid at h/R = 0.1, ρR/D = 1 and 30: ≤ 1.8e-7;
+  - fit family N = 1000 vs 2000 at the most demanding valid fit: identical;
+  - conventional θ√τ 0.004 / 0.028 / 0.090.
+
+### Result 3: outside D-dependence signature (P3.7.3 outside)
+
+[p3_7b_ddep_analysis.jl](phase3/p3_7b_ddep_analysis.jl) → [results/phase3/p3_7b_ddep_analysis/](results/phase3/p3_7b_ddep_analysis/). s = 2.5, MC only. TE = annulus conventional T₂ at D = 3 for every D.
+
+| ρ | q_conv | q_layer (6 models) | Δq = q_layer − q_conv | two-measurement band (SNR 200) |
+|---|---|---|---|---|
+| 0.1 | 0.032 ± 0.001 | 0.006 – 0.017 | −0.015 … −0.026 (± ≤ 0.001) | 0.041: below (0.38–0.64×) |
+| 1 | 0.257 ± 0.003 | 0.034 – 0.125 | −0.13 … −0.22 (± ≤ 0.002) | 0.042: detectable (3.1–5.3×) |
+
+![ddep outside](results/phase3/p3_7b_ddep_analysis/p3_7b_ddep.png)
+
+- **Same mechanism as inside.** The conventional T₂ outside rises as D falls, while the layers' depends far less on D. Δq is detectable from ρ ≈ 1 µm/ms and not at ρ = 0.1.
+- **Weaker than inside at the same ρ:** q_conv is 0.032 / 0.257 outside against 0.041 / 0.355 inside (P3.7a).
+- **No band-edge cases.** This is partly because h/R = 1 cannot exist in a 0.5 µm gap; inside, the band edge was reached only at h/R = 1.
+- The comparison assumes ρ independent of D (MCMR's θ = ρ√(π/D) changes with D), and the s = 2.5 layers overlap (Result 2).
+
+### Inside, outside and walls (P3.7.4)
+
+All thresholds below are in physical ρ (µm/ms; cylinders ρ = y·D/R = 3y, walls ρ = x·D/w = 1.5x) at equal absolute h, all by `threshold_status`. Inside and outside are Monte Carlo over decade points (biases ≈ ±10 %, above). Walls are the Phase 2 continuum map re-thresholded by [p3_7_walls_comparison.jl](phase3/p3_7_walls_comparison.jl).
+
+| fixed ρ, max\|ΔS\| ≥ 0.01 | step | linear | exponential |
+|---|---|---|---|
+| h = 0.1 µm: walls / inside / outside s 2.5 / s 4 | 1.51 / 1.63 / 1.63 / 1.74 | 2.37 / 2.42 / 2.38 / 2.65 | 0.67 / 0.79 / 0.84 / 0.68 |
+| h = 0.5 µm: walls / inside / outside s 2.5 / s 4 | 0.34 / 0.40 / 0.53 / 0.33 | 0.44 / 0.51 / 0.61 / 0.44 | 0.26 / 0.37 / 0.56 / < 0.3 |
+
+- **At fixed ρ** (known ρ, single free-decay curve, SNR 200), a near-surface layer becomes visible at about the same physical ρ on walls, inside cylinders and outside cylinders:
+  - ≈ 1.5–2.7 µm/ms for h = 0.1 µm (exponential ≈ 0.7–0.8);
+  - ≈ 0.3–0.6 µm/ms for h = 0.5 µm.
+  - The differences are mostly within the ≈ 10 % method bias. The clear exceptions are tied to geometry: the exponential reaches further when the gap is wide (outside s = 4), and overlapping layers in the narrow gap (outside s = 2.5, h = 0.5 µm) delay visibility.
+- **With a free conventional ρ** the layer stays hidden much longer:
+  - inside it separates from ρR/D ≈ 1–3;
+  - on walls from ρ ≈ 3–6 µm/ms (h = 0.5 µm);
+  - outside the test is only available at s = 4, ρR/D = 0.1, where the layer is absorbed down to the method floor.
+- **D signature** (two D, SNR 200): detectable from ρ ≈ 1 µm/ms in all three geometries, not at ρ = 0.1. The conventional q is largest on walls (0.055 / 0.47), then inside (0.041 / 0.355), then outside s = 2.5 (0.032 / 0.257).
+
+### Conclusion
+
+- **Physiological range** (ρ ≈ 1/140 µm/ms, D = 3, R = 1, any packing f = 0.20–0.59). The distributed layer changes the apparent T₂ by ≤ 0.03 % in the intra, extra and summed signals, ≈ 100× below single-measurement noise at SNR 200. Packing density does not make it visible.
+- **Fixed ρ.** Outside the cylinders the layer becomes visible from a single curve at about the same ρR/D as inside (0.1–0.9 depending on profile and h/R). The clear exceptions are geometric: the exponential in a wide gap is visible earlier, and overlapping layers in a narrow gap later.
+- **Free conventional ρ.** Outside, the comparison is limited by the support model. Where the annulus is valid (s = 4, ρR/D = 0.1), the fitted conventional model reproduces the layer to the method floor (≈ 4e-4). Beyond it, outside best fits are not determined.
+- **D dependence.** This is the most robust signature in every geometry, detectable at SNR 200 from ρ ≈ 1 µm/ms (T₂ ≲ 1 ms). It is weaker outside than inside.
+- **Annulus model.** It is a useful support only at wide spacing and weak relaxation (validated s = 4, ρR/D ≤ 0.1, after renormalising truncated layers). At dense packing or strong ρ the square cell differs from the Krogh circle by as much as the effect being measured.
+- **Monte Carlo** agrees with every validated support: intra |z| ≤ 0.82; annulus at s = 4 to 5e-5 at weak ρ. The comparison timestep rule holds, except where c̄_min = 0.033 (extrapolated, flagged).
