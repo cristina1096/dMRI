@@ -1,0 +1,7 @@
+rhoRD,shape,hR,max_abs_diff_S
+1,step,0.1,5.321843777e-08
+1,linear,0.1,2.723894665e-09
+1,exponential,0.1,1.235975988e-09
+30,step,0.1,1.821493313e-07
+30,linear,0.1,1.356311004e-07
+30,exponential,0.1,5.938350839e-08

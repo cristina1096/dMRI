@@ -1,0 +1,7 @@
+label,s,rhoRD,tau,nseeds,cbar_min,tau_rule_extrapolated,theta_sqrt_tau,conv_max_abs_z_vs_annulus,annulus_validated,conv_S_ok,layers_S_ok,ratios_ok,identical
+s2.5_rhoRD0.1,2.5,0.1,0.00015,10,0.03333333333,true,0.003759942412,NaN,false,false,false,true,true
+s2.5_rhoRD1.0,2.5,1,8.611111111e-05,10,0.03333333333,true,0.02848820988,NaN,false,false,false,true,true
+s2.5_rhoRD10.0,2.5,10,8.611111111e-06,10,0.03333333333,true,0.09008762968,NaN,false,false,false,true,true
+s4.0_rhoRD0.1,4,0.1,0.00015,10,0.03333333333,true,0.003759942412,7.758998075,true,true,true,true,true
+s4.0_rhoRD1.0,4,1,8.611111111e-05,10,0.03333333333,true,0.02848820988,12.36991972,false,false,false,true,true
+s4.0_rhoRD10.0,4,10,8.611111111e-06,5,0.03333333333,true,0.09008762968,26.73438243,false,false,false,true,true

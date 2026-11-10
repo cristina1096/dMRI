@@ -194,7 +194,7 @@ for (j, sh) in enumerate(SHAPES)
         (i == 1 && j == 1) && axislegend(ax, position=:lt, labelsize=9)
     end
     ax3 = Axis(fig[3, j], xlabel="ρR/D", ylabel="best-fit residual (s = 4)", xscale=log10, yscale=log10,
-        title="s = 4, $(sh): best fit to the annulus family (× flagged: edge-residual upper bound)")
+        title="s = 4, $(sh): best-fit residual (valid fits only)")
     for hr in hrs
         p = sort([r for r in mc if r.s == 4.0 && r.shape == sh && r.hR == hr], by=r -> r.rhoRD)
         v = [r for r in p if !isnan(r.residual)]
