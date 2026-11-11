@@ -31,7 +31,7 @@ The layer relaxes spins continuously while they are near the surface, instead of
 | `"exponential"` | ``e^{-u}/(1-e^{-L/h})`` | ``0 \le d \le L`` |
 
 Exponential support ``L``:
-- **walls:** `layer_cutoff`, by default the spacing between repeating walls;
+- **walls:** `layer_cutoff`, by default the smallest spacing between walls (repeating or not);
 - **cylinders, inside:** the radius, so the profile reaches the axis;
 - **cylinders, outside:** `layer_cutoff`, by default the smallest surface gap to a neighbouring cylinder.
 
@@ -39,7 +39,7 @@ A single wall or cylinder without neighbours needs an explicit `layer_cutoff` fo
 
 ## Keywords
 
-**Walls** (the two sides are the positive and negative local coordinate):
+**Walls** (positive side: where the local coordinate is larger than the wall position; negative side: smaller):
 
 | keyword | meaning |
 |---|---|
@@ -56,8 +56,9 @@ A single wall or cylinder without neighbours needs an explicit `layer_cutoff` fo
 | `layer_cutoff` | outside support of the exponential profile (µm) |
 
 **Limits on the parameters:**
-- inside, step and linear need ``h \le R``;
-- outside, the support (``h`` for step and linear, `layer_cutoff` for the exponential) must not exceed the surface gap to any neighbouring cylinder, so that no layer reaches inside another cylinder.
+- walls: ``h`` (every profile) and `layer_cutoff` must not exceed the spacing between walls;
+- cylinders, inside: step and linear need ``h \le R`` (for the exponential ``h`` is a decay length and may exceed ``R``);
+- cylinders, outside: the support (``h`` for step and linear, `layer_cutoff` for the exponential) must not exceed the surface gap to any neighbouring cylinder, so that no layer reaches inside another cylinder.
 
 From the command line the same keywords are flags, e.g. `mcmr geometry create cylinders --layer_rho 0.02 --layer_h 0.2 ...`
 (see `mcmr geometry create cylinders --help`).
@@ -73,10 +74,13 @@ simulation = Simulation([]; geometry=geometry, diffusivity=3., R2=1/2000)
 
 - **Overlap.** Where the layers of several surfaces overlap (narrow gaps, thick layers), their rates **add**.
 - **Integration along a step.**
-  - The step profile is integrated exactly from line–circle intersections.
-  - Linear and exponential use adaptive Gauss–Legendre quadrature between the exact shell boundaries, to an internal tolerance of 1e-10.
+  - Walls: every profile is integrated in closed form (the distance changes linearly along a straight step).
+  - Cylinders: the step profile is integrated exactly from line–circle intersections; linear and exponential use adaptive Gauss–Legendre quadrature between the exact shell boundaries, to an internal tolerance of 1e-10.
   - Axial motion along a cylinder does not change ``d``.
-- **Timestep.** The default maximum timestep keeps ``\Delta R_{2,\max}\,\tau \le 0.005`` (set by `Simulation(...; timestep=(layer=0.005,))`), where ``\Delta R_{2,\max}`` is the summed peak rate over overlapping layers. This bounds the error of a single model's decay rate to about 0.15 %. For **comparing** models or profiles at the same ``\rho`` (differences of a few 1e-3 in the signal), set the timestep explicitly (`Simulation(...; timestep=τ)`): ``\sqrt{2D\tau} \le 0.9\,\bar c_{\min}``, i.e. ``\tau \le 0.135\,\bar c_{\min}^2`` at ``D = 3``, gives ≲ 10 % error in the difference.
+- **Timestep.** The default maximum timestep keeps ``\Delta R_{2,\max}\,\tau \le 0.005`` (set by `Simulation(...; timestep=(layer=0.005,))`). This bounds the error of a single model's decay rate to about 0.15 %.
+  - For **cylinders**, ``\Delta R_{2,\max}`` is an upper bound on the summed rate of overlapping layers (conservative, up to several times the true peak).
+  - For **walls**, it is the largest single-layer rate. Where the layers of two walls overlap, the summed rate can be up to twice that, so the effective ``\Delta R_2\,\tau`` can reach 0.01; set a smaller timestep for overlapping wall layers.
+  - For **comparing** models or profiles at the same ``\rho`` (differences of a few 1e-3 in the signal), set the timestep explicitly, ``\tau = \min(0.135\,\bar c_{\min}^2,\ 0.005/\Delta R_{2,\max})`` at ``D = 3`` (in general ``\sqrt{2D\tau} \le 0.9\,\bar c_{\min}``), which gives ≲ 10 % error in the difference. An explicit `timestep=τ` replaces every automatic limit, so the rate limit must be included by hand.
 - **Not supported:**
   - finite RF pulses together with a layer (an error is raised); use instantaneous pulses;
   - spins stuck to a surface (surface density > 0) do not feel the layer (a warning is given).
@@ -86,6 +90,6 @@ simulation = Simulation([]; geometry=geometry, diffusivity=3., R2=1/2000)
 - **Step layers that overlap double the rate** in the overlap region, which is not a realistic near-surface profile.
 - **A truncated exponential on curved arrays has an interior jump.**
   - The support of a neighbouring cylinder (a circle of radius ``R+L``) cuts into the gap away from the line of centres. There the neighbour's tail switches on with a jump of ``e^{-L/h}`` relative to the surface value.
-  - The jump is negligible for ``h \ll L``, and up to ``e^{-1}`` near the surface for ``h = L``.
-  - Walls have no such jump, because their cut falls on the opposite wall.
+  - Near the surface the jump is negligible for ``h \ll L``, up to ``e^{-1}`` for ``h = L``, and tends to 1 for ``h \gg L``. At the edges of the overlap lens it reaches twice the local rate.
+  - Walls with the default cutoff (the spacing) have no such jump, because the cut falls on the opposite wall; a shorter user `layer_cutoff` creates the same jump on walls.
 - **Linear layers remain realistic** when they overlap.

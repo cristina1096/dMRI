@@ -34,12 +34,12 @@ Each section follows the same pattern: **design** (what was chosen, the alternat
 | P3.6.1 | Timestep scans inside cylinders vs the radial continuum (thin, profiles, radius, rate) | errors vs ΔR₂(0)τ, √(2Dτ)/h, √(Dτ)/R recorded | rate error ∝ ΔR₂(0)τ (p ≈ 1; 0.1 % at c ≈ 0.005); difference error controlled by √(2Dτ)/h (p ≈ 1.5 for thin step layers at \|e\| ≳ 40 %); profiles collapse in √(2Dτ)/c̄, crossing 10 % at ≈ 0.9–1.3 (measured at c̄ = 0.1; rule √(2Dτ) ≤ 0.9 c̄ confirmed at c̄ = 0.05: 4.3 ± 3.8 %); no curvature effect resolved |
 | P3.6.2 | Timestep rule for comparison studies | constraint documented | **Decided (user, 2026-11-08): option (b)** — comparison studies use τ ≤ 0.135 c̄_min² (√(2Dτ) ≤ 0.9 c̄; error ≲ 10 %, measured at c̄ = 0.1 and 0.05); default c = 0.005 unchanged for single-model runs; no package option |
 | P3.6.4 | Runtime summary | table | cylinders ≈ 2.6–3× walls; layer ×1.5–1.6; linear ×1.2, exponential ×2.5 vs step; cell list open |
-
 | P3.7.1, P3.7.3, P3.7.4 (inside, P3.7a) | Comparison with the conventional model inside single cylinders: apparent T₂ vs R and parameters, map over ρR/D × h/R with best fit, D signature | ΔT₂/T₂ and \|ΔS\| vs 2σ at SNR 100/200 | physiological ρ: \|ΔT₂/T₂\| ≤ 0.044 % (≥ 70× below noise); fixed-ρ threshold ρR/D ≈ 0.1–0.75; free conventional ρ separates from ρR/D ≈ 1–3 or beyond the ceiling D·j₀₁²/R²; D signature detectable at ρ = 1 |
 | P3.7.1, P3.7.2 (arrays, P3.7b) | Fig. 9B analogue: intra, extra, summed T₂ vs packing f = 0.20–0.59 | as above | \|ΔT₂/T₂\| ≤ 0.028 % in every compartment (≈ 100× below noise); MC vs radial continuum \|z\| ≤ 0.82 |
 | P3.7.3, P3.7.4 (outside, P3.7b) | Annulus support model, outside map (s = 2.5, 4), outside D signature; walls/inside/outside on one threshold convention | pre-registered annulus rule; thresholds by `threshold_status` | annulus valid only at s = 4, ρR/D ≤ 0.1 (renormalised; user decisions); fixed-ρ visibility at about the same physical ρ in all geometries; D signature detectable at ρ = 1 everywhere |
 | P3.5.1–P3.5.4 | Overlapping layers: configurations, realism (ray test), exact summation, signal and D dependence vs overlap | realism criterion; ≤ 1e-10 vs brute force | linear realistic; step doubles; truncated exponential jumps by e^(−gap/h) inside the fluid (D3.5 open); package exact (suite 3579/3579); \|ΔS\| keeps rising through overlap; D dependence not removed (≥ 0.13 q_conv) |
 | P3.8.1–P3.8.3 | Record, user documentation, tag | complete; docs build; tag exists | this record; `docs/src/near_surface_layer.md` (docs build OK); tag `rd-cylinders-v1` |
+
 ---
 
 ## Design decisions (D3.1–D3.6)
@@ -1499,7 +1499,8 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
   - A change would need a package change and a rerun of the affected exponential results (P3.4.8e–h, P3.7b, P3.5).
 - **◐ P3.1.3, P3.4.6, P3.4.8.** Left as they are (user, 2026-10-25).
 - **P3.6.4 cell list.** The layer cost per spin-step scales with the number of cylinders per cell (×6.7 at 400); a cell list of layer indices is open.
-- **`max_layer_rate`.** A valid but conservative summed bound, up to 5× the true peak in the s = 2.5 array. It costs runtime, not accuracy.
+- **`max_layer_rate`.** For cylinders a valid but conservative summed bound, up to 5× the true peak in the s = 2.5 array; it costs runtime, not accuracy.
+- **Walls timestep bound is not summed** (found in the P3.8 review, verified): for walls `max_layer_rate` is the largest single-layer rate, so where two wall layers overlap the default ΔR₂·τ can reach 0.01 instead of 0.005 (e.g. `Walls(repeats=1, layer_rho=0.1, layer_h=0.8)`: bound 0.125 /ms, summed rate 0.25 /ms at mid-gap). The Phase 2 overlap study (P2.5.9) is continuum-based, and its Monte Carlo check set τ = 0.005/(summed peak rate)/4 explicitly (`research/phase2/p2_5_overlap_mc_check.jl:18`), so no committed result is affected; whether the package bound should sum overlapping sides is a design decision for the user.
 
 ### Deferred minors (from the plan reviews; none changes a result)
 
@@ -1513,6 +1514,8 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
 | Tags `rd-profiles-v1`, `rd-walls-v1` | not created (the Phase 2 commits are not re-tagged here); deferred to the user |
 | P2.4.4 polynomial profile | not implemented (not needed by Phase 3); deferred |
 | P2.4.6 quadrature path | done in Phase 3 (P3.3, D3.3) |
-| Exponential `h > spacing` / cutoff checks | done: `layer_cutoff` must not exceed the wall spacing; a non-repeating wall or cylinder needs an explicit `layer_cutoff` (`src/geometries/user/fix.jl`) |
+| Exponential `h > spacing` | NOT resolved for walls: `layer_h ≤ spacing` is still enforced for every profile, although for the exponential h is a decay length (cylinders inside explicitly allow exponential h > R); deferred — a design decision |
+| `layer_cutoff` checks | done: `layer_cutoff` must not exceed the wall spacing; a lone wall or cylinder needs an explicit `layer_cutoff` (`src/geometries/user/fix.jl`) |
+| `layer_cutoff` NaN message | NOT fixed: on a repeating wall `layer_cutoff = NaN` gives the message for a non-repeating wall (`fix.jl:94`); deferred |
 | Stuck spins without the layer | done: warning for walls and cylinders when the surface density is > 0 |
 | User docs | done (P3.8.2) |
