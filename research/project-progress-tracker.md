@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 33 (+3 ◐) | ◐ in progress (step profile on cylinders verified 2026-10-24) |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 36 (+3 ◐) | ☑ complete (tag `rd-cylinders-v1`, 2026-11-11); 3 ◐ left as is (user); D3.5 exponential support open for a user decision |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.
@@ -409,9 +409,9 @@ Rep1 (single cylinder vs exact rate) and Rep3 (packings) from Phase 1 are reused
 
 | ID | ☐ | Task | Pass criterion | Output |
 |---|---|---|---|---|
-| P3.8.1 | ☐ | Phase 3 record (`research/phase3_record.md`) with every test, settings, σ, rulings | complete | record |
-| P3.8.2 | ☐ | User documentation for the cylinder layer fields | docs build | docs |
-| P3.8.3 | ☐ | Tag `rd-cylinders-v1` | tag exists | git tag |
+| P3.8.1 | ☑ | Phase 3 record (`research/phase3_record.md`) with every test, settings, σ, rulings | complete | record; **Done (2026-11-11)**: summary rows for P3.5, P3.7a/b, P3.8; Phase 3 close section (open items, D3.5 decision, deferred minors, Phase 2 carry-over) |
+| P3.8.2 | ☑ | User documentation for the cylinder layer fields | docs build | docs; **Done**: `docs/src/near_surface_layer.md` (walls and cylinders), docs build OK |
+| P3.8.3 | ☑ | Tag `rd-cylinders-v1` | tag exists | git tag; **Done** after the final review |
 
 ## Phase 3 deliverables
 

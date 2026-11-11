@@ -35,6 +35,7 @@ makedocs(;
         "Tutorial (CLI)" => "tutorial_cli.md",
         "Geometry" => "geometry.md",
         "MRI/collision properties" => "properties.md",
+        "Near-surface R2 layer" => "near_surface_layer.md",
         "API" => "api.md",
         "References" => "references.md",
     ],
