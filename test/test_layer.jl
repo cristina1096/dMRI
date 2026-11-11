@@ -470,3 +470,34 @@ end
     @test a ≈ b rtol=1e-12                                             # the integral does not depend on direction
     @test a ≈ s.rho / 0.8 rtol=1e-9                                    # whole layer crossed: ρ/(piece length), tail e^(-800) negligible
 end
+
+@testset "test_layer.jl: walls follow-up to Phase 3.8 (summed bound, exponential h, NaN cutoff)" begin
+    Layers = mr.Geometries.Internal.Layers
+    geom(walls) = mr.Simulation([]; geometry=walls, verbose=false).geometry
+    @testset "max_layer_rate sums facing layers whose supports overlap" begin
+        # spacing 1, h = 0.8 on both sides: the positive layer of one wall and the negative layer of the next overlap (0.8 + 0.8 > 1)
+        g = geom(mr.Walls(repeats=1., layer_rho=0.1, layer_h=0.8))
+        @test Layers.max_layer_rate(g) ≈ 2 * 0.1 / 0.8
+        @test Layers.max_layer_rate(g) >= Layers.layer_exponent(g, SVector(0.5, 0., 0.), SVector(0.5, 0., 0.), 1.0)   # true peak 0.25 at mid-gap
+        # no overlap (0.5 + 0.5 ≤ 2): unchanged, the largest single rate
+        @test Layers.max_layer_rate(geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.5))) ≈ 0.1 / 0.5
+        # two non-repeating walls 1 apart: the facing sides overlap, the outer sides face nothing
+        @test Layers.max_layer_rate(geom(mr.Walls(position=[0., 1.], layer_rho=0.1, layer_h=0.8))) ≈ 2 * 0.1 / 0.8
+        # positive side only: it faces an empty negative side, so nothing adds
+        @test Layers.max_layer_rate(geom(mr.Walls(repeats=1., layer_rho_positive=0.1, layer_h_positive=0.8))) ≈ 0.1 / 0.8
+        # default timestep follows the summed bound
+        # (ρ = 1 so that the layer limit 0.005/2.5 = 0.002 binds below the tortuosity limit 0.03·1²/3 = 0.01)
+        s = mr.Simulation([]; geometry=mr.Walls(repeats=1., layer_rho=1.0, layer_h=0.8), diffusivity=3., verbose=false, timestep=(layer=0.005,))
+        @test s.timestep.max_timestep ≈ 0.005 / (2 * 1.0 / 0.8)
+    end
+    @testset "exponential: h is a decay length, only the cutoff is limited by the spacing" begin
+        g = geom(mr.Walls(repeats=1., layer_rho=0.1, layer_h=2.0, layer_shape="exponential"))     # h > spacing, cutoff = spacing
+        @test g[1].layer[1].positive.cutoff ≈ 1.0
+        @test_throws ErrorException geom(mr.Walls(repeats=1., layer_rho=0.1, layer_h=2.0))         # step: h is the support
+        @test_throws ErrorException geom(mr.Walls(repeats=1., layer_rho=0.1, layer_h=2.0, layer_shape="linear"))
+        @test_throws ErrorException geom(mr.Walls(repeats=1., layer_rho=0.1, layer_h=0.5, layer_shape="exponential", layer_cutoff=1.5))
+    end
+    @testset "NaN layer_cutoff gives its own message" begin
+        @test_throws r"finite" geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.5, layer_shape="exponential", layer_cutoff=NaN))
+    end
+end

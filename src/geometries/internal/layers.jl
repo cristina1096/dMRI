@@ -397,13 +397,36 @@ has_layer(geometry::FixedGeometry) = any(g -> !isnothing(g.layer), geometry)
 """
     max_layer_rate(geometry)
 
-Largest near-surface rate (1/ms) in the geometry: ΔR2(0) = (ρ/h)·g(0) over all wall layer sides with ρ > 0; for cylinders an upper bound on the summed rate where outer layers overlap (P3.2.6). 0 if there is no layer.
+Upper bound on the near-surface rate (1/ms) in the geometry, summed where layers overlap: for walls the larger of the largest ΔR2(0) = (ρ/h)·g(0) and the sum of two facing surface rates whose supports overlap; for cylinders an upper bound on the summed rate where outer layers overlap (P3.2.6). 0 if there is no layer.
 """
 max_layer_rate(::Nothing) = 0.0
 max_layer_rate(layers::Vector{WallLayer}) = maximum((surface_rate(s) for l in layers for s in (l.positive, l.negative)); init=0.0)
 max_layer_rate(g::FixedObstructionGroup) = max_layer_rate(g.layer, g)
 max_layer_rate(::Nothing, ::FixedObstructionGroup) = 0.0
-max_layer_rate(layers::Vector{WallLayer}, ::FixedObstructionGroup) = max_layer_rate(layers)
+"""
+Upper bound on the summed ΔR2 for walls: the largest single surface rate, or, across each gap between neighbouring walls
+(images included for repeating walls), the sum of the two facing surface rates (positive side of the lower wall, negative
+side of the upper one) when their supports overlap, L₊ + L₋ > gap. Supports never exceed the smallest wall spacing
+(validation), so at most these two layers overlap anywhere. Exact when no layers overlap.
+"""
+function max_layer_rate(layers::Vector{WallLayer}, g::FixedObstructionGroup)
+    best = max_layer_rate(layers)
+    isempty(layers) && return best
+    if repeating(g)
+        spacing = g.repeats[1]
+        ordered = sort([(mod(l.position, spacing), l) for l in layers], by=first)
+        pairs = [(ordered[k], k < length(ordered) ? ordered[k + 1] : (ordered[1][1] + spacing, ordered[1][2])) for k in eachindex(ordered)]
+    else
+        ordered = sort([(l.position, l) for l in layers], by=first)
+        pairs = [(ordered[k], ordered[k + 1]) for k in 1:length(ordered) - 1]
+    end
+    for ((xa, a), (xb, b)) in pairs
+        gap = xb - xa
+        gap > 0 || continue
+        (a.positive.cutoff + b.negative.cutoff > gap) && (best = max(best, surface_rate(a.positive) + surface_rate(b.negative)))
+    end
+    return best
+end
 
 """
 Upper bound on the summed ΔR2 for cylinders: for each cylinder, the larger of its inner surface rate and its outer

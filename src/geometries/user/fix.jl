@@ -85,12 +85,15 @@ function wall_layers(walls::Walls; density=0.)
             rho < 0 && error("Wall $i, $side side: layer_rho must be >= 0, got $rho.")
             h < 0 && error("Wall $i, $side side: layer_h must be >= 0, got $h.")
             rho > 0 && iszero(h) && error("Wall $i, $side side: layer_h must be > 0 when layer_rho > 0.")
-            rho > 0 && h > spacing && error("Wall $i, $side side: layer_h = $h um exceeds the spacing between walls ($spacing um), so the layer would pass through a neighbouring wall.")
             shape = resolve_shape(side, i)
+            # step and linear: h is the support and must fit between walls; exponential: h is a decay length and only the
+            # cutoff (below) is limited by the spacing
+            shape != :exponential && rho > 0 && h > spacing && error("Wall $i, $side side: layer_h = $h um exceeds the spacing between walls ($spacing um), so the layer would pass through a neighbouring wall.")
             shape == :exponential || return Internal.LayerSide(rho, h, shape)
             iszero(rho) && return Internal.LayerSide(rho, h, shape, h)          # inert side: no cutoff needed
             given = walls.layer_cutoff[i]
             cutoff = isnothing(given) ? spacing : Float64(given)
+            isnan(cutoff) && error("Wall $i, $side side: layer_cutoff must be finite, got NaN.")
             isfinite(cutoff) || error("Wall $i, $side side: an exponential layer on a non-repeating wall needs `layer_cutoff`.")
             cutoff > 0 || error("Wall $i, $side side: layer_cutoff must be > 0, got $cutoff.")
             cutoff <= spacing || error("Wall $i, $side side: layer_cutoff = $cutoff um exceeds the spacing between walls ($spacing um).")

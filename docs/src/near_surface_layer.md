@@ -56,7 +56,7 @@ A single wall or cylinder without neighbours needs an explicit `layer_cutoff` fo
 | `layer_cutoff` | outside support of the exponential profile (µm) |
 
 **Limits on the parameters:**
-- walls: ``h`` (every profile) and `layer_cutoff` must not exceed the spacing between walls;
+- walls: for step and linear ``h`` (the support) must not exceed the spacing between walls; for the exponential ``h`` is a decay length and only `layer_cutoff` is limited by the spacing;
 - cylinders, inside: step and linear need ``h \le R`` (for the exponential ``h`` is a decay length and may exceed ``R``);
 - cylinders, outside: the support (``h`` for step and linear, `layer_cutoff` for the exponential) must not exceed the surface gap to any neighbouring cylinder, so that no layer reaches inside another cylinder.
 
@@ -78,8 +78,7 @@ simulation = Simulation([]; geometry=geometry, diffusivity=3., R2=1/2000)
   - Cylinders: the step profile is integrated exactly from line–circle intersections; linear and exponential use adaptive Gauss–Legendre quadrature between the exact shell boundaries, to an internal tolerance of 1e-10.
   - Axial motion along a cylinder does not change ``d``.
 - **Timestep.** The default maximum timestep keeps ``\Delta R_{2,\max}\,\tau \le 0.005`` (set by `Simulation(...; timestep=(layer=0.005,))`). This bounds the error of a single model's decay rate to about 0.15 %.
-  - For **cylinders**, ``\Delta R_{2,\max}`` is an upper bound on the summed rate of overlapping layers (conservative, up to several times the true peak).
-  - For **walls**, it is the largest single-layer rate. Where the layers of two walls overlap, the summed rate can be up to twice that, so the effective ``\Delta R_2\,\tau`` can reach 0.01; set a smaller timestep for overlapping wall layers.
+  - ``\Delta R_{2,\max}`` is an upper bound on the summed rate where layers overlap: for walls, the sum of the two facing surface rates across a gap whose supports overlap; for cylinders, the surface rate plus those of every neighbour whose outer support reaches (conservative, up to several times the true peak). Without overlap it is the largest single surface rate.
   - For **comparing** models or profiles at the same ``\rho`` (differences of a few 1e-3 in the signal), set the timestep explicitly, ``\tau = \min(0.135\,\bar c_{\min}^2,\ 0.005/\Delta R_{2,\max})`` at ``D = 3`` (in general ``\sqrt{2D\tau} \le 0.9\,\bar c_{\min}``), which gives ≲ 10 % error in the difference. An explicit `timestep=τ` replaces every automatic limit, so the rate limit must be included by hand.
 - **Not supported:**
   - finite RF pulses together with a layer (an error is raised); use instantaneous pulses;

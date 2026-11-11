@@ -1498,7 +1498,7 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
 - **◐ P3.1.3, P3.4.6, P3.4.8.** Left as they are (user, 2026-10-25).
 - **P3.6.4 cell list.** The layer cost per spin-step scales with the number of cylinders per cell (×6.7 at 400); a cell list of layer indices is open.
 - **`max_layer_rate`.** For cylinders a valid but conservative summed bound, up to 5× the true peak in the s = 2.5 array; it costs runtime, not accuracy.
-- **Walls timestep bound is not summed** (found in the P3.8 review, verified): for walls `max_layer_rate` is the largest single-layer rate, so where two wall layers overlap the default ΔR₂·τ can reach 0.01 instead of 0.005 (e.g. `Walls(repeats=1, layer_rho=0.1, layer_h=0.8)`: bound 0.125 /ms, summed rate 0.25 /ms at mid-gap). The Phase 2 overlap study (P2.5.9) is continuum-based, and its Monte Carlo check set τ = 0.005/(summed peak rate)/4 explicitly (`research/phase2/p2_5_overlap_mc_check.jl:18`), so no committed result is affected; whether the package bound should sum overlapping sides is a design decision for the user.
+- **Walls timestep bound — fixed after the tag (user decision 2026-11-11).** Found in the P3.8 review: for walls `max_layer_rate` was the largest single-layer rate, so where two wall layers overlap the default ΔR₂·τ could reach 0.01 (e.g. `Walls(repeats=1, layer_rho=0.1, layer_h=0.8)`: bound 0.125 /ms, summed rate 0.25 /ms at mid-gap). It now sums the two facing surface rates across any gap whose supports overlap (exact without overlap, so non-overlapping setups keep a bit-identical τ). The Phase 2 overlap study (P2.5.9) is continuum-based and its Monte Carlo check set τ = 0.005/(summed peak rate)/4 explicitly (`research/phase2/p2_5_overlap_mc_check.jl:18`), so no committed result is affected.
 
 ### Deferred minors (from the plan reviews; none changes a result)
 
@@ -1512,8 +1512,8 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
 | Tags `rd-profiles-v1`, `rd-walls-v1` | not created (the Phase 2 commits are not re-tagged here); deferred to the user |
 | P2.4.4 polynomial profile | not implemented (not needed by Phase 3); deferred |
 | P2.4.6 quadrature path | done in Phase 3 (P3.3, D3.3) |
-| Exponential `h > spacing` | NOT resolved for walls: `layer_h ≤ spacing` is still enforced for every profile, although for the exponential h is a decay length (cylinders inside explicitly allow exponential h > R); deferred — a design decision |
+| Exponential `h > spacing` | done after the tag (user decision 2026-11-11): walls check `layer_h ≤ spacing` only for step and linear; for the exponential h is a decay length and only `layer_cutoff ≤ spacing` is required (as cylinders inside allow exponential h > R) |
 | `layer_cutoff` checks | done: `layer_cutoff` must not exceed the wall spacing; a lone wall or cylinder needs an explicit `layer_cutoff` (`src/geometries/user/fix.jl`) |
-| `layer_cutoff` NaN message | NOT fixed: on a repeating wall `layer_cutoff = NaN` gives the message for a non-repeating wall (`fix.jl:94`); deferred |
+| `layer_cutoff` NaN message | done after the tag: `layer_cutoff = NaN` now raises "layer_cutoff must be finite" |
 | Stuck spins without the layer | done: warning for walls and cylinders when the surface density is > 0 |
 | User docs | done (P3.8.2) |

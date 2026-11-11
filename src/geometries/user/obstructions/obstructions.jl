@@ -28,7 +28,7 @@ end
 for obstruction_type in (
     ObstructionType(:Wall; ndim=1, volumes=[], fields=[
         Field{Float64}(:layer_rho, "Near-surface layer: integrated relaxivity ρ = ∫ΔR2(d)dd (um/ms) on both sides of the wall, unless a side-specific value is set. Zero means no layer.", 0.),
-        Field{Float64}(:layer_h, "Near-surface layer: length scale h (um) on both sides of the wall, unless a side-specific value is set.", 0.),
+        Field{Float64}(:layer_h, "Near-surface layer: length scale h (um) on both sides of the wall, unless a side-specific value is set. For step and linear h is the support and at most the spacing between walls; for the exponential it is the decay length (the support is `layer_cutoff`).", 0.),
         Field{Float64}(:layer_rho_positive, "Near-surface layer: ρ (um/ms) on the positive side (local coordinate larger than the wall position). Overrides `layer_rho`."),
         Field{Float64}(:layer_rho_negative, "Near-surface layer: ρ (um/ms) on the negative side. Overrides `layer_rho`."),
         Field{Float64}(:layer_h_positive, "Near-surface layer: h (um) on the positive side. Overrides `layer_h`."),
