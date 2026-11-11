@@ -79,7 +79,7 @@ function TimeStep(;
             push!(lines, "Maximum timestep set by requirement to limit the transition from bound to free state of spins to $(options[5]) ms.")
             push!(lines, "You can alter the sensitivity to the bound state dwell time by changing the value of `timestep=(dwell_time=...)` from its current value of $(dwell_time).")
         elseif idx == 6
-            push!(lines, "Maximum timestep set by the near-surface layer (τ ≤ c/ΔR2(0) with the strongest layer ΔR2(0) = $(Internal.max_layer_rate(geometry)) /ms) to $(options[6]) ms.")
+            push!(lines, "Maximum timestep set by the near-surface layer (τ ≤ c/ΔR2,max with ΔR2,max = $(Internal.max_layer_rate(geometry)) /ms, an upper bound on the near-surface rate summed over overlapping layers) to $(options[6]) ms.")
             push!(lines, "You can alter it by changing `timestep=(layer=...)` from its current value of $(layer).")
         end
         push!(lines, "The actual timestep will be reduced based on the MR sequence(s).")

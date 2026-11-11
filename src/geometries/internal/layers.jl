@@ -423,7 +423,8 @@ function max_layer_rate(layers::Vector{WallLayer}, g::FixedObstructionGroup)
     for ((xa, a), (xb, b)) in pairs
         gap = xb - xa
         gap > 0 || continue
-        (a.positive.cutoff + b.negative.cutoff > gap) && (best = max(best, surface_rate(a.positive) + surface_rate(b.negative)))
+        # relative tolerance: layers that exactly fill the gap (L₊ + L₋ = gap) only touch, even when the computed gap rounds down
+        (a.positive.cutoff + b.negative.cutoff > gap * (1 + 1e-12)) && (best = max(best, surface_rate(a.positive) + surface_rate(b.negative)))
     end
     return best
 end

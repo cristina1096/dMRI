@@ -483,6 +483,8 @@ end
         @test Layers.max_layer_rate(geom(mr.Walls(repeats=2., layer_rho=0.1, layer_h=0.5))) ≈ 0.1 / 0.5
         # two non-repeating walls 1 apart: the facing sides overlap, the outer sides face nothing
         @test Layers.max_layer_rate(geom(mr.Walls(position=[0., 1.], layer_rho=0.1, layer_h=0.8))) ≈ 2 * 0.1 / 0.8
+        # layers that exactly fill the gap (h = gap/2) only touch: no doubling, despite the gap rounding to 0.49999999999999994
+        @test Layers.max_layer_rate(geom(mr.Walls(repeats=1., position=[0.2, 0.7], layer_rho=0.1, layer_h=0.25))) ≈ 0.1 / 0.25
         # positive side only: it faces an empty negative side, so nothing adds
         @test Layers.max_layer_rate(geom(mr.Walls(repeats=1., layer_rho_positive=0.1, layer_h_positive=0.8))) ≈ 0.1 / 0.8
         # default timestep follows the summed bound
