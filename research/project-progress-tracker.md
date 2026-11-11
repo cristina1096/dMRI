@@ -14,7 +14,7 @@ Working tracker for implementation. Tick a box when its pass criterion is met, n
 |---|---|---|---|---|---|
 | **Phase 1** | 1–2 (21 Sep – 2 Oct) | Verified baseline, unmodified code | 22 | 19 | ☑ exit criterion met (open: P1.1.3, P1.1.5, optional P1.3.5) |
 | **Phase 2** | 3–11 (5 Oct – 4 Dec) | Implement and verify R₂(d) on wall geometry, no RF | 55 | 44 | ◐ |
-| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 36 (+3 ◐) | ☑ complete (tag `rd-cylinders-v1`, 2026-11-11); 3 ◐ left as is (user); D3.5 exponential support open for a user decision |
+| **Phase 3** | TBD | R₂(d) on cylinders (single, arrays with overlapping layers), no RF; comparison with the conventional model | 39 (+6 decisions) | 36 (+3 ◐) | ☑ complete (tag `rd-cylinders-v1`, 2026-11-11); 3 ◐ left as is (user); D3.5 exponential cut-off jump accepted as is (user, 2026-11-11) |
 | Phase 4 | 14–15 | Trade-off audit, write-up | — | — | not yet planned |
 
 Update the "Done" column at the end of each week.

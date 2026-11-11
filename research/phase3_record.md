@@ -1494,9 +1494,7 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
 
 ### Open items carried out of Phase 3
 
-- **D3.5, exponential support (user decision).** On curved arrays a truncated exponential (L ≤ gap) jumps inside the fluid (P3.5.2).
-  - Options: a smooth taper, a shorter cutoff, or accept it as is.
-  - A change would need a package change and a rerun of the affected exponential results (P3.4.8e–h, P3.7b, P3.5).
+- **D3.5, exponential support — decided (user, 2026-11-11): accept as is.** On curved arrays a truncated exponential (L ≤ gap) jumps inside the fluid (P3.5.2). The hard cut at L (default: the smallest surface gap outside, R inside) stays; the jump is documented in the user docs (Caveats) and is negligible for h ≪ L. The alternatives (smooth taper, shorter cutoff) were not adopted, so no rerun is needed.
 - **◐ P3.1.3, P3.4.6, P3.4.8.** Left as they are (user, 2026-10-25).
 - **P3.6.4 cell list.** The layer cost per spin-step scales with the number of cylinders per cell (×6.7 at 400); a cell list of layer indices is open.
 - **`max_layer_rate`.** For cylinders a valid but conservative summed bound, up to 5× the true peak in the s = 2.5 array; it costs runtime, not accuracy.
