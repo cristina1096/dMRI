@@ -205,7 +205,7 @@ All profiles normalised so ∫₀^∞ *g*(*u*) d*u* = 1.
 | P2.4.7 | ◐ | **V4 per profile** — fit *h*\*(θ) to the B4 reference for each profile, fixed ΔR₂(0) | *h*\*(θ) with uncertainty and per-readout residuals for every profile; residuals reported, not pass/fail | linear: h*(θ) for all 12 θ, residuals ≤ 0.5 SEM (`p2_3_9_fit_h_linear/`); exponential skipped (user decision 2026-10-07) |
 | P2.4.8 | ◐ | Profile comparison at fixed ΔR₂(0): overlay the P2.3.4(b)-type curves *S*(*t*; *h*) for all profiles | Differences between profiles reported with σ; no expected equality assumed | step vs linear: ρ* agrees within 9.2e-4, small drift growing with θ (z up to −2.4); both fit within 0.5 SEM; S(t; h) overlay still to do (`p2_4_8_compare_step_linear/`); exponential attenuation added (step ≈ exponential at equal ρ for h ≤ 0.2, residual shape effect up to −7.4e-4) |
 | P2.4.9 | ☐ | *(optional)* Power law and half-Gaussian | As P2.4.3 | fig |
-| P2.4.10 | ☐ | Tag `rd-profiles-v1` | Tag exists | git tag |
+| P2.4.10 | ☑ | Tag `rd-profiles-v1` | Tag exists | git tag — tag `rd-profiles-v1` on b171952 (2026-10-08), created retroactively 2026-11-11 (user) |
 
 ## 2.5 Shape comparison under consistent conditions (week 8)
 
@@ -273,7 +273,7 @@ Converge one control at a time. Use the **same seed** across each sweep, then co
 | P2.6.10 | ☑ | Runtime vs *h* at converged τ | *h* = 0.01–0.5 µm | Confirms feasible working range (proposal Table 1, risk "excessive timestep cost") | ≈ 0.03–0.05 h per full run for h = 0.01–0.5 (τ not h-limited); vs ΔR₂(0): 0.01 h (0.1) to 0.63 h (10). `phase2_record.md` |
 | P2.6.11 | ☑ | Noise cost at fixed budget | Fewer spins required by smaller τ → σ increase (√ ratio) | σ penalty tabulated per *h* | σ penalty √(0.04/τ): 1.0 / 2.0 / 2.8 / 4.0 / 8.9 for ΔR₂(0) = 0.1 / 0.5 / 1 / 2 / 10 (independent of h). `phase2_record.md` |
 | P2.6.12 | ☑ | Accuracy–cost summary | One figure: error vs runtime, points labelled by τ and ε_R₂ | Recommended settings stated | `results/phase2/p2_6_8_cost/cost.png`; recommended: default c = 0.005 (≈ 0.1 %), c = 0.05 for ≈ 1 %. Earlier τ = 1e-2 results: bias ≤ 6.4e-4, no reruns |
-| P2.6.13 | ☐ | Tag `rd-walls-v1` | Tag exists | git tag |
+| P2.6.13 | ☑ | Tag `rd-walls-v1` | Tag exists | git tag — tag `rd-walls-v1` on 0aad802 (2026-10-24), created retroactively 2026-11-11 (user) |
 
 ## Phase 2 deliverables
 

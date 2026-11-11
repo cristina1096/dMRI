@@ -1509,7 +1509,7 @@ The docs build passes (`julia --project=docs -e 'using Pkg; Pkg.instantiate(); i
 
 | item | status |
 |---|---|
-| Tags `rd-profiles-v1`, `rd-walls-v1` | not created (the Phase 2 commits are not re-tagged here); deferred to the user |
+| Tags `rd-profiles-v1`, `rd-walls-v1` | done retroactively (user, 2026-11-11): `rd-profiles-v1` on b171952 (end of the profile work, 2026-10-08), `rd-walls-v1` on 0aad802 (end of Phase 2, 2026-10-24; code identical to the last Phase 2 result commit) |
 | P2.4.4 polynomial profile | not implemented (not needed by Phase 3); deferred |
 | P2.4.6 quadrature path | done in Phase 3 (P3.3, D3.3) |
 | Exponential `h > spacing` | done after the tag (user decision 2026-11-11): walls check `layer_h ≤ spacing` only for step and linear; for the exponential h is a decay length and only `layer_cutoff ≤ spacing` is required (as cylinders inside allow exponential h > R) |
